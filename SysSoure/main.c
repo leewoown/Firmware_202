@@ -245,7 +245,6 @@ void main(void)
                      SysRegs.SysMachine=System_STATE_READY;
                      Farasis52AhSocRegs.state =SOC_STATE_RUNNING;
                  }
-
             break;
             case System_STATE_READY:
 
@@ -274,7 +273,7 @@ void main(void)
                          }
                      }
                  }
-                 if(SysRegs.SysStateReg.bit.HMICOMEnable==0)
+                 else if(SysRegs.SysStateReg.bit.HMICOMEnable==0)
                  {
                      CANARegs.HMICMDRegs.all=0;
                      CANARegs.HMICEllTempsAgv=0;
@@ -348,7 +347,6 @@ void main(void)
                  {
                      SysRegs.SysMachine=System_STATE_READY;
                  }
-
 
             break;
             case System_STATE_PROTECTER:
@@ -795,7 +793,13 @@ void main(void)
 
            }
            SysRegs.CellTempssampling=0;
+           SysRegs.VoltTempsReadCount++;
            SysRegs.SysStateReg.bit.CellTempsOk=1;
+           if(SysRegs.VoltTempsReadCount>=10)
+           {
+              SysRegs.VoltTempsReadCount=100;
+              SysRegs.SysStateReg.bit.INITOK=1;
+           }
        }
        if(Slave0Regs.ErrorCount>200) {SysRegs.SlaveISOSPIErrReg.bit.SlaveBMS00=1;}
        if(Slave1Regs.ErrorCount>200) {SysRegs.SlaveISOSPIErrReg.bit.SlaveBMS01=1;}
@@ -804,27 +808,18 @@ void main(void)
 
        if(CANARegs.HMICMDRegs.bit.HMI_MODE==1)
        {
-           memcpy(&CANARegs.SysCellVoltage[(C_SlaveMEAEa*0)],    &Slave0Regs.CellVoltage[0],sizeof(Uint16)*C_SlaveMEAEa);
-           memcpy(&CANARegs.SysCellVoltage[(C_SlaveMEAEa*1)],    &Slave1Regs.CellVoltage[0],sizeof(Uint16)*C_SlaveMEAEa);
-           memcpy(&CANARegs.SysCellVoltage[(C_SlaveMEAEa*2)],    &Slave2Regs.CellVoltage[0],sizeof(Uint16)*C_SlaveMEAEa);
-           memcpy(&CANARegs.SysCellVoltage[(C_SlaveMEAEa*3)],    &Slave3Regs.CellVoltage[0],sizeof(Uint16)*C_SlaveMEAEa);
+           memcpy(&CANARegs.SysCellVoltage[0],        &Slave0Regs.CellVoltage[0],sizeof(Uint16)*7);
+           memcpy(&CANARegs.SysCellVoltage[7],        &Slave1Regs.CellVoltage[0],sizeof(Uint16)*8);
+           memcpy(&CANARegs.SysCellVoltage[15],       &Slave2Regs.CellVoltage[0],sizeof(Uint16)*7);
+           memcpy(&CANARegs.SysCellVoltage[22],       &Slave3Regs.CellVoltage[0],sizeof(Uint16)*8);
+
+           memcpy(&CANARegs.SysCelltemperature[0],    &Slave1Regs.CellTemperature[0],sizeof(int16)*7);
+           memcpy(&CANARegs.SysCelltemperature[7],    &Slave1Regs.CellTemperature[0],sizeof(int16)*8);
+           memcpy(&CANARegs.SysCelltemperature[15],   &Slave2Regs.CellTemperature[0],sizeof(int16)*7);
+           memcpy(&CANARegs.SysCelltemperature[22],   &Slave3Regs.CellTemperature[0],sizeof(int16)*8);
 
         }
-        if(CANARegs.HMICMDRegs.bit.HMI_MODE==1)
-        {
-            memcpy(&CANARegs.SysCelltemperature[(C_SlaveMEAEa*1)],    &Slave1Regs.CellTemperature[0],sizeof(int16)*C_SlaveMEAEa);
-            memcpy(&CANARegs.SysCelltemperature[(C_SlaveMEAEa*2)],    &Slave2Regs.CellTemperature[0],sizeof(int16)*C_SlaveMEAEa);
-            memcpy(&CANARegs.SysCelltemperature[(C_SlaveMEAEa*3)],    &Slave3Regs.CellTemperature[0],sizeof(int16)*C_SlaveMEAEa);
 
-        }
-        if(CANARegs.HMICMDRegs.bit.HMI_MODE==1)
-        {
-
-        }
-        if(CANARegs.HMICMDRegs.bit.HMI_MODE==1)
-        {
-
-        }
         if(SysRegs.Maincount>3000){SysRegs.Maincount=0;}
 
     }
@@ -871,8 +866,9 @@ interrupt void cpu_timer0_isr(void)
 
    /*
     * DigitalInput detection
+    * 릴레이 변경으로 삭제
     */
-   SysDigitalInput(&SysRegs);
+   //SysDigitalInput(&SysRegs);
 
 
   /*
@@ -986,27 +982,20 @@ interrupt void cpu_timer0_isr(void)
        case 4:
                if(SysRegs.SysStateReg.bit.INITOK==1)
                {
-                  // SysRegs.MDNumber=C_SysModuleEa;
+
                    MDCalVoltandTemsHandle(&SysRegs);
+                   SysRegs.MDNumber++;
                }
        break;
        case 5:
 
-               if(SysRegs.SysStateReg.bit.INITOK==1)
-               {
-                 //  SysCalTemperatureHandle(&SysRegs);
-               }
 
        break;
        case 6:
 
        break;
        case 7:
-               if(SysRegs.VoltTempsReadCount>=10)
-               {
-                   SysRegs.VoltTempsReadCount=100;
-                   SysRegs.SysStateReg.bit.INITOK=1;
-               }
+
 
        break;
        default :
@@ -1148,6 +1137,35 @@ interrupt void cpu_timer0_isr(void)
        case 60:
                if(CANARegs.HMICMDRegs.bit.HMI_MODE==1)
                {
+                  /*
+                   *    unsigned int     SysStatus              :3; // 0,1,2
+                        unsigned int     SysRlyStatus           :3; // 3,4,5
+                        unsigned int     SysProtectStatus       :2; // 6,7
+                        unsigned int     SysSOCStatus           :2; // 8,9
+                        unsigned int     SysDisCharMode         :1; // 10
+                        unsigned int     HMICOMEnable           :1; // 11
+                        unsigned int     HMIBalanceMode         :1; // 12
+                        unsigned int     NRlyDOStatus           :1; // 13
+                        unsigned int     PRlyDOStatus           :1; // 14
+                        unsigned int     PreRlyDOStatus         :1; // 15
+                        unsigned int     ISOSPICOMERR           :1; // 16
+                        unsigned int     INCANCOMERR            :1; // 17
+                        unsigned int     TCPIPTOMERR            :1; // 18
+                        unsigned int     RS485COMERR            :1; // 19
+                        unsigned int     ISORegERR              :1; // 20
+                        unsigned int     MSDERR                 :1; // 21
+                        unsigned int     RlyERR                 :1; // 22
+                        unsigned int     INITOK                 :1; // 23
+                        unsigned int     SysBalanceMode         :1; // 24
+                        unsigned int     SysBalanceEn           :1; // 25
+                        unsigned int     SysAalarm              :1; // 26
+                        unsigned int     SysFault               :1; // 27
+                        unsigned int     SysProtect             :1; // 28
+                        unsigned int     CellVoltOk             :1; // 29
+                        unsigned int     CellTempsOk            :1; // 30
+                        unsigned int     SW31                   :1; // 31
+                   */
+
                  CANATX(0x701,8,SysRegs.SysStateReg.Word.DataL,SysRegs.SysStateReg.Word.DataH,0X000,0x0000);
                }
        break;
@@ -1155,7 +1173,7 @@ interrupt void cpu_timer0_isr(void)
                if((CANARegs.HMICMDRegs.bit.HMI_MODE==1)&&(CANARegs.HMICMDRegs.bit.HMI_CellVoltReq==1))
                {
                  CANARegs.HMICellVoltCout++;
-                 if(CANARegs.HMICellVoltCout>=C_HmiCellVoltCount)
+                 if(CANARegs.HMICellVoltCout >C_HmiCellVoltCount)
                  {
                      CANARegs.HMICellVoltCout=0;
                  }
@@ -1170,7 +1188,7 @@ interrupt void cpu_timer0_isr(void)
                if((CANARegs.HMICMDRegs.bit.HMI_MODE==1)&&(CANARegs.HMICMDRegs.bit.HMI_CellTempsReq==1))
                {
                    CANARegs.HMICellTempsCout++;
-                   if(CANARegs.HMICellTempsCout>=C_HmiCellTempCount)
+                   if(CANARegs.HMICellTempsCout >C_HmiCellTempCount)
                    {
                        CANARegs.HMICellTempsCout=0;
                    }
@@ -1243,15 +1261,25 @@ interrupt void cpu_timer0_isr(void)
     */
    SysRegs.SysStateReg.bit.HMICOMEnable=CANARegs.HMICMDRegs.bit.HMI_MODE;
    SysRegs.SysStateReg.bit.HMIBalanceMode=CANARegs.HMICMDRegs.bit.HMI_CellBalaEn;
-   SysRegs.SysStateReg.bit.NRlyDOStatus=SysRegs.SysDigitalInputReg.bit.NAUX;
-   SysRegs.SysStateReg.bit.PRlyDOStatus=SysRegs.SysDigitalInputReg.bit.PAUX;
+ //  SysRegs.SysStateReg.bit.NRlyDOStatus=SysRegs.SysDigitalInputReg.bit.NAUX;
+ //  SysRegs.SysStateReg.bit.PRlyDOStatus=SysRegs.SysDigitalInputReg.bit.PAUX;
+ //  SysRegs.SysStateReg.bit.PreRlyDOStatus=PrtectRelayRegs.State.bit.ProRlyDI;
+
+   SysRegs.SysStateReg.bit.NRlyDOStatus=SysRegs.SysDigitalOutPutReg.bit.NRlyOUT;
+   SysRegs.SysStateReg.bit.PRlyDOStatus=SysRegs.SysDigitalOutPutReg.bit.PRlyOUT;
    SysRegs.SysStateReg.bit.PreRlyDOStatus=PrtectRelayRegs.State.bit.ProRlyDI;
+
+
    SysRegs.SysStateReg.bit.SysRlyStatus = PrtectRelayRegs.StateMachine;
    SysRegs.SysStateReg.bit.SysSOCStatus = Farasis52AhSocRegs.state;
 
-   PrtectRelayRegs.State.bit.NRlyDI=SysRegs.SysDigitalInputReg.bit.NAUX;
-   PrtectRelayRegs.State.bit.PRlyDI=SysRegs.SysDigitalInputReg.bit.PAUX;
+   PrtectRelayRegs.State.bit.NRlyDI=SysRegs.SysDigitalOutPutReg.bit.NRlyOUT;
+   PrtectRelayRegs.State.bit.PRlyDI=SysRegs.SysDigitalOutPutReg.bit.PRlyOUT;
+
+
    ProtectRlySateCheck(&PrtectRelayRegs);
+
+
    SysRegs.SysDigitalOutPutReg.bit.NRlyOUT=PrtectRelayRegs.State.bit.NRlyDO;
    SysRegs.SysDigitalOutPutReg.bit.PRlyOUT=PrtectRelayRegs.State.bit.PRlyDO;
    SysRegs.SysDigitalOutPutReg.bit.ProRlyOUT=PrtectRelayRegs.State.bit.PreRlyDO;
@@ -1275,7 +1303,7 @@ interrupt void ISR_CANRXINTA(void)
         if(CANARegs.MailBoxRxCount>300){CANARegs.MailBoxRxCount=0;LEDCANState_T;}
         if(ECanaRegs.CANRMP.bit.RMP0==1)
         {
-            if(ECanaMboxes.MBOX0.MSGID.bit.STDMSGID==0x32C)
+            if(ECanaMboxes.MBOX0.MSGID.bit.STDMSGID==0x3C2)
             {
                 SysRegs.CTCANErrCheck=0;
                 CANARegs.MailBox0RxCount++;

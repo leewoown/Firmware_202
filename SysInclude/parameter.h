@@ -297,18 +297,18 @@ Parameter
 
 #define     Product_Type                       3   // 24.09.21
 #define     Product_Version                    10   // 24.09.21
-#define     Product_SysCellVauleS              14
-#define     Product_SysCellVauleP              6
+#define     Product_SysCellVauleS              15
+#define     Product_SysCellVauleP              2
 #define     Product_Voltage                    512 // 3.664*24
-#define     Product_Capacity                   3000  //
+#define     Product_Capacity                   460  //
 
 
-#define     C_PackVoltMax                   1008 //4.2*24
-#define     C_PackVoltMin                   672  //2.8*2.4
+#define     C_PackVoltMax                   540 //3.6*24
+#define     C_PackVoltMin                   370  //2.8*2.4
 
 
-#define     C_CellShutdownFault             2.8
-#define     C_CellBalanLimtVolt             3.0
+#define     C_CellShutdownFault             2.6
+#define     C_CellBalanLimtVolt             3.
 #define     C_BalanceDivVoltage             0.01
 #define     C_PackBalanCurrent              5.0
 
@@ -317,16 +317,16 @@ Parameter
 #define     C_CTDirection                 1.0
 #define     C_Cell_Capacity               52
 
-#define     C_SysModuleEa                 6 // Module 개수를  정의함
+#define     C_SysModuleEa                 2 // Module 개수를  정의함
 #define     C_SlaveMEAEa                  7 // Slave BMS에서 측정하는 전압 및 온도 개수 정의함
-#define     C_ModuleMEAEa                 14 // Module에서 측정하는 셀 전압 및 온도 개수를 정의함
+#define     C_ModuleMEAEa                 15 // Module에서 측정하는 셀 전압 및 온도 개수를 정의함
 #define     C_SlaveBMSEa                  12
 
 #define     C_SysCellVoltEa               30//C_SysModuleEa*C_ModuleMEAEa // Battery Pack 내 Cell 전압 EA
 #define     C_SysCellTempEa               30//C_SysModuleEa*C_ModuleMEAEa // Battery Pack 내 Cell 온도 EA
 
-#define     C_HmiCellVoltCount            C_SysCellVoltEa/3 //CAN TX  전송 위한 Cell 전압 개수 정의함
-#define     C_HmiCellTempCount            C_SysCellTempEa/3 //CAN TX  전송 위한 Cell 온도 개수 정의함
+#define     C_HmiCellVoltCount            9//C_SysCellVoltEa/3 //CAN TX  전송 위한 Cell 전압 개수 정의함
+#define     C_HmiCellTempCount            9//C_SysCellTempEa/3 //CAN TX  전송 위한 Cell 온도 개수 정의함
 #define     C_HMIISOSPIErrCount           C_SlaveBMSEa/3
 
 

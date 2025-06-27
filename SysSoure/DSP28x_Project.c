@@ -331,7 +331,7 @@ void MDCalInit(SystemReg *P)
     memset(&P->MDVoltageF[0],0.0,sizeof(float32)*6);
     memset(&(P->MDCellVoltAgvF[0]),0.0,sizeof(float32)*6);
     memset(&P->MDCellTempsAgvF[0],0.0,sizeof(float32)*6);
-    P->MDNumber=6;
+    P->MDNumber=2;
 }
 
 void MDCalVoltandTemsHandle(SystemReg *P)
@@ -343,14 +343,12 @@ void MDCalVoltandTemsHandle(SystemReg *P)
   unsigned int MDCellPosStart=0;
   unsigned int MDCellPosCount=0;
   //unsigned int MDCellPosStop=0;
-  P->MDNumber++;
   if(P->MDNumber>C_SysModuleEa)
   {
       P->MDNumber=0;
   }
-  MDCellPosStart = P->MDNumber  *C_ModuleMEAEa;
+  MDCellPosStart = P->MDNumber  * C_ModuleMEAEa;
   MDCellPosCount = MDCellPosStart+C_ModuleMEAEa;
-
   switch(P->MDNumber)
   {
       case 0:
@@ -522,7 +520,7 @@ void SysCalVoltageHandle(SystemReg *s)
     //
     SysModuleMinVoltageF =s->MDVoltageF[0];
     SysModuleMaxVoltageF =s->MDVoltageF[0];
-    ModuleSize=C_SysModuleEa;
+    ModuleSize=2;
     for(ModuleCount=0;ModuleCount<ModuleSize;ModuleCount++)
     {
         if (SysModuleMaxVoltageF <= s->MDVoltageF[ModuleCount])

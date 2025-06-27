@@ -174,7 +174,7 @@ void InitECana(void)
            ECanaMboxes.MBOX30.MSGID.all    = 0;
            ECanaMboxes.MBOX31.MSGID.all    = 0;
 
-           ECanaMboxes.MBOX0.MSGID.bit.STDMSGID  = 0x32C;
+           ECanaMboxes.MBOX0.MSGID.bit.STDMSGID  = 0x3C2;
            ECanaMboxes.MBOX1.MSGID.bit.STDMSGID  = 0x600;
            ECanaMboxes.MBOX2.MSGID.bit.STDMSGID  = 0x700;
            ECanaMboxes.MBOX3.MSGID.bit.STDMSGID  = 0x400;
