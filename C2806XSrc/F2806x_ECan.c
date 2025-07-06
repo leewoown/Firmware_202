@@ -427,8 +427,7 @@ void InitECana(void)
            ECanaShadow.CANMIM.bit.MIM28 = 0;
            ECanaShadow.CANMIM.bit.MIM29 = 0;
            ECanaShadow.CANMIM.bit.MIM30 = 0;
-           //ECanaShadow.CANMIM.bit.MIM31 = 1;
-
+          // ECanaShadow.CANMIM.bit.MIM31 = 1
            ECanaRegs.CANMIM.all   = ECanaShadow.CANMIM.all;
 
            /* Write to DLC field in Master Control reg  Data Size를 8byte로 선언*/

@@ -81,17 +81,17 @@ void CANATX(unsigned int ID, unsigned char Length, unsigned int Data0, unsigned 
     ECanaRegs.CANTRS.all = ECanaShadow.CANTRS.all;
     do
     {
-       ECanaShadow.CANTA.all = ECanaRegs.CANTA.all;
-     //  CANWatchDog++;
-     //  if(CANWatchDog>20)
-     //  {
-     //      ECanaShadow.CANTA.bit.TA31=0;
-     //  }
+        ECanaShadow.CANTA.all = ECanaRegs.CANTA.all;
+        //  CANWatchDog++;
+        //  if(CANWatchDog>20)
+        //  {
+        //      ECanaShadow.CANTA.bit.TA31=0;
+        //  }
     }
     while(!ECanaShadow.CANTA.bit.TA31);
 
     //Tx Flag Clear
-    InitECan();
+    //InitECan();
     ECanaShadow.CANTA.all = 0;
     ECanaShadow.CANTA.bit.TA31=1;                   // Clear TA5
     ECanaRegs.CANTA.all = ECanaShadow.CANTA.all;

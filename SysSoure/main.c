@@ -233,6 +233,7 @@ void main(void)
                  SlaveBMSIint(&Slave3Regs);
 
                  SysRegs.SysStateReg.bit.SysStatus=0;
+
                  SysRegs.SysMachine=System_STATE_STANDBY;
                  PrtectRelayRegs.StateMachine=PrtctRly_STANDBY;
             break;
@@ -250,6 +251,27 @@ void main(void)
 
                  SysRegs.SysStateReg.bit.SysStatus =1;
                  Farasis52AhSocRegs.state =SOC_STATE_RUNNING;
+
+                 if(SysRegs.SysStateReg.bit.HMICOMEnable==0)
+                 {
+                     CANARegs.HMICMDRegs.all=0;
+                     CANARegs.HMICEllTempsAgv=0;
+                     CANARegs.HMICEllVoltMin=0;
+                     if(SysRegs.SysStateReg.bit.SysProtect==0)
+                     {
+                         PrtectRelayRegs.State.bit.WakeUpEN=1;
+                         if(CANARegs.PMSCMDRegs.bit.PrtctReset==1)
+                         {
+                             SysRegs.SysAlarmReg.all=0;
+                             SysRegs.SysFaultReg.all=0;
+                             SysRegs.SysProtectReg.all=0;
+                             SysRegs.SysStateReg.all=0;
+                             SysRegs.SysStateReg.bit.SysFault=0;
+                             PrtectRelayRegs.StateMachine= PrtctRly_INIT;
+                            // SysRegs.SysMachine=System_STATE_INIT;
+                         }
+                     }
+                 }
                  if(SysRegs.SysStateReg.bit.HMICOMEnable==1)
                  {
                      CANARegs.PMSCMDRegs.bit.PrtctReset=0;
@@ -269,27 +291,7 @@ void main(void)
                              SysRegs.SysStateReg.all=0;
                              SysRegs.SysStateReg.bit.SysFault=0;
                              PrtectRelayRegs.StateMachine= PrtctRly_INIT;
-                             SysRegs.SysMachine=System_STATE_INIT;
-                         }
-                     }
-                 }
-                 else if(SysRegs.SysStateReg.bit.HMICOMEnable==0)
-                 {
-                     CANARegs.HMICMDRegs.all=0;
-                     CANARegs.HMICEllTempsAgv=0;
-                     CANARegs.HMICEllVoltMin=0;
-                     if(SysRegs.SysStateReg.bit.SysProtect==0)
-                     {
-                         PrtectRelayRegs.State.bit.WakeUpEN=1;
-                         if(CANARegs.PMSCMDRegs.bit.PrtctReset==1)
-                         {
-                             SysRegs.SysAlarmReg.all=0;
-                             SysRegs.SysFaultReg.all=0;
-                             SysRegs.SysProtectReg.all=0;
-                             SysRegs.SysStateReg.all=0;
-                             SysRegs.SysStateReg.bit.SysFault=0;
-                             PrtectRelayRegs.StateMachine= PrtctRly_INIT;
-                             SysRegs.SysMachine=System_STATE_INIT;
+                             //SysRegs.SysMachine=System_STATE_INIT;
                          }
                      }
                  }
@@ -307,7 +309,7 @@ void main(void)
                  SysRegs.SysStateReg.bit.SysStatus =2;
                  if(SysRegs.SysStateReg.bit.HMICOMEnable==0)
                  {
-
+                     PrtectRelayRegs.State.bit.WakeUpEN=1;
                      if(SysRegs.SysStateReg.bit.SysProtect==0)
                      {
                          if(CANARegs.PMSCMDRegs.bit.PrtctReset==1)
@@ -318,7 +320,7 @@ void main(void)
                              SysRegs.SysStateReg.all=0;
                              SysRegs.SysStateReg.bit.SysFault=0;
                              PrtectRelayRegs.StateMachine= PrtctRly_INIT;
-                             SysRegs.SysMachine=System_STATE_INIT;
+                             //SysRegs.SysMachine=System_STATE_INIT;
                          }
                      }
                  }
@@ -338,7 +340,7 @@ void main(void)
                              SysRegs.SysStateReg.all=0;
                              SysRegs.SysStateReg.bit.SysFault=0;
                              PrtectRelayRegs.StateMachine= PrtctRly_INIT;
-                             SysRegs.SysMachine=System_STATE_INIT;
+                             //SysRegs.SysMachine=System_STATE_INIT;
                          }
 
                      }
@@ -1285,6 +1287,7 @@ interrupt void cpu_timer0_isr(void)
    SysRegs.SysDigitalOutPutReg.bit.ProRlyOUT=PrtectRelayRegs.State.bit.PreRlyDO;
    SysRegs.SysProtectReg.bit.PackRly_Err=PrtectRelayRegs.State.bit.RlyFaulttSate;
    SysDigitalOutput(&SysRegs);
+   InitECan();
    // Acknowledge this interrupt to receive more interrupts from group 1
 
 //   LEDSysState_L;
@@ -1311,7 +1314,10 @@ interrupt void ISR_CANRXINTA(void)
                 SysRegs.SysCurrentData.byte.CurrentH   = (ECanaMboxes.MBOX0.MDL.byte.BYTE0<<8)|(ECanaMboxes.MBOX0.MDL.byte.BYTE1);
                 SysRegs.SysCurrentData.byte.CurrentL   = (ECanaMboxes.MBOX0.MDL.byte.BYTE2<<8)|(ECanaMboxes.MBOX0.MDL.byte.BYTE3);
             }
-
+            ECanaShadow.CANRMP.all =ECanaRegs.CANRMP.all;
+           // ECanaShadow.CANRMP.all= 0;
+            ECanaShadow.CANRMP.bit.RMP0 = 1;
+            ECanaRegs.CANRMP.all = ECanaShadow.CANRMP.all ;
         }
         if(ECanaRegs.CANRMP.bit.RMP1==1)
         {
@@ -1322,7 +1328,10 @@ interrupt void ISR_CANRXINTA(void)
                if(CANARegs.MailBox1RxCount>100){CANARegs.MailBox1RxCount=0;}
                CANARegs.PMSCMDRegs.all      =  (ECanaMboxes.MBOX1.MDL.byte.BYTE1<<8)|(ECanaMboxes.MBOX1.MDL.byte.BYTE0);
             }
-
+            ECanaShadow.CANRMP.all =ECanaRegs.CANRMP.all;
+            //ECanaShadow.CANRMP.all= 0;
+            ECanaShadow.CANRMP.bit.RMP1 = 1;
+            ECanaRegs.CANRMP.all = ECanaShadow.CANRMP.all ;
         }
         if(ECanaRegs.CANRMP.bit.RMP2==1)
         {
@@ -1331,15 +1340,19 @@ interrupt void ISR_CANRXINTA(void)
                 SysRegs.HMICANErrCheck=0;
                 CANARegs.MailBox2RxCount++;
                 if(CANARegs.MailBox2RxCount>100){CANARegs.MailBox2RxCount=0;}
-                CANARegs.HMICMDRegs.all      =  (ECanaMboxes.MBOX2.MDL.byte.BYTE1<<8)|(ECanaMboxes.MBOX2.MDL.byte.BYTE0);
+                CANARegs.HMICMDRegs.all      =   (ECanaMboxes.MBOX2.MDL.byte.BYTE1<<8)|(ECanaMboxes.MBOX2.MDL.byte.BYTE0);
+                //CANRXRegs.WORD700_1         =  (ECanaMboxes.MBOX2.MDL.byte.BYTE2<<8)|(ECanaMboxes.MBOX2.MDL.byte.BYTE3);
+                 CANARegs.HMICEllTempsAgv     =  (ECanaMboxes.MBOX2.MDH.byte.BYTE5<<8)|(ECanaMboxes.MBOX2.MDH.byte.BYTE4);
+                 CANARegs.HMICEllVoltMin      =  (ECanaMboxes.MBOX2.MDH.byte.BYTE7<<8)|(ECanaMboxes.MBOX2.MDH.byte.BYTE6);
                 if(CANARegs.HMICMDRegs.bit.HMI_Reset==1)
                 {
                     CANARegs.HMICMDRegs.bit.HMI_RlyEN=0;
                 }
 
-                //CANRXRegs.WORD700_1         =  (ECanaMboxes.MBOX2.MDL.byte.BYTE2<<8)|(ECanaMboxes.MBOX2.MDL.byte.BYTE3);
-                 CANARegs.HMICEllTempsAgv     =  (ECanaMboxes.MBOX2.MDH.byte.BYTE5<<8)|(ECanaMboxes.MBOX2.MDH.byte.BYTE4);
-                 CANARegs.HMICEllVoltMin      =  (ECanaMboxes.MBOX2.MDH.byte.BYTE7<<8)|(ECanaMboxes.MBOX2.MDH.byte.BYTE6);
+                 ECanaShadow.CANRMP.all =ECanaRegs.CANRMP.all;
+               //  ECanaShadow.CANRMP.all= 0;
+                 ECanaShadow.CANRMP.bit.RMP2 = 1;
+                 ECanaRegs.CANRMP.all = ECanaShadow.CANRMP.all ;
             }
         }
        /*
@@ -1358,17 +1371,19 @@ interrupt void ISR_CANRXINTA(void)
         }
         */
     }
-    ECanaShadow.CANRMP.all =ECanaRegs.CANRMP.all;
-    ECanaShadow.CANRMP.all= 0;
-    ECanaShadow.CANRMP.bit.RMP1 = 1;
-    ECanaShadow.CANRMP.bit.RMP0 = 1;  //interrupt pending clear by writing 1
-    ECanaShadow.CANRMP.bit.RMP2 = 1;
-    ECanaRegs.CANRMP.all = ECanaShadow.CANRMP.all ;
- //   ECanaShadow.CANME.all=ECanaRegs.CANME.all;
- //   ECanaShadow.CANME.bit.ME0=1;    //0x5NA MCU Rx Enable
- //   ECanaShadow.CANME.bit.ME1=1;    //0x5NA MCU Rx Enable
- //   ECanaShadow.CANME.bit.ME2=1;    //0x5NB MCU Rx Enable
- //   ECanaShadow.CANME.bit.ME31=1;   //CAN-A Tx Enable
+   // ECanaShadow.CANRMP.all =ECanaRegs.CANRMP.all;
+  //  ECanaShadow.CANRMP.all= 0;
+  //  ECanaShadow.CANRMP.bit.RMP0 = 1;
+  //  ECanaShadow.CANRMP.bit.RMP1 = 1;
+  //  ECanaShadow.CANRMP.bit.RMP2 = 1;
+  //  ECanaShadow.CANRMP.bit.RMP3 = 1;
+  //  ECanaRegs.CANRMP.all = ECanaShadow.CANRMP.all ;
+
+    ECanaShadow.CANME.all=ECanaRegs.CANME.all;
+    ECanaShadow.CANME.bit.ME0=1;    //0x5NA MCU Rx Enable
+    ECanaShadow.CANME.bit.ME1=1;    //0x5NA MCU Rx Enable
+    ECanaShadow.CANME.bit.ME2=1;    //0x5NB MCU Rx Enable
+    ECanaShadow.CANME.bit.ME31=1;   //CAN-A Tx Enable
     PieCtrlRegs.PIEACK.all = PIEACK_GROUP9;
 
    // IER |= 0x0100;                  // Enable INT9
