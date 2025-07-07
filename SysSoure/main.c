@@ -239,6 +239,8 @@ void main(void)
             break;
             case System_STATE_STANDBY:// INIT
                  SysRegs.SysStateReg.bit.SysStatus =0;
+                 SysRegs.SysStateReg.bit.INITOK=1;
+
                  if(SysRegs.SysStateReg.bit.INITOK==1)
                  {
                      Farasis52AhSocRegs.CellAgvVoltageF=SysRegs.SysCellAgvVoltageF;
@@ -248,8 +250,9 @@ void main(void)
                  }
             break;
             case System_STATE_READY:
-
                  SysRegs.SysStateReg.bit.SysStatus =1;
+                 PrtectRelayRegs.State.bit.WakeUpEN=1;
+                 SysRegs.SysStateReg.bit.INITOK=1;
                  Farasis52AhSocRegs.state =SOC_STATE_RUNNING;
 
                  if(SysRegs.SysStateReg.bit.HMICOMEnable==0)
@@ -259,7 +262,7 @@ void main(void)
                      CANARegs.HMICEllVoltMin=0;
                      if(SysRegs.SysStateReg.bit.SysProtect==0)
                      {
-                         PrtectRelayRegs.State.bit.WakeUpEN=1;
+
                          if(CANARegs.PMSCMDRegs.bit.PrtctReset==1)
                          {
                              SysRegs.SysAlarmReg.all=0;
@@ -279,19 +282,19 @@ void main(void)
                      {
                          if(CANARegs.HMICMDRegs.bit.HMI_Reset==0)
                          {
-                             PrtectRelayRegs.State.bit.WakeUpEN = CANARegs.HMICMDRegs.bit.HMI_RlyEN;
+                            // PrtectRelayRegs.State.bit.WakeUpEN = CANARegs.HMICMDRegs.bit.HMI_RlyEN;
                          }
                          if(CANARegs.HMICMDRegs.bit.HMI_Reset==1)
                          {
                              CANARegs.HMICMDRegs.bit.HMI_RlyEN =0;
-                             PrtectRelayRegs.State.bit.WakeUpEN=0;
+                            // PrtectRelayRegs.State.bit.WakeUpEN=0;
                              SysRegs.SysAlarmReg.all=0;
                              SysRegs.SysFaultReg.all=0;
                              SysRegs.SysProtectReg.all=0;
                              SysRegs.SysStateReg.all=0;
                              SysRegs.SysStateReg.bit.SysFault=0;
                              PrtectRelayRegs.StateMachine= PrtctRly_INIT;
-                             //SysRegs.SysMachine=System_STATE_INIT;
+                           //  SysRegs.SysMachine=System_STATE_INIT;
                          }
                      }
                  }
@@ -320,7 +323,7 @@ void main(void)
                              SysRegs.SysStateReg.all=0;
                              SysRegs.SysStateReg.bit.SysFault=0;
                              PrtectRelayRegs.StateMachine= PrtctRly_INIT;
-                             //SysRegs.SysMachine=System_STATE_INIT;
+                            // SysRegs.SysMachine=System_STATE_INIT;
                          }
                      }
                  }
@@ -329,18 +332,18 @@ void main(void)
                      CANARegs.PMSCMDRegs.bit.PrtctReset=0;
                      if(SysRegs.SysStateReg.bit.SysProtect==0)
                      {
-                         PrtectRelayRegs.State.bit.WakeUpEN = CANARegs.HMICMDRegs.bit.HMI_RlyEN;
+                         //PrtectRelayRegs.State.bit.WakeUpEN = CANARegs.HMICMDRegs.bit.HMI_RlyEN;
                          if(CANARegs.HMICMDRegs.bit.HMI_Reset==1)
                          {
                              CANARegs.HMICMDRegs.bit.HMI_RlyEN =0;
-                             PrtectRelayRegs.State.bit.WakeUpEN=0;
+                           //  PrtectRelayRegs.State.bit.WakeUpEN=0;
                              SysRegs.SysAlarmReg.all=0;
                              SysRegs.SysFaultReg.all=0;
                              SysRegs.SysProtectReg.all=0;
                              SysRegs.SysStateReg.all=0;
                              SysRegs.SysStateReg.bit.SysFault=0;
                              PrtectRelayRegs.StateMachine= PrtctRly_INIT;
-                             //SysRegs.SysMachine=System_STATE_INIT;
+                          //   SysRegs.SysMachine=System_STATE_INIT;
                          }
 
                      }
