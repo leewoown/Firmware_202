@@ -323,7 +323,8 @@ void CANRegVarINIT(CANAReg *P)
     memset(&P->MDCellTempsAgv[0],0.0,6);
     memset(&P->SysCellVoltage[0],0.0,C_SysCellTempEa);
     memset(&P->SysCelltemperature[0],0.0,C_SysCellTempEa);
-
+    P->PMSCMDRegs.all =0;
+    P->HMICMDRegs.all =0;
 
 }
 void MDCalInit(SystemReg *P)

@@ -27,7 +27,7 @@ extern void CalFrey60AhSocHandle(SocReg *P);
 #define C_Frey60Ah_SOCX0C   -4276.6
 #define C_Frey60Ah_SOCX1D    939.26
 #define C_Frey60Ah_SOCX0D   -3043.6
-#define C_Frey60AhNorm      0.0208//1/48Ah
+#define C_Frey60AhNorm       0.002631//1/380Ah;(0.0208//1/48Ah)
 #endif
 
 #if Kokam100Ah
