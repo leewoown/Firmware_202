@@ -335,7 +335,9 @@ void CalFrey60AhSocInit(SocReg *P)
 {
     // 60Ah
       P->AVGXF         =   P->CellAgvVoltageF;
-      if((LFP_VOLT_A_BOT< P->AVGXF)&&(P->AVGXF<=LFP_VOLT_A_TOP))
+     // IS_IN_RANGE_EXCLUSIVE_INCLUSIVE(P->AVGXF , LFP_VOLT_A_BOT, LFP_VOLT_A_TOP)
+      //if((LFP_VOLT_A_BOT< P->AVGXF)&&(P->AVGXF<=LFP_VOLT_A_TOP))
+      if(IS_IN_RANGE_EXCLUSIVE_INCLUSIVE(P->AVGXF , LFP_VOLT_A_BOT, LFP_VOLT_A_TOP))
       {
           //#define C_Frey60Ah_SOCX1A    62.112
           //#define C_Frey60Ah_SOCX0A   -189.44
