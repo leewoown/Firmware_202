@@ -866,22 +866,22 @@ interrupt void cpu_timer0_isr(void)
 /*
  *
  */
-  /* if((CANARegs.HMICMDRegs.bit.HMI_MODE==1)&&(CANARegs.HMICMDRegs.bit.HMI_Reset==1))
+   if((CANARegs.HMICMDRegs.bit.HMI_MODE==1)&&(CANARegs.HMICMDRegs.bit.HMI_Reset==1))
    {
         CANARegs.HMICMDRegs.bit.HMI_Reset=0;
         CANARegs.PMSCMDRegs.bit.PrtctReset=0;
-        SysRegs.SysAlarmReg.all=0;
-        SysRegs.SysFaultReg.all=0;
-        SysRegs.SysProtectReg.all=0;
-        SysRegs.SysStateReg.all=0;
-        SysRegs.SysStateReg.bit.SysFault=0;
+        //SysRegs.SysAlarmReg.all=0;
+        //SysRegs.SysFaultReg.all=0;
+        //SysRegs.SysProtectReg.all=0;
+        //SysRegs.SysStateReg.all=0;
+        //SysRegs.SysStateReg.bit.SysFault=0;
         delay_ms(200);
         if(SysRegs.SysStateReg.bit.SysProtect==0)
         {
            PrtectRelayRegs.StateMachine= PrtctRly_INIT;
            SysRegs.SysMachine=System_STATE_STANDBY;
          }
-   }*/
+   }
 
    /*
     * DigitalInput detection
