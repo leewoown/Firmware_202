@@ -18,16 +18,32 @@ extern void CalFrey60AhRegsInit(SocReg *P);
 extern void CalFrey60AhSocInit(SocReg *P);
 extern void CalFrey60AhSocHandle(SocReg *P);
 
-#define C_Frey60Ah_SOCX1A    62.112
-#define C_Frey60Ah_SOCX0A   -189.44
-#define C_Frey60Ah_SOCX2B    2566.7
-#define C_Frey60Ah_SOCX1B    -16384
-#define C_Frey60Ah_SOCX0B     26156
-#define C_Frey60Ah_SOCX1C    1313.1
-#define C_Frey60Ah_SOCX0C   -4276.6
-#define C_Frey60Ah_SOCX1D    939.26
-#define C_Frey60Ah_SOCX0D   -3043.6
-#define C_Frey60AhNorm       0.002631//1/380Ah;(0.0208//1/48Ah)
+#define C_Frey60Ah_SOCX0A    3352.4701
+#define C_Frey60Ah_SOCX1A    -20858.4935
+#define C_Frey60Ah_SOCX2A    32422.54
+
+
+#define C_Frey60Ah_SOCX2B    21.8172
+#define C_Frey60Ah_SOCX1B    1.8087
+#define C_Frey60Ah_SOCX0B    -216.32
+
+#define C_Frey60Ah_SOCX2C    1.4655
+#define C_Frey60Ah_SOCX1C    4.8170
+#define C_Frey60Ah_SOCX0C    15.83
+
+
+#define C_Frey60Ah_SOCX2D    -3344.4816
+#define C_Frey60Ah_SOCX1D    22607.0234
+#define C_Frey60Ah_SOCX0D   - 38111.77
+
+#define C_Frey60Ah_SOCX2E    0
+#define C_Frey60Ah_SOCX1E    1499.9998
+#define C_Frey60Ah_SOCX0E    -4912.50
+
+
+//#define C_Frey60AhNorm       0.002631//1/380Ah;(0.0208//1/48Ah)
+#define C_EVE380AhNorm       0.002631//1/380Ah;(0.0208//1/48Ah)
+
 #endif
 
 #if Kokam100Ah
@@ -322,6 +338,20 @@ void CalFrey60AhRegsInit(SocReg *P)
     P->SOCX1OutFDZore=0.0;
     P->DZoreCalCout=0;
 
+
+    P->SOCX4InFEZore=0.0;
+    P->SOCX3InFEZore=0.0;
+    P->SOCX2InFEZore=0.0;
+    P->SOCX1InFEZore=0.0;
+    P->SOCX4OutFEZore=0.0;
+    P->SOCX3OutFEZore=0.0;
+    P->SOCX2OutFEZore=0.0;
+    P->SOCX1OutFEZore=0.0;
+    P->EZoreCalCout=0;
+
+
+
+
     P->SOCbufF=0.0;
     P->SysSocInitF=0.0;
     P->CellAgvVoltageF=0.0;
@@ -333,31 +363,76 @@ void CalFrey60AhRegsInit(SocReg *P)
 }
 void CalFrey60AhSocInit(SocReg *P)
 {
+
+    /*
+     * #define C_Frey60Ah_SOCX0A    3352.4701
+       #define C_Frey60Ah_SOCX1A    -20858.4935
+       #define C_Frey60Ah_SOCX2A    32422.54
+
+
+       #define C_Frey60Ah_SOCX2B    12365.5914
+       #define C_Frey60Ah_SOCX1B    -80393.0108
+       #define C_Frey60Ah_SOCX0B    130685.77
+
+       #define C_Frey60Ah_SOCX2C    1.4655
+       #define C_Frey60Ah_SOCX1C    4.8170
+       #define C_Frey60Ah_SOCX0C    15.83
+
+
+       #define C_Frey60Ah_SOCX2D    -3344.4816
+       #define C_Frey60Ah_SOCX1D    22607.0234
+       #define C_Frey60Ah_SOCX0D   - 38111.77
+
+       #define C_Frey60Ah_SOCX2E    0
+       #define C_Frey60Ah_SOCX1E    1499.9998
+       #define C_Frey60Ah_SOCX0E    -4912.50
+     */
+
+
     // 60Ah
       P->AVGXF         =   P->CellAgvVoltageF;
-     // IS_IN_RANGE_EXCLUSIVE_INCLUSIVE(P->AVGXF , LFP_VOLT_A_BOT, LFP_VOLT_A_TOP)
-      //if((LFP_VOLT_A_BOT< P->AVGXF)&&(P->AVGXF<=LFP_VOLT_A_TOP))
-      if(IS_IN_RANGE_EXCLUSIVE_INCLUSIVE(P->AVGXF , LFP_VOLT_A_BOT, LFP_VOLT_A_TOP))
+         //IS_ABOVE_AND_UNDER(P->AVGXF, LFP_VOLT_A_BOT, LFP_VOLT_A_TOP)  ((A) >  (MIN) && (A) <= (MAX))  // 초과 ~ 이하
+      if(IS_ABOVE_AND_UNDER(P->AVGXF , LFP_VOLT_A_BOT, LFP_VOLT_A_TOP))
       {
-          //#define C_Frey60Ah_SOCX1A    62.112
-          //#define C_Frey60Ah_SOCX0A   -189.44
-          P->AZoreCalCout++;
+          if(P->AVGXF<=3.03)
+          {
+              P->SOCbufF =0.0;
+          }
+          if(IS_ABOVE_AND_UNDER(P->AVGXF ,3.03, 3.2))
+          {
+              P->SOCbufF =5.0;
+          }
+          if(IS_ABOVE_AND_UNDER(P->AVGXF ,3.2, 3.21))
+          {
+              P->SOCbufF =10.0;
+          }
+          if(IS_ABOVE_AND_UNDER(P->AVGXF ,3.21, 3.215))
+          {
+              P->SOCbufF =15.0;
+          }
+          //#define LFP_VOLT_A_BOT   3.030
+          //#define LFP_VOLT_A_TOP   3.215
+          //#define C_Frey60Ah_SOCX0A    3352.4701
+          //#define C_Frey60Ah_SOCX1A    -20858.4935
+          //#define C_Frey60Ah_SOCX2A    32422.54
+      /*    P->AZoreCalCout++;
           P->SOCX4InFAZore = 0;
           P->SOCX3InFAZore = 0;
-          P->SOCX2InFAZore = 0;
+          P->SOCX2InFAZore = P->AVGXF*P->AVGXF;
           P->SOCX1InFAZore = P->AVGXF;
 
           P->SOCX4OutFAZore = 0;
           P->SOCX3OutFAZore = 0;
-          P->SOCX2OutFAZore = 0;
-          P->SOCX1OutFAZore = C_Frey60Ah_SOCX1A*P->SOCX1InFAZore;
-          P->SOCbufF        = P->SOCX1OutFAZore + C_Frey60Ah_SOCX0A;
+          P->SOCX2OutFAZore = C_Frey60Ah_SOCX2A* P->SOCX2InFAZore;
+          P->SOCX1OutFAZore = C_Frey60Ah_SOCX1A* P->SOCX1InFAZore;
+          P->SOCbufF        = P->SOCX2OutFAZore+P->SOCX1OutFAZore+ C_Frey60Ah_SOCX0A;*/
           if(P->AZoreCalCout>3600)
           {
               P->AZoreCalCout=0;
           }
       }
-      if((LFP_VOLT_B_BOT<P->AVGXF)&&(P->AVGXF<=LFP_VOLT_B_TOP))
+     // IS_ABOVE_AND_UNDER(P->AVGXF, LFP_VOLT_B_BOT, LFP_VOLT_B_TOP)  ((A) >  (MIN) && (A) <= (MAX))  // 초과 ~ 이하
+      if(IS_ABOVE_AND_UNDER(P->AVGXF, LFP_VOLT_B_BOT, LFP_VOLT_B_TOP))
       {
           //#define C_Frey60Ah_SOCX2B    2566.7
           //#define C_Frey60Ah_SOCX1B    -16384
@@ -365,6 +440,7 @@ void CalFrey60AhSocInit(SocReg *P)
           P->BZoreCalCout++;
           P->SOCX4InFBZore = 0;
           P->SOCX3InFBZore = 0;
+
           P->SOCX2InFBZore = P->AVGXF*P->AVGXF;
           P->SOCX1InFBZore = P->AVGXF;
 
@@ -378,7 +454,8 @@ void CalFrey60AhSocInit(SocReg *P)
                P->BZoreCalCout=0;
            }
       }
-      if((LFP_VOLT_C_BOT<P->AVGXF)&&(P->AVGXF<=LFP_VOLT_C_TOP))
+
+      if(IS_ABOVE_AND_UNDER(P->AVGXF, LFP_VOLT_C_BOT, LFP_VOLT_C_TOP))
       {
 
           P->CZoreCalCout++;
@@ -386,33 +463,51 @@ void CalFrey60AhSocInit(SocReg *P)
           //#define C_Frey60Ah_SOCX0C   -4276.6
           P->SOCX4InFCZore = 0;
           P->SOCX3InFCZore = 0;
-          P->SOCX2InFCZore = 0;
+          P->SOCX2InFCZore = P->AVGXF*P->AVGXF;
           P->SOCX1InFCZore = P->AVGXF;
 
           P->SOCX4OutFCZore = 0;
           P->SOCX3OutFCZore = 0;
-          P->SOCX2OutFCZore = 0;
-          P->SOCX1OutFCZore = C_Frey60Ah_SOCX1C*P->SOCX1InFAZore;
-          P->SOCbufF        = P->SOCX1OutFCZore + C_Frey60Ah_SOCX0C;
+          P->SOCX2OutFCZore = C_Frey60Ah_SOCX2C*P->SOCX2InFCZore;
+          P->SOCX1OutFCZore = C_Frey60Ah_SOCX1C*P->SOCX1InFCZore;
+          P->SOCbufF        = P->SOCX2OutFCZore+P->SOCX1OutFCZore + C_Frey60Ah_SOCX0C;
 
           if(P->CZoreCalCout>3600)
            {
                P->CZoreCalCout=0;
            }
       }
-      if((LFP_VOLT_D_BOT<P->AVGXF)&&(P->AVGXF<=LFP_VOLT_D_TOP))
+      if(IS_ABOVE_AND_UNDER(P->AVGXF, LFP_VOLT_D_BOT, LFP_VOLT_D_TOP))
       {
           P->DZoreCalCout++;
           P->SOCX4InFDZore = 0;
           P->SOCX3InFDZore = 0;
-          P->SOCX2InFDZore = 0;
+          P->SOCX2InFDZore = P->AVGXF*P->AVGXF;
           P->SOCX1InFDZore = P->AVGXF;
 
           P->SOCX4OutFDZore = 0;
           P->SOCX3OutFDZore = 0;
-          P->SOCX2OutFDZore = 0;
-          P->SOCX1OutFDZore = C_Frey60Ah_SOCX1D*P->SOCX1InFAZore;
-          P->SOCbufF        = P->SOCX1OutFCZore + C_Frey60Ah_SOCX0D;
+          P->SOCX2OutFDZore = C_Frey60Ah_SOCX2D*P->SOCX2InFDZore;
+          P->SOCX1OutFDZore = C_Frey60Ah_SOCX1D*P->SOCX1InFDZore;
+          P->SOCbufF        = P->SOCX2OutFDZore+P->SOCX1OutFDZore + C_Frey60Ah_SOCX0D;
+          if(P->DZoreCalCout>3600)
+           {
+               P->DZoreCalCout=0;
+           }
+      }
+      if(IS_ABOVE_AND_UNDER(P->AVGXF, LFP_VOLT_E_BOT, LFP_VOLT_E_TOP))
+      {
+          P->EZoreCalCout++;
+          P->SOCX4InFEZore = 0;
+          P->SOCX3InFEZore = 0;
+          P->SOCX2InFEZore = 0;
+          P->SOCX1InFEZore = P->AVGXF;
+
+          P->SOCX4OutFEZore = 0;
+          P->SOCX3OutFEZore = 0;
+          P->SOCX2OutFEZore = 0;
+          P->SOCX1OutFEZore = C_Frey60Ah_SOCX1E*P->SOCX1InFEZore;
+          P->SOCbufF        = P->SOCX1OutFEZore + C_Frey60Ah_SOCX0E;
           if(P->DZoreCalCout>3600)
            {
                P->DZoreCalCout=0;
@@ -456,28 +551,49 @@ void CalFrey60AhSocHandle(SocReg *P)
                   if(P->SoCStateRegs.bit.CalMeth==0)
                   {
                       // 60Ah
-                       if((LFP_VOLT_A_BOT< P->AVGXF)&&(P->AVGXF<=LFP_VOLT_A_TOP))
+                      P->AVGXF         =   P->CellAgvVoltageF;
+                          //IS_ABOVE_AND_UNDER(P->AVGXF, LFP_VOLT_A_BOT, LFP_VOLT_A_TOP)  ((A) >  (MIN) && (A) <= (MAX))  // 초과 ~ 이하
+                       if(IS_ABOVE_AND_UNDER(P->AVGXF , LFP_VOLT_A_BOT, LFP_VOLT_A_TOP))
                        {
-                           //#define C_Frey60Ah_SOCX1A    62.112
-                           //#define C_Frey60Ah_SOCX0A   -189.44
-                           P->AZoreCalCout++;
+                           if(P->AVGXF<=3.03)
+                           {
+                               P->SOCbufF =0.0;
+                           }
+                           if(IS_ABOVE_AND_UNDER(P->AVGXF ,3.03, 3.2))
+                           {
+                               P->SOCbufF =5.0;
+                           }
+                           if(IS_ABOVE_AND_UNDER(P->AVGXF ,3.2, 3.21))
+                           {
+                               P->SOCbufF =10.0;
+                           }
+                           if(IS_ABOVE_AND_UNDER(P->AVGXF ,3.21, 3.215))
+                           {
+                               P->SOCbufF =15.0;
+                           }
+                           //#define LFP_VOLT_A_BOT   3.030
+                           //#define LFP_VOLT_A_TOP   3.215
+                           //#define C_Frey60Ah_SOCX0A    3352.4701
+                           //#define C_Frey60Ah_SOCX1A    -20858.4935
+                           //#define C_Frey60Ah_SOCX2A    32422.54
+                       /*    P->AZoreCalCout++;
                            P->SOCX4InFAZore = 0;
                            P->SOCX3InFAZore = 0;
-                           P->SOCX2InFAZore = 0;
+                           P->SOCX2InFAZore = P->AVGXF*P->AVGXF;
                            P->SOCX1InFAZore = P->AVGXF;
 
                            P->SOCX4OutFAZore = 0;
                            P->SOCX3OutFAZore = 0;
-                           P->SOCX2OutFAZore = 0;
-                           P->SOCX1OutFAZore = C_Frey60Ah_SOCX1A*P->SOCX1InFAZore;
-                           P->SOCbufF        = P->SOCX1OutFAZore + C_Frey60Ah_SOCX0A;
-                           P->SOCbufF = P->SOCbufF +3.0;
+                           P->SOCX2OutFAZore = C_Frey60Ah_SOCX2A* P->SOCX2InFAZore;
+                           P->SOCX1OutFAZore = C_Frey60Ah_SOCX1A* P->SOCX1InFAZore;
+                           P->SOCbufF        = P->SOCX2OutFAZore+P->SOCX1OutFAZore+ C_Frey60Ah_SOCX0A;*/
                            if(P->AZoreCalCout>3600)
                            {
                                P->AZoreCalCout=0;
                            }
                        }
-                       if((LFP_VOLT_B_BOT<P->AVGXF)&&(P->AVGXF<=LFP_VOLT_B_TOP))
+                      // IS_ABOVE_AND_UNDER(P->AVGXF, LFP_VOLT_B_BOT, LFP_VOLT_B_TOP)  ((A) >  (MIN) && (A) <= (MAX))  // 초과 ~ 이하
+                       if(IS_ABOVE_AND_UNDER(P->AVGXF, LFP_VOLT_B_BOT, LFP_VOLT_B_TOP))
                        {
                            //#define C_Frey60Ah_SOCX2B    2566.7
                            //#define C_Frey60Ah_SOCX1B    -16384
@@ -485,6 +601,7 @@ void CalFrey60AhSocHandle(SocReg *P)
                            P->BZoreCalCout++;
                            P->SOCX4InFBZore = 0;
                            P->SOCX3InFBZore = 0;
+
                            P->SOCX2InFBZore = P->AVGXF*P->AVGXF;
                            P->SOCX1InFBZore = P->AVGXF;
 
@@ -493,104 +610,72 @@ void CalFrey60AhSocHandle(SocReg *P)
                            P->SOCX2OutFBZore = C_Frey60Ah_SOCX2B*P->SOCX2InFBZore;
                            P->SOCX1OutFBZore = C_Frey60Ah_SOCX1B*P->SOCX1InFBZore;
                            P->SOCbufF        = P->SOCX2OutFBZore + P->SOCX1OutFBZore+C_Frey60Ah_SOCX0B;
-                           if(P->AVGXF>3.292)
-                           {
-                               P->SOCbufF =39.5;
-                           }
                            if(P->BZoreCalCout>3600)
                             {
                                 P->BZoreCalCout=0;
                             }
                        }
-                       if((LFP_VOLT_C_BOT<P->AVGXF)&&(P->AVGXF<=LFP_VOLT_C_TOP))
+
+                       if(IS_ABOVE_AND_UNDER(P->AVGXF, LFP_VOLT_C_BOT, LFP_VOLT_C_TOP))
                        {
 
-                          P->CZoreCalCout++;
-                         /*
+                           P->CZoreCalCout++;
                            //#define C_Frey60Ah_SOCX1C    1313.1
                            //#define C_Frey60Ah_SOCX0C   -4276.6
                            P->SOCX4InFCZore = 0;
                            P->SOCX3InFCZore = 0;
-                           P->SOCX2InFCZore = 0;
+                           P->SOCX2InFCZore = P->AVGXF*P->AVGXF;
                            P->SOCX1InFCZore = P->AVGXF;
 
                            P->SOCX4OutFCZore = 0;
                            P->SOCX3OutFCZore = 0;
-                           P->SOCX2OutFCZore = 0;
-                           P->SOCX1OutFCZore = C_Frey60Ah_SOCX1C*P->SOCX1InFAZore;
-                           P->SOCbufF        = P->SOCX1OutFCZore + C_Frey60Ah_SOCX0C;*/
+                           P->SOCX2OutFCZore = C_Frey60Ah_SOCX2C*P->SOCX2InFCZore;
+                           P->SOCX1OutFCZore = C_Frey60Ah_SOCX1C*P->SOCX1InFCZore;
+                           P->SOCbufF        = P->SOCX2OutFCZore+P->SOCX1OutFCZore + C_Frey60Ah_SOCX0C;
 
-                           if((3.294<=P->AVGXF)&&(P->AVGXF<3.295))
-                           {
-                               P->SOCbufF =55;
-                           }
-                           if((3.295<=P->AVGXF)&&(P->AVGXF<3.304))
-                           {
-                               P->SOCbufF =65;
-                           }
-                           if((3.304<=P->AVGXF)&&(P->AVGXF<3.312))
-                           {
-                               P->SOCbufF =70;
-                           }
-                           if((3.312<=P->AVGXF)&&(P->AVGXF<=3.317))
-                           {
-                               P->SOCbufF =75;
-                           }
                            if(P->CZoreCalCout>3600)
                             {
                                 P->CZoreCalCout=0;
                             }
                        }
-                       if((LFP_VOLT_D_BOT<P->AVGXF)&&(P->AVGXF<=LFP_VOLT_D_TOP))
+                       if(IS_ABOVE_AND_UNDER(P->AVGXF, LFP_VOLT_D_BOT, LFP_VOLT_D_TOP))
                        {
                            P->DZoreCalCout++;
-                         /*
                            P->SOCX4InFDZore = 0;
                            P->SOCX3InFDZore = 0;
-                           P->SOCX2InFDZore = 0;
+                           P->SOCX2InFDZore = P->AVGXF*P->AVGXF;
                            P->SOCX1InFDZore = P->AVGXF;
 
                            P->SOCX4OutFDZore = 0;
                            P->SOCX3OutFDZore = 0;
-                           P->SOCX2OutFDZore = 0;
-                           P->SOCX1OutFDZore = C_Frey60Ah_SOCX1D*P->SOCX1InFAZore;
-                           P->SOCbufF        = P->SOCX1OutFCZore + C_Frey60Ah_SOCX0D;
-                           P->SOCbufF        = P->SOCbufF+7;
-                           */
-                           if((3.317<=P->AVGXF)&&(P->AVGXF<3.334))
-                           {
-                               P->SOCbufF =75;
-                           }
-                           if((3.334<=P->AVGXF)&&(P->AVGXF<3.335))
-                           {
-                               P->SOCbufF =85;
-                           }
-                           if((3.335<=P->AVGXF)&&(P->AVGXF<3.336))
-                           {
-                               P->SOCbufF =95;
-                           }
-                           if((3.336<=P->AVGXF)&&(P->AVGXF<3.337))
-                           {
-                               P->SOCbufF =100;
-                           }
-                           if(P->CZoreCalCout>3600)
-                            {
-                                P->CZoreCalCout=0;
-                            }
+                           P->SOCX2OutFDZore = C_Frey60Ah_SOCX2D*P->SOCX2InFDZore;
+                           P->SOCX1OutFDZore = C_Frey60Ah_SOCX1D*P->SOCX1InFDZore;
+                           P->SOCbufF        = P->SOCX2OutFDZore+P->SOCX1OutFDZore + C_Frey60Ah_SOCX0D;
                            if(P->DZoreCalCout>3600)
                             {
                                 P->DZoreCalCout=0;
                             }
                        }
-                       if(P->SOCbufF <=0.0)
+                       if(IS_ABOVE_AND_UNDER(P->AVGXF, LFP_VOLT_E_BOT, LFP_VOLT_E_TOP))
                        {
-                           P->SOCbufF = 0.0;
-                       }
-                       else if(P->SOCbufF > 90.0)
-                       {
-                           P->SOCbufF = 100.0;
+                           P->EZoreCalCout++;
+                           P->SOCX4InFEZore = 0;
+                           P->SOCX3InFEZore = 0;
+                           P->SOCX2InFEZore = 0;
+                           P->SOCX1InFEZore = P->AVGXF;
+
+                           P->SOCX4OutFEZore = 0;
+                           P->SOCX3OutFEZore = 0;
+                           P->SOCX2OutFEZore = 0;
+                           P->SOCX1OutFEZore = C_Frey60Ah_SOCX1E*P->SOCX1InFEZore;
+                           P->SOCbufF        = P->SOCX1OutFEZore + C_Frey60Ah_SOCX0E;
+                           if(P->DZoreCalCout>3600)
+                            {
+                                P->DZoreCalCout=0;
+                            }
                        }
                        P->SysSocInitF = P->SOCbufF;
+                      // P->SysPackSOCF = P->SOCbufF;
                   }
                   if(P->SoCStateRegs.bit.CalMeth==1)
                   {
@@ -612,7 +697,7 @@ void CalFrey60AhSocHandle(SocReg *P)
                       /*
                       * SOC 변환
                       */
-                      P->SysPackSOCBufF1 = P->SysPackAhF *C_Frey60AhNorm;// 1/48(0.0208)
+                      P->SysPackSOCBufF1 = P->SysPackAhF *C_EVE380AhNorm;// 1/48(0.0208)
                       P->SysPackSOCBufF2 = P->SysPackSOCBufF1*100.0; //--> 단위 변환 %
                       P->SysPackSOCF     = P->SysSocInitF+P->SysPackSOCBufF2;
                   }

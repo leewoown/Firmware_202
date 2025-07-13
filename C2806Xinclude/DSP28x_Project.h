@@ -80,14 +80,11 @@ Next, definitions used in main file.
 #define         ToggleBit(val, bit)             (val ^= BIT_MASK(bit))
 #define         bit_is_set(val, bit)            (val & BIT_MASK(bit))
 #define         bit_is_clear(val, bit)          (~val & BIT_MASK(bit))
-// A가 min 초과이고 max 이하인지 검사
-#define         IS_IN_RANGE_EXCLUSIVE_INCLUSIVE(A, MIN, MAX)  ((A) > (MIN) && (A) <= (MAX))
-// A가 min 이상이고 max 미만인지 검사
-#define         IS_IN_RANGE_INCLUSIVE_EXCLUSIVE(A, MIN, MAX)  ((A) >= (MIN) && (A) < (MAX))
-// A가 min 이상이고 max 이하인지 검사
-#define         IS_IN_RANGE_INCLUSIVE_INCLUSIVE(A, MIN, MAX)  ((A) >= (MIN) && (A) <= (MAX))
-// A가 min 초과이고 max 미만인지 검사
-#define         IS_IN_RANGE_EXCLUSIVE_EXCLUSIVE(A, MIN, MAX)  ((A) > (MIN) && (A) < (MAX))
+
+#define IS_OVER_AND_UNDER(A, MIN, MAX)   ((A) >= (MIN) && (A) <= (MAX))  // 이상 ~ 이하
+#define IS_ABOVE_AND_UNDER(A, MIN, MAX)  ((A) >  (MIN) && (A) <= (MAX))  // 초과 ~ 이하
+#define IS_OVER_AND_BELOW(A, MIN, MAX)   ((A) >= (MIN) && (A) <  (MAX))  // 이상 ~ 미만
+#define IS_ABOVE_AND_BELOW(A, MIN, MAX)  ((A) >  (MIN) && (A) <  (MAX))  // 초과 ~ 미만
 
 struct Data_WORD
 {

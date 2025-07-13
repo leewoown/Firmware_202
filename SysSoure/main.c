@@ -130,9 +130,17 @@ CANAReg         CANARegs;
 //SocReg          Farasis52AhSocRegs;
 SocReg          Frey60AhSocRegs;
 float32         NCMsocTestVoltAGV =3.210;
+
 float32         NUMsocTestVCT =0.0;
 float32         LFPsocTestVoltAGV =3.050;
 float32         LFPsocTestVCT =0.0;
+
+float32         TesVoltAGV =3.050;
+float32         TescutCt =0.0;
+float32         TescutCtabs =0.0;
+
+
+
 unsigned int    ProtectRelayCyle=0;
 //extern unsigned int    CellVoltUnBalaneFaulCount=0;
 
@@ -204,7 +212,8 @@ void main(void)
     ERTM;   // Enable Global realtime interrupt DBGM
     SysRegs.SysMachine = System_STATE_INIT;
     PrtectRelayRegs.StateMachine= PrtctRly_INIT;
-
+    CANARegs.PMSCMDRegs.all=0;
+    CANARegs.HMICMDRegs.all=0;
     while(1)
     {
 
@@ -220,7 +229,6 @@ void main(void)
                  SysVarINIT(&SysRegs);
                  CANRegVarINIT(&CANARegs);
                  MDCalInit(&SysRegs);
-               //  CalFarasis52AhRegsInit(&Farasis52AhSocRegs);
                  CalFrey60AhRegsInit(&Frey60AhSocRegs);
                  Slave0Regs.ID=BMS_ID_0;
                  Slave0Regs.SlaveCh=C_Slave_ACh;
@@ -858,7 +866,7 @@ interrupt void cpu_timer0_isr(void)
 /*
  *
  */
-   if((CANARegs.HMICMDRegs.bit.HMI_MODE==1)&&(CANARegs.HMICMDRegs.bit.HMI_Reset==1))
+  /* if((CANARegs.HMICMDRegs.bit.HMI_MODE==1)&&(CANARegs.HMICMDRegs.bit.HMI_Reset==1))
    {
         CANARegs.HMICMDRegs.bit.HMI_Reset=0;
         CANARegs.PMSCMDRegs.bit.PrtctReset=0;
@@ -873,7 +881,7 @@ interrupt void cpu_timer0_isr(void)
            PrtectRelayRegs.StateMachine= PrtctRly_INIT;
            SysRegs.SysMachine=System_STATE_STANDBY;
          }
-   }
+   }*/
 
    /*
     * DigitalInput detection
@@ -887,25 +895,40 @@ interrupt void cpu_timer0_isr(void)
   */
     SysCalCurrentHandle(&SysRegs);
 
+
+   // Frey60AhSocRegs.CellAgvVoltageF=LFPsocTestVoltAGV;
+   // CalFrey60AhSocInit(&Frey60AhSocRegs);
+   // SysRegs.SysMachine=System_STATE_READY;
+   // Frey60AhSocRegs.state =SOC_STATE_RUNNING;
    /*
     *  Farasis52AhSocRegs.CellAgvVoltageF = NCMsocTestVoltAGV;
     *  Farasis52AhSocRegs.SysSoCCTF       = NUMsocTestVCT;
     *  Farasis52AhSocRegs.SysSoCCTAbsF    = NUMsocTestVCT;
     */
 
+   /*
+    * float32         TesVoltAGV =3.050;
+      float32         TescutCt =0.0;
+      float32         TescutCtabs =0.0;
+    */
+
+   // Frey60AhSocRegs.CellAgvVoltageF = TesVoltAGV;
+    // Frey60AhSocRegs.SysSoCCTF       = TescutCt;
+    // Frey60AhSocRegs.SysSoCCTAbsF    = TescutCtabs;
+
     Frey60AhSocRegs.CellAgvVoltageF = SysRegs.SysCellAgvVoltageF;
     Frey60AhSocRegs.SysSoCCTF       = SysRegs.SysPackCurrentF;
     Frey60AhSocRegs.SysSoCCTAbsF    = SysRegs.SysPackCurrentAsbF;
     Frey60AhSocRegs.state =SOC_STATE_RUNNING;
     CalFrey60AhSocHandle(&Frey60AhSocRegs);
-  /* if(Farasis52AhSocRegs.SoCStateRegs.bit.CalMeth==0)
+   if(Frey60AhSocRegs.SoCStateRegs.bit.CalMeth==0)
    {
-       SysRegs.SysSOCF=Farasis52AhSocRegs.SysSocInitF;
+       SysRegs.SysSOCF=Frey60AhSocRegs.SysSocInitF;
    }
-   if(Farasis52AhSocRegs.SoCStateRegs.bit.CalMeth==1)
+   if(Frey60AhSocRegs.SoCStateRegs.bit.CalMeth==1)
    {
-       SysRegs.SysSOCF=Farasis52AhSocRegs.SysPackSOCF;
-   }*/
+       SysRegs.SysSOCF=Frey60AhSocRegs.SysPackSOCF;
+   }
 
    /*
     * Frey60AhSocRegs.CellAgvVoltageF = LFPsocTestVoltAGV;
