@@ -1171,6 +1171,7 @@ interrupt void cpu_timer0_isr(void)
                CANATX(0x61B,8,CANARegs.MDVoltage[3],CANARegs.MDCellVoltAgv[3],CANARegs.MDCellTempsAgv[3],0x0000);
        break;
        case 50:
+
             //   CANARegs.MDVoltage[4]              = (Uint16)(SysRegs.MDVoltageF[4]*10);
             //   CANARegs.MDCellVoltAgv[4]          = (Uint16)(SysRegs.MDCellVoltAgvF[4]*1000);
             //   CANARegs.MDCellTempsAgv[4]         = (Uint16)(SysRegs.MDCellTempsAgvF[4]*10);
@@ -1181,6 +1182,14 @@ interrupt void cpu_timer0_isr(void)
             //   CANARegs.MDCellVoltAgv[5]          = (Uint16)(SysRegs.MDCellVoltAgvF[5]*1000);
             //   CANARegs.MDCellTempsAgv[5]         = (Uint16)(SysRegs.MDCellTempsAgvF[5]*10);
             //   CANATX(0x61D,8,CANARegs.MDVoltage[5],CANARegs.MDCellVoltAgv[5],CANARegs.MDCellTempsAgv[5],0x0000);
+
+          // Uint16 CharCONSTVolt;
+          // int16  CahrConstantCurrt;
+           CANARegs.CharCONSTVolt=547;
+           CANARegs.CahrConstantCurrt =300;
+           CANATX(0x61E,8,CANARegs.CharCONSTVolt,CANARegs.CahrConstantCurrt,CANARegs.SysPackPT,CANARegs.SysPackCT);
+
+
        break;
        case 60:
                if(CANARegs.HMICMDRegs.bit.HMI_MODE==1)
@@ -1216,6 +1225,12 @@ interrupt void cpu_timer0_isr(void)
 
                  CANATX(0x701,8,SysRegs.SysStateReg.Word.DataL,SysRegs.SysStateReg.Word.DataH,0X000,0x0000);
                }
+
+               CANARegs.ChargerStateRegs.all=0;
+               CANARegs.ChargerStateRegs.bit.BatNRly=1;
+               CANARegs.ChargerStateRegs.bit.BatPRly=1;
+               CANARegs.ChargerStateRegs.bit.BSACHAEnable=1;
+               CANATX(0x61f,8,CANARegs.CharCONSTVolt,CANARegs.CahrConstantCurrt,CANARegs.SysPackPT,CANARegs.SysPackCT);
        break;
        case 65:
                if((CANARegs.HMICMDRegs.bit.HMI_MODE==1)&&(CANARegs.HMICMDRegs.bit.HMI_CellVoltReq==1))
@@ -1225,11 +1240,11 @@ interrupt void cpu_timer0_isr(void)
                  {
                      CANARegs.HMICellVoltCout=0;
                  }
-                 CANARegs.HMICellVoltNum=CANARegs.HMICellVoltCout*3;
-                 CANATX(0x702,8,CANARegs.HMICellVoltNum,
-                                CANARegs.SysCellVoltage[CANARegs.HMICellVoltNum],
-                                CANARegs.SysCellVoltage[CANARegs.HMICellVoltNum+1],
-                                CANARegs.SysCellVoltage[CANARegs.HMICellVoltNum+2]);
+           //      CANARegs.HMICellVoltNum=CANARegs.HMICellVoltCout*3;
+           //      CANATX(0x702,8,CANARegs.HMICellVoltNum,
+           //                     CANARegs.SysCellVoltage[CANARegs.HMICellVoltNum],
+           //                     CANARegs.SysCellVoltage[CANARegs.HMICellVoltNum+1],
+           //                     CANARegs.SysCellVoltage[CANARegs.HMICellVoltNum+2]);
                }
        break;
        case 70:

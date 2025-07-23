@@ -666,7 +666,30 @@ union BATStatus_REG
    unsigned int     all;
    struct BATStatus_BIT bit;
 };
-
+struct ChargerState_BIT
+{       // bits   description
+    unsigned int     BatPTOC            :1; // 0
+    unsigned int     BatSOCOV           :1; // 1
+    unsigned int     BatSOCUn           :1; // 2
+    unsigned int     BatNRly            :1; // 3
+    unsigned int     BatPRly            :1; // 4
+    unsigned int     BatPreRly          :1; // 5
+    unsigned int     BatRlyErr          :1; // 6
+    unsigned int     BSACHAEnable       :1; // 7
+    unsigned int     NotUsed08          :1; // 8
+    unsigned int     NotUsed09          :1; // 9
+    unsigned int     NotUsed10          :1; // 10
+    unsigned int     NotUsed11          :1; // 11
+    unsigned int     NotUsed12          :1; // 12
+    unsigned int     NotUsed13          :1; // 13
+    unsigned int     NotUsed14          :1; // 14
+    unsigned int     NotUsed15          :1; // 15
+};
+union ChargerSate_REG
+{
+   unsigned int     all;
+   struct ChargerState_BIT bit;
+};
 typedef struct CANA_DATA
 {
 
@@ -688,6 +711,8 @@ typedef struct CANA_DATA
     Uint16 SysDISCHAPWRContinty;
     Uint16 SysCHARGPWRPeak;
     Uint16 SysDISCHAPWRPeak;
+    Uint16 CharCONSTVolt;
+    int16  CahrConstantCurrt;
     Uint16 MDVoltage[6];
     Uint16 MDCellVoltAgv[6];
     int16  MDCellTempsAgv[6];
@@ -718,6 +743,7 @@ typedef struct CANA_DATA
     union  DigitalOutPut_REG          DigitalOutPutReg;
     union  VCUCOMMAND_REG             PMSCMDRegs;
     union  HMICOMMAND_REG             HMICMDRegs;
+    union  ChargerSate_REG            ChargerStateRegs;
 }CANAReg;
 
 typedef enum

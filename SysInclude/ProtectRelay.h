@@ -94,6 +94,7 @@ union ProtectRelaySate_REG
    unsigned int     all;
    struct ProtectRelayState_BIT bit;
 };
+
 typedef struct PrtectRelay_Date
 {
     /*
