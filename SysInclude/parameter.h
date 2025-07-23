@@ -320,7 +320,7 @@ Parameter
 #define     C_SysModuleEa                 2 // Module 개수를  정의함
 #define     C_SlaveMEAEa                  7 // Slave BMS에서 측정하는 전압 및 온도 개수 정의함
 #define     C_ModuleMEAEa                 15 // Module에서 측정하는 셀 전압 및 온도 개수를 정의함
-#define     C_SlaveBMSEa                  4
+#define     C_SlaveBMSEa                  6
 
 #define     C_SysCellVoltEa               30//C_SysModuleEa*C_ModuleMEAEa // Battery Pack 내 Cell 전압 EA
 #define     C_SysCellTempEa               30//C_SysModuleEa*C_ModuleMEAEa // Battery Pack 내 Cell 온도 EA

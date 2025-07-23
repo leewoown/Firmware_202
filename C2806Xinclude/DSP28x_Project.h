@@ -207,31 +207,30 @@ typedef enum
 struct SystemState_BIT
 {       // bits   description
     unsigned int     SysStatus              :3; // 0,1,2
-    unsigned int     SysRlyStatus           :3; // 3,4,5
-    unsigned int     SysProtectStatus       :2; // 6,7
-    unsigned int     SysSOCStatus           :2; // 8,9
-    unsigned int     SysDisCharMode         :1; // 10
-    unsigned int     HMICOMEnable           :1; // 11
-    unsigned int     HMIBalanceMode         :1; // 12
-    unsigned int     NRlyDOStatus           :1; // 13
-    unsigned int     PRlyDOStatus           :1; // 14
-    unsigned int     PreRlyDOStatus         :1; // 15
-    unsigned int     ISOSPICOMERR           :1; // 16
-    unsigned int     INCANCOMERR            :1; // 17
-    unsigned int     TCPIPTOMERR            :1; // 18
-    unsigned int     RS485COMERR            :1; // 19
-    unsigned int     ISORegERR              :1; // 20
-    unsigned int     MSDERR                 :1; // 21
-    unsigned int     RlyERR                 :1; // 22
-    unsigned int     INITOK                 :1; // 23
-    unsigned int     SysBalanceMode         :1; // 24
-    unsigned int     SysBalanceEn           :1; // 25
-    unsigned int     SysAalarm              :1; // 26
-    unsigned int     SysFault               :1; // 27
-    unsigned int     SysProtect             :1; // 28
-    unsigned int     CellVoltOk             :1; // 29
-    unsigned int     CellTempsOk            :1; // 30
-    unsigned int     SW31                   :1; // 31
+    unsigned int     SysProtectStatus       :3; // 3,4,5
+    unsigned int     Systate                :3; // 6,7,8
+    unsigned int     SysRlyStatus           :3; // 9,10,11
+    unsigned int     SysSOCStatus           :3; // 12,13,14
+    unsigned int     INITOK                 :1; // 15
+    unsigned int     SysBalanceEn           :1; // 16
+    unsigned int     NRlyDOStatus           :1; // 17
+    unsigned int     PRlyDOStatus           :1; // 18
+    unsigned int     PreRlyDOStatus         :1; // 19
+    unsigned int     MSDERR                 :1; // 20
+    unsigned int     RlyERR                 :1; // 21
+    unsigned int     SysDisCharMode         :1; // 22
+    unsigned int     SysBalanceMode         :1; // 23
+    unsigned int     HMICOMEnable           :1; // 24
+    unsigned int     HMIBalanceMode         :1; // 25
+    unsigned int     ISOSPICOMERR           :1; // 26
+    unsigned int     INCANCOMERR            :1; // 27
+    unsigned int     SysAalarm              :1; // 28
+    unsigned int     SysProtect             :1; // 29
+    unsigned int     CellVoltOk             :1; // 30
+    unsigned int     CellTempsOk            :1; // 31
+//    unsigned int     ISORegERR              :1; // 27
+//    unsigned int     RlyERR                 :1; // 29
+
 };
 union SystemState_REG
 {

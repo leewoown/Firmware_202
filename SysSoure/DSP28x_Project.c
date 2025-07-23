@@ -242,7 +242,6 @@ void SysVarINIT(SystemReg *s)
     s->SlaveReadTempsEn.bit.SlaveBMS11=1;
 
 
-    s->SysStateReg.bit.SysDisCharMode =1;
     memset(&s->SlaveVoltErrCount[0],0,sizeof(Uint16)*32);
     memset(&s->SlaveTempsErrCount[0],0,sizeof(Uint16)*32);
     memset(&s->SlaveBalanErrCount[0],0,sizeof(Uint16)*32);
