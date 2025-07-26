@@ -120,7 +120,7 @@ void SysTimerINIT(SystemReg *s)
 }
 void SysVarINIT(SystemReg *s)
 {
-
+    s->CanComEable=0;
     s->PMSysCMDResg.all=0;
     s->SysStateReg.all=0;
     s->SysAlarmReg.all=0;
@@ -324,7 +324,12 @@ void CANRegVarINIT(CANAReg *P)
     memset(&P->SysCelltemperature[0],0.0,C_SysCellTempEa);
     P->PMSCMDRegs.all =0;
     P->HMICMDRegs.all =0;
-
+    P->ChargerStateRegs.all=0;
+    P->SysStatus.all=0;
+    P->DigitalOutPutReg.all=0;
+    P->VcuRxFlg=0;
+    P->CharRxFlg=0;
+    P->VcuCharRxCout=0;
 }
 void MDCalInit(SystemReg *P)
 {
@@ -577,7 +582,7 @@ void SysCalCurrentHandle(SystemReg *s)
     CurrentCT  =  CurrentCT - 0x80000000;
 
     Currentbuf        =  ((float)CurrentCT)/1000;          // (mA to A) CAB500 resolution 1mA
-    s->SysPackCurrentF  = C_CTDirection * Currentbuf;    // Decide Current sensor's direction
+    s->SysPackCurrentF  = -1.0 * Currentbuf;    // Decide Current sensor's direction
 
     if(s->SysPackCurrentF>=500.0)
     {
@@ -1201,9 +1206,11 @@ void SysDigitalOutput(SystemReg *sys)
     if(sys->SysDigitalOutPutReg.bit.PWRHOLD==1)
     {
         LatchResetRlyON;
+        LatchSetRlyON;
     }
     else
     {
+        LatchResetRlyOFF;
         LatchResetRlyOFF;
     }
 }

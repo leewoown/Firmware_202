@@ -488,6 +488,7 @@ typedef struct System_Date
     Uint16  Maincount;
     Uint16  MainIsr1;
     Uint16  CANRXCOUNT;
+    Uint16  CanComEable;
     Uint16  CANRXMailBox00Count;
     Uint16  CANRXMailBox01Count;
     Uint16  CANRXMailBox02Count;
@@ -739,6 +740,9 @@ typedef struct CANA_DATA
     Uint16 HMICellVoltNum;
     Uint16 HMICellTempsNum;
     Uint16 HMIISOSPIErrNum;
+    Uint16 VcuRxFlg;
+    Uint16 CharRxFlg;
+    Uint16 VcuCharRxCout;
     union  BATStatus_REG              SysStatus;
     union  DigitalOutPut_REG          DigitalOutPutReg;
     union  VCUCOMMAND_REG             PMSCMDRegs;

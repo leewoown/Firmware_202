@@ -686,13 +686,13 @@ void CalFrey60AhSocHandle(SocReg *P)
                       P->SysPackAhNewF = P->SysSoCCTF * P->SysSOCdtF;
                       P->SysPackAhF    = P->SysPackAhF + P->SysPackAhOldF;
                       P->SysPackAhOldF = P->SysPackAhF;
-                      if(P->SysPackAhF <= -52.0)
+                      if(P->SysPackAhF <= -380.0)
                       {
-                         P->SysPackAhF =-52.0;
+                         P->SysPackAhF =-380.0;
                       }
-                      if(P->SysPackAhF> 52.0)
+                      if(P->SysPackAhF> 380.0)
                       {
-                          P->SysPackAhF= 52.0;
+                          P->SysPackAhF= 380.0;
                       }
                       /*
                       * SOC º¯È¯

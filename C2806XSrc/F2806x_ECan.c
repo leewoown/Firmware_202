@@ -177,7 +177,7 @@ void InitECana(void)
            ECanaMboxes.MBOX0.MSGID.bit.STDMSGID  = 0x3C2;
            ECanaMboxes.MBOX1.MSGID.bit.STDMSGID  = 0x600;
            ECanaMboxes.MBOX2.MSGID.bit.STDMSGID  = 0x700;
-           ECanaMboxes.MBOX3.MSGID.bit.STDMSGID  = 0x400;
+           ECanaMboxes.MBOX3.MSGID.bit.STDMSGID  = 0x702;
            ECanaMboxes.MBOX4.MSGID.bit.STDMSGID  = 0x004;
            ECanaMboxes.MBOX5.MSGID.bit.STDMSGID  = 0x005;
            ECanaMboxes.MBOX6.MSGID.bit.STDMSGID  = 0x006;
@@ -314,10 +314,10 @@ void InitECana(void)
 
            ECanaShadow.CANMD.all = ECanaRegs.CANMD.all;                    // 해당 MailBox을 1:RX, 0:TX 선정함. 우선은 모두 RX 로 설정. 32개 메일박스 RX인터럽트 확인한다.
 
-           ECanaShadow.CANMD.bit.MD0=1;   //RX:80VBATCT
-           ECanaShadow.CANMD.bit.MD1=1;   //RX:12VBATCT
-           ECanaShadow.CANMD.bit.MD2=1;   //RX:VCU
-           ECanaShadow.CANMD.bit.MD3=1;   //RX:HMI
+           ECanaShadow.CANMD.bit.MD0=1;   //RX:CT
+           ECanaShadow.CANMD.bit.MD1=1;   //RX:VCU
+           ECanaShadow.CANMD.bit.MD2=1;   //RX:HMI
+           ECanaShadow.CANMD.bit.MD3=1;   //RX:CHA
            ECanaShadow.CANMD.bit.MD4=0;
            ECanaShadow.CANMD.bit.MD5=0;
            ECanaShadow.CANMD.bit.MD6=0;
