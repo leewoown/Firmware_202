@@ -206,26 +206,29 @@ typedef enum
 } SysState;
 struct SystemState_BIT
 {       // bits   description
-    unsigned int     SysStatus              :3; // 0,1,2
-    unsigned int     SysProtectStatus       :3; // 3,4,5
-    unsigned int     Systate                :3; // 6,7,8
-    unsigned int     SysRlyStatus           :3; // 9,10,11
-    unsigned int     SysSOCStatus           :3; // 12,13,14
-    unsigned int     INITOK                 :1; // 15
-    unsigned int     SysBalanceEn           :1; // 16
-    unsigned int     NRlyDOStatus           :1; // 17
-    unsigned int     PRlyDOStatus           :1; // 18
-    unsigned int     PreRlyDOStatus         :1; // 19
-    unsigned int     MSDERR                 :1; // 20
-    unsigned int     RlyERR                 :1; // 21
-    unsigned int     SysDisCharMode         :1; // 22
-    unsigned int     SysBalanceMode         :1; // 23
-    unsigned int     HMICOMEnable           :1; // 24
-    unsigned int     HMIBalanceMode         :1; // 25
-    unsigned int     ISOSPICOMERR           :1; // 26
-    unsigned int     INCANCOMERR            :1; // 27
-    unsigned int     SysAalarm              :1; // 28
-    unsigned int     SysProtect             :1; // 29
+    unsigned int     SysStatus              :2; // 0,1
+    unsigned int     SysProtectStatus       :2; // 2,3
+    unsigned int     Systate                :3; // 4,5,6
+    unsigned int     SysRlyStatus           :3; // 7,8,9
+    unsigned int     SysSOCStatus           :2; // 10,11
+    unsigned int     SysSocMode             :1; // 12
+    unsigned int     INITOK                 :1; // 13
+    unsigned int     SysBalanceEn           :1; // 14
+    unsigned int     SysBalanceMode         :1; // 15
+    unsigned int     SysDisCharMode         :1; // 16
+    unsigned int     SysChargerEn           :1; // 17
+    unsigned int     SysAalarm              :1; // 18
+    unsigned int     SysProtect             :1; // 19
+    unsigned int     NRlyDOStatus           :1; // 20
+    unsigned int     PRlyDOStatus           :1; // 21
+    unsigned int     PreRlyDOStatus         :1; // 22
+    unsigned int     PwrHoldRlyDOStatus     :1; // 23
+    unsigned int     MSDERR                 :1; // 24
+    unsigned int     RlyERR                 :1; // 25
+    unsigned int     HMICOMEnable           :1; // 26
+    unsigned int     HMIBalanceMode         :1; // 27
+    unsigned int     CANCOMERR              :1; // 28
+    unsigned int     ISOSPICOMERR           :1; // 29
     unsigned int     CellVoltOk             :1; // 30
     unsigned int     CellTempsOk            :1; // 31
 //    unsigned int     ISORegERR              :1; // 27
@@ -705,21 +708,30 @@ typedef struct CANA_DATA
     int16  SysPackCT;
     int16  SysPackSOC;
     Uint16 SysPackSOH;
-    int16  SysPackAh;
+
     Uint16 SysState;
     Uint16 SysPackVotageBuf;
     Uint16 SysCHARGPWRContinty;
     Uint16 SysDISCHAPWRContinty;
     Uint16 SysCHARGPWRPeak;
     Uint16 SysDISCHAPWRPeak;
+    int16  SysPackAh;
+    Uint16 SysPackIsoRegs;
+    Uint16 SysCellInRegsMax;
+    Uint16 SysSoHCapacity;
+
     Uint16 CharCONSTVolt;
     int16  CahrConstantCurrt;
+    Uint16 MDNumber;
     Uint16 MDVoltage[6];
     Uint16 MDCellVoltAgv[6];
     int16  MDCellTempsAgv[6];
-    Uint16 MDNumber;
+
+    Uint16 CellNumCount;
     Uint16 SysCellVoltage[C_SysCellVoltEa];
     int16  SysCelltemperature[C_SysCellTempEa];
+    Uint16 SysCellInRegs[C_SysCellVoltEa];
+
     Uint16 CellVoltageMax;
     Uint16 CellVoltageMin;
     Uint16 CellVoltageAgv;
@@ -740,6 +752,14 @@ typedef struct CANA_DATA
     Uint16 HMICellVoltNum;
     Uint16 HMICellTempsNum;
     Uint16 HMIISOSPIErrNum;
+    Uint16 CANCom_0x61DDate0;
+    Uint16 CANCom_0x61DDate1;
+    Uint16 CANCom_0x61DDate2;
+    Uint16 CANCom_0x61DDate3;
+    Uint16 SlaveBMSNumCout;
+
+    Uint16 SlaveBMSErrCout[4];
+    //Uint16
     Uint16 VcuRxFlg;
     Uint16 CharRxFlg;
     Uint16 VcuCharRxCout;

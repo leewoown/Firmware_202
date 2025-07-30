@@ -684,7 +684,7 @@ void CalFrey60AhSocHandle(SocReg *P)
                        */
                       P->SysSOCdtF = C_CTSampleTime*C_SocCumulativeTime; // CumulativeTime(1/3600) -> 누적시간
                       P->SysPackAhNewF = P->SysSoCCTF * P->SysSOCdtF;
-                      P->SysPackAhF    = P->SysPackAhF + P->SysPackAhOldF;
+                      P->SysPackAhF    = P->SysPackAhNewF + P->SysPackAhOldF;
                       P->SysPackAhOldF = P->SysPackAhF;
                       if(P->SysPackAhF <= -380.0)
                       {

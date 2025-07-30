@@ -330,6 +330,12 @@ void CANRegVarINIT(CANAReg *P)
     P->VcuRxFlg=0;
     P->CharRxFlg=0;
     P->VcuCharRxCout=0;
+    P->CANCom_0x61DDate0=0;
+    P->CANCom_0x61DDate1=0;
+    P->CANCom_0x61DDate2=0;
+    P->CANCom_0x61DDate3=0;
+    P->SlaveBMSNumCout=0;
+    P->CellNumCount=0;
 }
 void MDCalInit(SystemReg *P)
 {
