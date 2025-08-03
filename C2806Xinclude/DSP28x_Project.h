@@ -752,10 +752,7 @@ typedef struct CANA_DATA
     Uint16 HMICellVoltNum;
     Uint16 HMICellTempsNum;
     Uint16 HMIISOSPIErrNum;
-    Uint16 CANCom_0x61DDate0;
-    Uint16 CANCom_0x61DDate1;
-    Uint16 CANCom_0x61DDate2;
-    Uint16 CANCom_0x61DDate3;
+
     Uint16 SlaveBMSNumCout;
 
     Uint16 SlaveBMSErrCout[4];
