@@ -1304,7 +1304,7 @@ interrupt void cpu_timer0_isr(void)
                CANARegs.ChargerStateRegs.all=0;
                CANARegs.ChargerStateRegs.bit.BatNRly=1;
                CANARegs.ChargerStateRegs.bit.BatPRly=1;
-
+               CANARegs.ChargerStateRegs.bit.BSACHAEnable=1;
                if(SysRegs.SysStateReg.bit.SysDisCharMode==1)
                {
                    CANARegs.ChargerStateRegs.bit.BSACHAEnable=1;
