@@ -674,6 +674,33 @@ void CalFrey60AhSocHandle(SocReg *P)
                                 P->DZoreCalCout=0;
                             }
                        }
+                       if(IS_ABOVE_AND_UNDER(P->AVGXF, LFP_VOLT_F_BOT, LFP_VOLT_F_TOP))
+                       {
+                           P->FZoreCalCout++;
+                           P->SOCbufF        = 92.0;
+                           if(P->FZoreCalCout>3600)
+                            {
+                                P->FZoreCalCout=0;
+                            }
+                       }
+                       if(IS_ABOVE_AND_UNDER(P->AVGXF, LFP_VOLT_G_BOT, LFP_VOLT_G_TOP))
+                       {
+                           P->GZoreCalCout++;
+                           P->SOCbufF        = 95.0;
+                           if(P->GZoreCalCout>3600)
+                            {
+                                P->GZoreCalCout=0;
+                            }
+                       }
+                       if(IS_ABOVE_AND_UNDER(P->AVGXF, LFP_VOLT_H_BOT, LFP_VOLT_H_TOP))
+                       {
+                           P->HZoreCalCout++;
+                           P->SOCbufF        = 98.0;
+                           if(P->HZoreCalCout>3600)
+                            {
+                                P->HZoreCalCout=0;
+                            }
+                       }
                        P->SysSocInitF = P->SOCbufF;
                       // P->SysPackSOCF = P->SOCbufF;
                   }

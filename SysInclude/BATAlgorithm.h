@@ -43,15 +43,27 @@ Note: In this software, the default inverter is supposed to be DMC1500 board.
  */
 #define LFP_VOLT_A_BOT   3.030
 #define LFP_VOLT_A_TOP   3.215
+
 #define LFP_VOLT_B_BOT   3.215
 #define LFP_VOLT_B_TOP   3.285
+
 #define LFP_VOLT_C_BOT   3.285
 #define LFP_VOLT_C_TOP   3.287
+
 #define LFP_VOLT_D_BOT   3.287
 #define LFP_VOLT_D_TOP   3.310
+
 #define LFP_VOLT_E_BOT   3.310
 #define LFP_VOLT_E_TOP   3.340
 
+#define LFP_VOLT_F_BOT   3.340
+#define LFP_VOLT_F_TOP   3.345
+
+#define LFP_VOLT_G_BOT   3.345
+#define LFP_VOLT_G_TOP   3.350
+
+#define LFP_VOLT_H_BOT   3.350
+#define LFP_VOLT_H_TOP   3.400
 
 typedef enum
 {
@@ -161,6 +173,11 @@ typedef struct
   float32  SOCX2OutFDZore;
   float32  SOCX1OutFDZore;
   Uint16   DZoreCalCout;
+  Uint16   EZoreCalCout;
+  Uint16   FZoreCalCout;
+  Uint16   GZoreCalCout;
+  Uint16   HZoreCalCout;
+
 
   float32  SOCX4InFEZore;
   float32  SOCX3InFEZore;
@@ -170,7 +187,7 @@ typedef struct
   float32  SOCX3OutFEZore;
   float32  SOCX2OutFEZore;
   float32  SOCX1OutFEZore;
-  Uint16   EZoreCalCout;
+
 
 
   float32  SOCbufF;
