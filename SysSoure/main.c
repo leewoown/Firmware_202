@@ -61,9 +61,12 @@ void MDCalVoltandTemsHandle(SystemReg *P);
 //void CalFarasis52AhSocInit(SocReg *P);
 //void CalFarasis52AhSocHandle(SocReg *P);
 
-extern void CalFrey60AhRegsInit(SocReg *P);
-extern void CalFrey60AhSocInit(SocReg *P);
-extern void CalFrey60AhSocHandle(SocReg *P);
+//extern void CalFrey60AhRegsInit(SocReg *P);
+//extern void CalFrey60AhSocInit(SocReg *P);
+//extern void CalFrey60AhSocHandle(SocReg *P);
+void CalEVE240AhRegsInit(SocReg *P);
+void CalEVE240AhSocInit(SocReg *P);
+void CalEVE240AhSocHandle(SocReg *P);
 
 void SysFaultCheck(SystemReg *s);
 void SysAlarmtCheck(SystemReg *s);
@@ -128,7 +131,8 @@ SlaveReg        Slave3Regs;
 
 CANAReg         CANARegs;
 //SocReg          Farasis52AhSocRegs;
-SocReg          Frey60AhSocRegs;
+//SocReg          Frey60AhSocRegs;
+SocReg          EV240AhSocRegs;
 float32         NCMsocTestVoltAGV =3.210;
 
 float32         NUMsocTestVCT =0.0;
@@ -226,11 +230,14 @@ void main(void)
                  SysRegs.SysDigitalOutPutReg.bit.LEDFaultOUT=0;
                  SysRegs.SysDigitalOutPutReg.bit.LEDProtectOUT=0;
                  SysRegs.SysStateReg.bit.SysBalanceMode=0;
+                 SysRegs.SysStateReg.bit.INITOK=0;
+                 SysRegs.SysStateReg.all=0;
                  SysTimerINIT(&SysRegs);
                  SysVarINIT(&SysRegs);
                  CANRegVarINIT(&CANARegs);
                  MDCalInit(&SysRegs);
-                 CalFrey60AhRegsInit(&Frey60AhSocRegs);
+                 CalEVE240AhRegsInit(&EV240AhSocRegs);
+                 //CalFrey60AhRegsInit(&Frey60AhSocRegs);
                  Slave0Regs.ID=BMS_ID_0;
                  Slave0Regs.SlaveCh=C_Slave_ACh;
                  SlaveBMSIint(&Slave0Regs);
@@ -252,18 +259,70 @@ void main(void)
                  PrtectRelayRegs.StateMachine=PrtctRly_STANDBY;
             break;
             case System_STATE_STANDBY:// INIT
-                    SysRegs.SysStateReg.bit.SysStatus =1;
-          //       SysRegs.SysStateReg.bit.INITOK=1;
-          //       PrtectRelayRegs.State.bit.WakeUpEN=1;
+                  SysRegs.SysStateReg.bit.SysStatus =1;
+                  //SysRegs.SysStateReg.bit.INITOK=1;
+                  //PrtectRelayRegs.State.bit.WakeUpEN=1;
+                 if(SysRegs.SysStateReg.bit.INITOK==0)
+                 {
+                     SysRegs.SysStateReg.bit.CellVoltOk=1;
+                     Slave0Regs.ID=BMS_ID_0;
+                     Slave0Regs.SlaveCh=C_Slave_ACh;
+                     Slave0Regs.Balance.all = 0x0000;
+                     SlaveBmsBalance(&Slave0Regs);
+                     Slave0Regs.StateMachine = STATE_BATREAD;
+                     Slave0Regs.ID=BMS_ID_0;
+                     Slave0Regs.SlaveCh=C_Slave_ACh;
+                     SlaveVoltagHandler(&Slave0Regs);
+
+                     Slave1Regs.ID=BMS_ID_1;
+                     Slave1Regs.SlaveCh=C_Slave_ACh;
+                     Slave1Regs.Balance.all = 0x0000;
+                     SlaveBmsBalance(&Slave1Regs);
+                     Slave1Regs.StateMachine = STATE_BATREAD;
+                     Slave1Regs.ID=BMS_ID_1;
+                     Slave1Regs.SlaveCh=C_Slave_ACh;
+                     SlaveVoltagHandler(&Slave1Regs);
+
+
+                     Slave2Regs.ID=BMS_ID_2;
+                     Slave2Regs.SlaveCh=C_Slave_ACh;
+                     Slave2Regs.Balance.all = 0x0000;
+                     SlaveBmsBalance(&Slave2Regs);
+                     Slave2Regs.StateMachine = STATE_BATREAD;
+                     Slave2Regs.ID=BMS_ID_2;
+                     Slave2Regs.SlaveCh=C_Slave_ACh;
+                     SlaveVoltagHandler(&Slave2Regs);
+
+
+                     Slave3Regs.ID=BMS_ID_3;
+                     Slave3Regs.SlaveCh=C_Slave_ACh;
+                     Slave3Regs.Balance.all = 0x0000;
+                     SlaveBmsBalance(&Slave3Regs);
+                     Slave3Regs.StateMachine = STATE_BATREAD;
+                     Slave3Regs.ID=BMS_ID_3;
+                     Slave3Regs.SlaveCh=C_Slave_ACh;
+                     SlaveVoltagHandler(&Slave3Regs);
+                     EV240AhSocRegs.CellAgvVoltageF=SysRegs.SysCellAgvVoltageF;
+
+                     CalEVE240AhSocInit(&EV240AhSocRegs);
+                     delay_ms(300);
+                     SysRegs.SysStateReg.bit.INITOK=1;
+                     SysRegs.SysMachine=System_STATE_READY;
+                     EV240AhSocRegs.state =SOC_STATE_RUNNING;
+                 }
                  if(SysRegs.SysStateReg.bit.INITOK==1)
                  {
-                     Frey60AhSocRegs.CellAgvVoltageF=SysRegs.SysCellAgvVoltageF;
-                     CalFrey60AhSocInit(&Frey60AhSocRegs);
-                     SysRegs.SysMachine=System_STATE_READY;
-                     Frey60AhSocRegs.state =SOC_STATE_RUNNING;
+                   //  Frey60AhSocRegs.CellAgvVoltageF=SysRegs.SysCellAgvVoltageF;
+                   //  EV240AhSocRegs.CellAgvVoltageF=SysRegs.SysCellAgvVoltageF;
+                   //  CalEVE240AhSocInit(&EV240AhSocRegs);
+
                  }
             break;
             case System_STATE_READY:
+                  SysRegs.SysStateReg.bit.INITOK=1;
+                  SysRegs.SysStateReg.bit.CANCOMEnable=1;
+                  PrtectRelayRegs.State.bit.WakeUpEN=1;
+                  EV240AhSocRegs.state =SOC_STATE_RUNNING;
                   if(SysRegs.SysStateReg.bit.SysDisCharMode ==1)
                   {
                       SysRegs.SysStateReg.bit.SysStatus =3;
@@ -272,7 +331,6 @@ void main(void)
                   {
                        SysRegs.SysStateReg.bit.SysStatus =2;
                   }
-              //   SysRegs.SysStateReg.bit.INITOK=1;
                  if(SysRegs.SysStateReg.bit.HMICOMEnable==0)
                  {
                      CANARegs.HMICMDRegs.all=0;
@@ -293,26 +351,23 @@ void main(void)
                          }
                      }
                  }
-                 PrtectRelayRegs.State.bit.WakeUpEN=1;
-                 Frey60AhSocRegs.state =SOC_STATE_RUNNING;
-                 if(SysRegs.SysStateReg.bit.HMICOMEnable==1)
+                 else if(SysRegs.SysStateReg.bit.HMICOMEnable==1)
                  {
                      CANARegs.PMSCMDRegs.bit.PrtctReset=0;
                      if(SysRegs.SysStateReg.bit.SysProtect==0)
                      {
                          if(CANARegs.HMICMDRegs.bit.HMI_Reset==0)
                          {
-//                             PrtectRelayRegs.State.bit.WakeUpEN = CANARegs.HMICMDRegs.bit.HMI_RlyEN;
+//                           PrtectRelayRegs.State.bit.WakeUpEN = CANARegs.HMICMDRegs.bit.HMI_RlyEN;
                          }
                          if(CANARegs.HMICMDRegs.bit.HMI_Reset==1)
                          {
                              CANARegs.HMICMDRegs.bit.HMI_RlyEN =0;
-//                             PrtectRelayRegs.State.bit.WakeUpEN=0;
+//                           PrtectRelayRegs.State.bit.WakeUpEN=0;
                              SysRegs.SysAlarmReg.all=0;
                              SysRegs.SysFaultReg.all=0;
                              SysRegs.SysProtectReg.all=0;
                              SysRegs.SysStateReg.all=0;
- //                            SysRegs.SysStateReg.bit.SysFault=0;
                              PrtectRelayRegs.StateMachine= PrtctRly_INIT;
                              SysRegs.SysMachine=System_STATE_INIT;
                          }
@@ -584,6 +639,7 @@ void main(void)
 
                         Slave0Regs.StateMachine = STATE_BATREAD;
                         SlaveVoltagHandler(&Slave0Regs);
+
                         SysRegs.SlaveVoltErrCount[0]=Slave0Regs.ErrorCount;
                         if(SysRegs.SlaveVoltErrCount[0]>C_ISOSPIPrtectCont)
                         {
@@ -674,6 +730,8 @@ void main(void)
                         {
                             SysRegs.SlaveISOSPIErrReg.bit.SlaveBMS03 =0;
                         }
+
+
 
                         Slave3Regs.StateMachine = STATE_BATREAD;
                         Slave3Regs.ID=BMS_ID_3;
@@ -833,7 +891,7 @@ void main(void)
            if(SysRegs.VoltTempsReadCount>=10)
            {
               SysRegs.VoltTempsReadCount=100;
-              SysRegs.SysStateReg.bit.INITOK=1;
+           //   SysRegs.SysStateReg.bit.INITOK=1;
            }
        }
        if(Slave0Regs.ErrorCount>200) {SysRegs.SlaveISOSPIErrReg.bit.SlaveBMS00=1;}
@@ -897,7 +955,7 @@ interrupt void cpu_timer0_isr(void)
         //SysRegs.SysProtectReg.all=0;
         //SysRegs.SysStateReg.all=0;
         //SysRegs.SysStateReg.bit.SysFault=0;
-        delay_ms(200);
+      //  delay_ms(200);
         if(SysRegs.SysStateReg.bit.SysProtect==0)
         {
            PrtectRelayRegs.StateMachine= PrtctRly_INIT;
@@ -918,47 +976,23 @@ interrupt void cpu_timer0_isr(void)
     SysCalCurrentHandle(&SysRegs);
 
 
-   // Frey60AhSocRegs.CellAgvVoltageF=LFPsocTestVoltAGV;
-   // CalFrey60AhSocInit(&Frey60AhSocRegs);
-   // SysRegs.SysMachine=System_STATE_READY;
-   // Frey60AhSocRegs.state =SOC_STATE_RUNNING;
-   /*
-    *  Farasis52AhSocRegs.CellAgvVoltageF = NCMsocTestVoltAGV;
-    *  Farasis52AhSocRegs.SysSoCCTF       = NUMsocTestVCT;
-    *  Farasis52AhSocRegs.SysSoCCTAbsF    = NUMsocTestVCT;
-    */
+    if(SysRegs.SysStateReg.bit.INITOK==1)
+    {
+        EV240AhSocRegs.CellAgvVoltageF = SysRegs.SysCellAgvVoltageF;
+        EV240AhSocRegs.SysSoCCTF       = SysRegs.SysPackCurrentF;
+        EV240AhSocRegs.SysSoCCTAbsF    = SysRegs.SysPackCurrentAsbF;
+        EV240AhSocRegs.state =SOC_STATE_RUNNING;
+        CalEVE240AhSocHandle(&EV240AhSocRegs);
+        if(EV240AhSocRegs.SoCStateRegs.bit.CalMeth==0)
+        {
+            SysRegs.SysSOCF=EV240AhSocRegs.SysSocInitF;
+        }
+        if(EV240AhSocRegs.SoCStateRegs.bit.CalMeth==1)
+        {
+            SysRegs.SysSOCF=EV240AhSocRegs.SysPackSOCF;
+        }
+    }
 
-   /*
-    * float32         TesVoltAGV =3.050;
-      float32         TescutCt =0.0;
-      float32         TescutCtabs =0.0;
-    */
-
-   // Frey60AhSocRegs.CellAgvVoltageF = TesVoltAGV;
-    // Frey60AhSocRegs.SysSoCCTF       = TescutCt;
-    // Frey60AhSocRegs.SysSoCCTAbsF    = TescutCtabs;
-
-
-    //Frey60AhSocRegs.SysPackAhF
-    Frey60AhSocRegs.CellAgvVoltageF = SysRegs.SysCellAgvVoltageF;
-    Frey60AhSocRegs.SysSoCCTF       = SysRegs.SysPackCurrentF;
-    Frey60AhSocRegs.SysSoCCTAbsF    = SysRegs.SysPackCurrentAsbF;
-    Frey60AhSocRegs.state =SOC_STATE_RUNNING;
-    CalFrey60AhSocHandle(&Frey60AhSocRegs);
-   if(Frey60AhSocRegs.SoCStateRegs.bit.CalMeth==0)
-   {
-       SysRegs.SysSOCF=Frey60AhSocRegs.SysSocInitF;
-   }
-   if(Frey60AhSocRegs.SoCStateRegs.bit.CalMeth==1)
-   {
-       SysRegs.SysSOCF=Frey60AhSocRegs.SysPackSOCF;
-   }
-
-   /*
-    * Frey60AhSocRegs.CellAgvVoltageF = LFPsocTestVoltAGV;
-    * Frey60AhSocRegs.SysSoCCTF       = LFPsocTestVCT;
-    * Frey60AhSocRegs.SysSoCCTAbsF    = LFPsocTestVCT;
-    */
 
    /*
     * Battery Alarm & Fault & Protect Check
@@ -977,7 +1011,7 @@ interrupt void cpu_timer0_isr(void)
    if((SysRegs.SysFaultReg.all != 0)&&(SysRegs.SysStateReg.bit.INITOK==1))
    {
 
- //      SysRegs.SysStateReg.bit.SysFault=1;
+ //   SysRegs.SysStateReg.bit.SysFault=1;
        SysRegs.SysStateReg.bit.SysProtectStatus=1;
    }
    else
@@ -1013,29 +1047,27 @@ interrupt void cpu_timer0_isr(void)
    switch(SysRegs.SysRegTimer10msecCount)
    {
        case 1:
-               if(SysRegs.SysStateReg.bit.CellVoltOk==1)
-               {
+              // if(SysRegs.SysStateReg.bit.CellVoltOk==1)
+              // {
                    memcpy(&SysRegs.SysCellVoltageF[0],        &Slave0Regs.CellVoltageF[0],sizeof(float32)*7);
                    memcpy(&SysRegs.SysCellVoltageF[7],        &Slave1Regs.CellVoltageF[0],sizeof(float32)*8);
                    memcpy(&SysRegs.SysCellVoltageF[15],       &Slave2Regs.CellVoltageF[0],sizeof(float32)*7);
                    memcpy(&SysRegs.SysCellVoltageF[22],       &Slave3Regs.CellVoltageF[0],sizeof(float32)*8);
-
                    SysCalVoltageHandle(&SysRegs);
                    SysRegs.SysStateReg.bit.CellVoltOk=0;
-               }
+              // }
        break;
        case 2:
-               if(SysRegs.SysStateReg.bit.CellTempsOk==1)
-               {
+              // if(SysRegs.SysStateReg.bit.CellTempsOk==1)
+              // {
                    memcpy(&SysRegs.SysCelltemperatureF[0],     &Slave0Regs.CellTemperatureF[0],sizeof(float32)*7);
                    memcpy(&SysRegs.SysCelltemperatureF[7],     &Slave1Regs.CellTemperatureF[0],sizeof(float32)*8);
                    memcpy(&SysRegs.SysCelltemperatureF[15],    &Slave2Regs.CellTemperatureF[0],sizeof(float32)*7);
                    memcpy(&SysRegs.SysCelltemperatureF[22],    &Slave3Regs.CellTemperatureF[0],sizeof(float32)*8);
 
-
                    SysCalTemperatureHandle(&SysRegs);
                    SysRegs.SysStateReg.bit.CellTempsOk=0;
-               }
+              // }
        break;
        case 3:
 
@@ -1050,14 +1082,57 @@ interrupt void cpu_timer0_isr(void)
        break;
        case 5:
 
-
+               CANARegs.CharCONSTVolt=51;
+               CANARegs.CahrConstantCurrt =300;
+               CANARegs.SysPackPT  = (unsigned int)(SysRegs.SysPackParallelVoltageF*10);
+               CANARegs.SysPackCT  = (unsigned int)(SysRegs.SysPackCurrentAsbF*10);
+               if(SysRegs.CanComEable==1)
+               {
+                   CANATX(0x61E,8,CANARegs.CharCONSTVolt,CANARegs.CahrConstantCurrt,CANARegs.SysPackPT,CANARegs.SysPackCT);
+               }
        break;
        case 6:
 
        break;
        case 7:
-
-
+              // CANARegs.ChargerStateRegs.all=0;
+               CANARegs.ChargerStateRegs.bit.BatNRly=1;
+               CANARegs.ChargerStateRegs.bit.BatPRly=1;
+               if(SysRegs.SysStateReg.bit.SysDisCharMode==1)
+               {
+                  // CANARegs.ChargerStateRegs.bit.BSACHAEnable=1;
+               }
+               else
+               {
+                  // CANARegs.ChargerStateRegs.bit.BSACHAEnable=0;
+               }
+               if(CANARegs.SysPackPT>=CANARegs.CharCONSTVolt)
+               {
+                   if(CANARegs.SysPackCT<=20)
+                   {
+                       //CANARegs.ChargerStateRegs.bit.BSACHAEnable=0;
+                   }
+               }
+               CANARegs.VcuCharRxCout++;
+               if(CANARegs.CharRxFlg==1)
+               {
+                   //SysRegs.SysStateReg.bit.SysDisCharMode=0;
+               }
+               else
+               {
+                  // SysRegs.SysStateReg.bit.SysDisCharMode=1;
+               }
+               if(CANARegs.VcuCharRxCout>=20)
+               {
+                 //  CANARegs.VcuRxFlg=0;
+                   //CANARegs.VcuCharRxCout=0;
+                  // CANARegs.CharRxFlg=0;
+               }
+               CANARegs.ChargerStateRegs.bit.BSACHAEnable=1;
+               if(SysRegs.CanComEable==1)
+               {
+                   CANATX(0x61f,8,CANARegs.ChargerStateRegs.all,0x0000,0x0000,0x0000);
+               }
        break;
        default :
        break;
@@ -1131,7 +1206,7 @@ interrupt void cpu_timer0_isr(void)
 
                 SysRegs.SysStateReg.bit.Systate=SysRegs.SysMachine;
                 SysRegs.SysStateReg.bit.SysRlyStatus=PrtectRelayRegs.StateMachine;
-                SysRegs.SysStateReg.bit.SysSOCStatus=Frey60AhSocRegs.state;
+                SysRegs.SysStateReg.bit.SysSOCStatus=EV240AhSocRegs.state;
 
          //      CANARegs.SysPackAh                 =(int)(SysRegs.SysAhF*10);
                 if(SysRegs.CanComEable==1)
@@ -1171,9 +1246,9 @@ interrupt void cpu_timer0_isr(void)
                }
        break;
        case 23:
-               CANARegs.CellTemperaturelMAX    = (Uint16)(SysRegs.SysCellMaxTemperatureF*10);
-               CANARegs.CellTemperaturelMIN    = (Uint16)(SysRegs.SysCellMinTemperatureF*10);
-               CANARegs.CellTemperatureAVG     = (Uint16)(SysRegs.SysCellAgvTemperatureF*10);
+               CANARegs.CellTemperaturelMAX    = (int16)(SysRegs.SysCellMaxTemperatureF*10);
+               CANARegs.CellTemperaturelMIN    = (int16)(SysRegs.SysCellMinTemperatureF*10);
+               CANARegs.CellTemperatureAVG     = (int16)(SysRegs.SysCellAgvTemperatureF*10);
                CANARegs.CellTemperatureDiv     = (Uint16)(SysRegs.SysCellDivTemperatureF*10);
                if(SysRegs.CanComEable==1)
                {
@@ -1191,7 +1266,7 @@ interrupt void cpu_timer0_isr(void)
                }
        break;
        case 30:
-                CANARegs.SysPackAh =(int)(Frey60AhSocRegs.SysPackAhF*10.0);
+                CANARegs.SysPackAh =(int)(EV240AhSocRegs.SysPackAhF*10.0);
                 CANARegs.SysPackIsoRegs   = 3000;
                 CANARegs.SysCellInRegsMax = 100;
                 CANARegs.SysSoHCapacity   = 3600;
@@ -1201,11 +1276,6 @@ interrupt void cpu_timer0_isr(void)
                 }
        break;
        case 35:
-               CANARegs.MDNumber++;
-               if(CANARegs.MDNumber>C_SysModuleEa)
-               {
-                   CANARegs.MDNumber=0;
-               }
                CANARegs.MDVoltage[CANARegs.MDNumber]              = (Uint16)(SysRegs.MDVoltageF[CANARegs.MDNumber]*10);
                CANARegs.MDCellVoltAgv[CANARegs.MDNumber]          = (Uint16)(SysRegs.MDCellVoltAgvF[CANARegs.MDNumber]*1000);
                CANARegs.MDCellTempsAgv[CANARegs.MDNumber]         = (Uint16)(SysRegs.MDCellTempsAgvF[CANARegs.MDNumber]*10);
@@ -1214,18 +1284,22 @@ interrupt void cpu_timer0_isr(void)
                    CANATX(0x619,8,CANARegs.MDNumber,
                                   CANARegs.MDVoltage[CANARegs.MDNumber],CANARegs.MDCellVoltAgv[CANARegs.MDNumber],CANARegs.MDCellTempsAgv[CANARegs.MDNumber]);
                }
+               CANARegs.MDNumber++;
+               if(CANARegs.MDNumber>1)
+               {
+                   CANARegs.MDNumber=0;
+               }
        break;
        case 40:
-
-               CANARegs.CellNumCount++;
-               if(CANARegs.CellNumCount>C_CellNum)
-               {
-                   CANARegs.CellNumCount=0;
-               }
                if(SysRegs.CanComEable==1)
                {
                    CANATX(0x61A,8,CANARegs.CellNumCount,
                                   CANARegs.SysCellVoltage[CANARegs.CellNumCount],CANARegs.SysCelltemperature[CANARegs.CellNumCount],CANARegs.SysCellInRegs[CANARegs.CellNumCount]);
+               }
+               CANARegs.CellNumCount++;
+               if(CANARegs.CellNumCount>29) // C_CellNum=30;
+               {
+                   CANARegs.CellNumCount=0;
                }
        break;
        case 45:
@@ -1239,32 +1313,25 @@ interrupt void cpu_timer0_isr(void)
             //   CANATX(0x61C,8,CANARegs.MDVoltage[4],CANARegs.MDCellVoltAgv[4],CANARegs.MDCellTempsAgv[4],0x0000);
        break;
        case 55:
-               CANARegs.SlaveBMSNumCout++;
+
                CANARegs.SlaveBMSErrCout[0]=Slave0Regs.ErrorCount;
                CANARegs.SlaveBMSErrCout[1]=Slave1Regs.ErrorCount;
                CANARegs.SlaveBMSErrCout[2]=Slave2Regs.ErrorCount;
                CANARegs.SlaveBMSErrCout[3]=Slave3Regs.ErrorCount;
 
-               if(CANARegs.SlaveBMSNumCout>C_SlaveBMSEa)
-               {
-                   CANARegs.SlaveBMSNumCout=0;
-               }
                CANARegs.CANCom_0x61DDate0 = ComBine(CANARegs.SlaveBMSErrCout[CANARegs.SlaveBMSNumCout], CANARegs.SlaveBMSNumCout);
                CANARegs.CANCom_0x61DDate1 = ComBine(CANARegs.MailBox1RxCount, CANARegs.MailBox0RxCount);
                CANARegs.CANCom_0x61DDate2 = ComBine(CANARegs.MailBox3RxCount, CANARegs.MailBox2RxCount);
                CANARegs.CANCom_0x61DDate3 = 0x0000;
                CANATX(0x61B,8,CANARegs.CANCom_0x61DDate0,CANARegs.CANCom_0x61DDate1,CANARegs.CANCom_0x61DDate2,CANARegs.CANCom_0x61DDate3);
-
+               CANARegs.SlaveBMSNumCout++;
+               if(CANARegs.SlaveBMSNumCout>3)
+               {
+                   CANARegs.SlaveBMSNumCout=0;
+               }
           // Uint16 CharCONSTVolt;
           // int16  CahrConstantCurrt;
-               CANARegs.CharCONSTVolt=542;
-               CANARegs.CahrConstantCurrt =300;
-               CANARegs.SysPackPT  = (unsigned int)(SysRegs.SysPackParallelVoltageF*10);
-               CANARegs.SysPackCT  = (unsigned int)(SysRegs.SysPackCurrentAsbF*10);
-               if(SysRegs.CanComEable==1)
-               {
-                   CANATX(0x61E,8,CANARegs.CharCONSTVolt,CANARegs.CahrConstantCurrt,CANARegs.SysPackPT,CANARegs.SysPackCT);
-               }
+
        break;
        case 60:
                if(CANARegs.HMICMDRegs.bit.HMI_MODE==1)
@@ -1301,44 +1368,8 @@ interrupt void cpu_timer0_isr(void)
                 // CANATX(0x701,8,SysRegs.SysStateReg.Word.DataL,SysRegs.SysStateReg.Word.DataH,0X000,0x0000);
                }
 
-               CANARegs.ChargerStateRegs.all=0;
-               CANARegs.ChargerStateRegs.bit.BatNRly=1;
-               CANARegs.ChargerStateRegs.bit.BatPRly=1;
 
-               if(SysRegs.SysStateReg.bit.SysDisCharMode==1)
-               {
-                   CANARegs.ChargerStateRegs.bit.BSACHAEnable=1;
-               }
-               else
-               {
-                   CANARegs.ChargerStateRegs.bit.BSACHAEnable=0;
-               }
-               if(CANARegs.SysPackPT>=CANARegs.CharCONSTVolt)
-               {
-                   if(CANARegs.SysPackCT<=20)
-                   {
-                       CANARegs.ChargerStateRegs.bit.BSACHAEnable=0;
-                   }
-               }
-               CANARegs.VcuCharRxCout++;
-               if(CANARegs.CharRxFlg==1)
-               {
-                   SysRegs.SysStateReg.bit.SysDisCharMode=0;
-               }
-               else
-               {
-                   SysRegs.SysStateReg.bit.SysDisCharMode=1;
-               }
-               if(CANARegs.VcuCharRxCout>=20)
-               {
-                 //  CANARegs.VcuRxFlg=0;
-                   CANARegs.VcuCharRxCout=0;
-                   CANARegs.CharRxFlg=0;
-               }
-               if(SysRegs.CanComEable==1)
-               {
-                   CANATX(0x61f,8,CANARegs.ChargerStateRegs.all,0x0000,0x0000,0x0000);
-               }
+
        break;
        case 65:
                if((CANARegs.HMICMDRegs.bit.HMI_MODE==1)&&(CANARegs.HMICMDRegs.bit.HMI_CellVoltReq==1))
@@ -1442,7 +1473,7 @@ interrupt void cpu_timer0_isr(void)
 
 
    SysRegs.SysStateReg.bit.SysRlyStatus = PrtectRelayRegs.StateMachine;
-   SysRegs.SysStateReg.bit.SysSOCStatus = Frey60AhSocRegs.state;
+   SysRegs.SysStateReg.bit.SysSOCStatus = EV240AhSocRegs.state;
 
    PrtectRelayRegs.State.bit.NRlyDI=SysRegs.SysDigitalOutPutReg.bit.NRlyOUT;
    PrtectRelayRegs.State.bit.PRlyDI=SysRegs.SysDigitalOutPutReg.bit.PRlyOUT;

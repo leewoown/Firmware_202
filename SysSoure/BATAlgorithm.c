@@ -11,8 +11,9 @@ extern void CalFarasis52AhSocHandle(SocReg *P);
 #define C_Farasis52Ah_SOCX2     -138.71
 #define C_Farasis52Ah_SOCX1     1195.70
 #define C_Farasis52Ah_SOCX0    -2472.30
-#define C_FarasisP52AhNorm     0.004//  0.0238//1/42Ah
+#define C_FarasisP52AhNorm      0.004//  0.0238//1/42Ah
 #endif
+
 #if Frey60Ah
 extern void CalFrey60AhRegsInit(SocReg *P);
 extern void CalFrey60AhSocInit(SocReg *P);
@@ -41,8 +42,8 @@ extern void CalFrey60AhSocHandle(SocReg *P);
 #define C_Frey60Ah_SOCX0E    -4912.50
 
 
-//#define C_Frey60AhNorm       0.002631//1/380Ah;(0.0208//1/48Ah)
-#define C_EVE380AhNorm       0.002631//1/380Ah;(0.0208//1/48Ah)
+#define C_Frey60AhNorm       0.002631//1/60Ah;
+
 
 #endif
 
@@ -674,6 +675,33 @@ void CalFrey60AhSocHandle(SocReg *P)
                                 P->DZoreCalCout=0;
                             }
                        }
+                       if(IS_ABOVE_AND_UNDER(P->AVGXF, LFP_VOLT_F_BOT, LFP_VOLT_F_TOP))
+                       {
+                           P->FZoreCalCout++;
+                           P->SOCbufF        = 92.0;
+                           if(P->FZoreCalCout>3600)
+                            {
+                                P->FZoreCalCout=0;
+                            }
+                       }
+                       if(IS_ABOVE_AND_UNDER(P->AVGXF, LFP_VOLT_G_BOT, LFP_VOLT_G_TOP))
+                       {
+                           P->GZoreCalCout++;
+                           P->SOCbufF        = 95.0;
+                           if(P->GZoreCalCout>3600)
+                            {
+                                P->GZoreCalCout=0;
+                            }
+                       }
+                       if(IS_ABOVE_AND_UNDER(P->AVGXF, LFP_VOLT_H_BOT, LFP_VOLT_H_TOP))
+                       {
+                           P->HZoreCalCout++;
+                           P->SOCbufF        = 98.0;
+                           if(P->HZoreCalCout>3600)
+                            {
+                                P->HZoreCalCout=0;
+                            }
+                       }
                        P->SysSocInitF = P->SOCbufF;
                       // P->SysPackSOCF = P->SOCbufF;
                   }
@@ -697,6 +725,231 @@ void CalFrey60AhSocHandle(SocReg *P)
                       /*
                       * SOC 변환
                       */
+                      P->SysPackSOCBufF1 = P->SysPackAhF *C_EVE380AhNorm;// 1/48(0.0208)
+                      P->SysPackSOCBufF2 = P->SysPackSOCBufF1*100.0; //--> 단위 변환 %
+                      P->SysPackSOCF     = P->SysSocInitF+P->SysPackSOCBufF2;
+                  }
+                  P->state = SOC_STATE_Save;
+
+             break;
+             case SOC_STATE_Save:
+
+                 P->state = SOC_STATE_RUNNING;
+
+             break;
+             case SOC_STATE_CLEAR:
+
+             break;
+         }
+         P->SysTime=0;
+     }
+}
+
+#endif
+#define C_EVE380AhNorm        0.002631//1/380Ah;
+extern void CalEVE240AhRegsInit(SocReg *P);
+extern void CalEVE240AhSocInit(SocReg *P);
+extern void CalEVE240AhSocHandle(SocReg *P);
+//void hermite_soc_40_60(SocReg *P);
+#if EVE24060Ah
+void CalEVE240AhRegsInit(SocReg *P)
+{
+    P->SysSOCdtF=0.0;
+    P->SysSoCCTF=0.0;
+    P->SysPackAhNewF=0.0;
+    P->SysPackAhOldF=0.0;
+    P->SysPackAhF=0.0;
+    P->SysPackSOCBufF1=0.0;
+    P->SysPackSOCBufF2=0.0;
+    P->SysPackSOCF=5.0;
+    P->AVGXF=0.0;
+
+    P->SOCX2InF=0.0;
+    P->SOCX1InF=0.0;
+    P->SOCX3InF=0.0;
+    P->SOCX4InF=0.0;
+
+    P->SOCX2OutF=0.0;
+    P->SOCX1OutF=0.0;
+    P->SOCX3OutF=0.0;
+    P->SOCX4OutF=0.0;
+
+    P->SOCX4InFAZore=0.0;
+    P->SOCX3InFAZore=0.0;
+    P->SOCX2InFAZore=0.0;
+    P->SOCX1InFAZore=0.0;
+    P->SOCX4OutFAZore=0.0;
+    P->SOCX3OutFAZore=0.0;
+    P->SOCX2OutFAZore=0.0;
+    P->SOCX1OutFAZore=0.0;
+    P->AZoreCalCout=0;
+
+
+
+    P->SOCX4InFBZore=0.0;
+    P->SOCX3InFBZore=0.0;
+    P->SOCX2InFBZore=0.0;
+    P->SOCX1InFBZore=0.0;
+    P->SOCX4OutFBZore=0.0;
+    P->SOCX3OutFBZore=0.0;
+    P->SOCX2OutFBZore=0.0;
+    P->SOCX1OutFBZore=0.0;
+    P->BZoreCalCout=0.0;
+
+
+    P->SOCX4InFCZore=0.0;
+    P->SOCX3InFCZore=0.0;
+    P->SOCX2InFCZore=0.0;
+    P->SOCX1InFCZore=0.0;
+    P->SOCX4OutFCZore=0.0;
+    P->SOCX3OutFCZore=0.0;
+    P->SOCX2OutFCZore=0.0;
+    P->SOCX1OutFCZore=0.0;
+    P->CZoreCalCout=0;
+
+    P->SOCX4InFDZore=0.0;
+    P->SOCX3InFDZore=0.0;
+    P->SOCX2InFDZore=0.0;
+    P->SOCX1InFDZore=0.0;
+    P->SOCX4OutFDZore=0.0;
+    P->SOCX3OutFDZore=0.0;
+    P->SOCX2OutFDZore=0.0;
+    P->SOCX1OutFDZore=0.0;
+    P->DZoreCalCout=0;
+
+
+    P->SOCX4InFEZore=0.0;
+    P->SOCX3InFEZore=0.0;
+    P->SOCX2InFEZore=0.0;
+    P->SOCX1InFEZore=0.0;
+    P->SOCX4OutFEZore=0.0;
+    P->SOCX3OutFEZore=0.0;
+    P->SOCX2OutFEZore=0.0;
+    P->SOCX1OutFEZore=0.0;
+    P->EZoreCalCout=0;
+
+    P->SOCbufF=0.0;
+    P->SysSocInitF=0.0;
+    P->CellAgvVoltageF=0.0;
+    P->SoCStateRegs.all=0;
+    P->CTCount=0;
+    P->SysTime=0;
+    P->SysSoCCTAbsF=0;
+    P->state=SOC_STATE_IDLE;
+
+}
+void hermite_soc_40_60(SocReg *P)
+{
+    // Hermite basis with position & slope matching at both ends
+    const float32 x0 = H_V0;
+    const float32 x1 = H_V1;
+    const float32 y0 = H_S0;
+    const float32 y1 = H_S1;
+    const float32 m0 = H_M0;
+    const float32 m1 = H_M1;
+
+    // 전압을 구간으로 클램프
+    P->AVGXF = CLAMP(P->CellAgvVoltageF , x0, x1);
+
+    const float32 dx = x1 - x0;             // ~0.0099 V
+    const float32 t  = (P->AVGXF  - x0)/ dx; // 0..1
+    const float32 t2= t*t; //bufB = bufA  * bufA ;
+    const float32 t3= t2*t;//bufC = bufB  * bufA ;
+
+
+    const float32 h00 = 2.f*t3 - 3.f*t2 + 1.f;    // 2t^3 - 3t^2 + 1
+    const float32 h10 =  t3 - 2.f*t2 + t;         // t^3 - 2t^2 + t
+    const float32 h01 = -2.f*t3 + 3.f*t2;         // -2t^3 + 3t^2
+    const float32 h11 = t3 -     t2;              // t^3 - t^2
+
+    P->SOCX1OutFCZore = h00*y0 + h10*dx*m0 + h01*y1 + h11*dx*m1;
+}
+void CalEVE240AhSocInit(SocReg *P)
+{
+    P->AVGXF= CLAMP(P->CellAgvVoltageF, V_MIN, V_MAX);
+    if (P->AVGXF < V_Soc00)
+    {
+        P->AVGXF  =V_Soc00;
+    }
+    if (P->AVGXF > V_Soc100)
+    {
+        P->AVGXF  =V_Soc100;
+    }
+
+    if (P->AVGXF < V_Soc20)  // [2.9000, 3.2790]
+    {
+        P->SOCX1OutFAZore = A1 * P->AVGXF + B1;
+        P->SysSocInitF= P->SOCX1OutFAZore;
+    }
+    else if (P->AVGXF < V_Soc40)   // [3.2790, 3.3040]
+    {
+        P->SOCX1OutFBZore = A2 * P->AVGXF + B2;
+        P->SysSocInitF= P->SOCX1OutFBZore;
+    }
+    else if (P->AVGXF <= V_Soc60) // [3.3040, 3.3200]  <-- Hermite 3차
+    {
+        hermite_soc_40_60(P);
+        P->SysSocInitF= P->SOCX1OutFCZore;
+    }
+    else if (P->AVGXF < V_Soc80) // [3.3200, 3.3410)
+    {
+        P->SOCX1OutFDZore= A4 * P->AVGXF + B4;
+        P->SysSocInitF= P->SOCX1OutFDZore;
+    }
+    else  // [3.3410, 3.4510]
+    {
+        P->SOCX1OutFEZore= A5 * P->AVGXF + B5;
+        P->SysSocInitF= P->SOCX1OutFEZore;
+    }
+}
+
+void CalEVE240AhSocHandle(SocReg *P)
+{
+    P->SysTime++;
+    P->AVGXF         =   P->CellAgvVoltageF;
+    if(P->SysTime>=C_SocSamPleCount)
+     {
+         if(P->SysSoCCTAbsF>=C_SocInitCTVaule)
+         {
+             P->SoCStateRegs.bit.CalMeth=1;
+             P->CTCount=0;
+         }
+         else
+         {
+             P->CTCount++;
+             if(P->CTCount>6000)
+             {
+                 P->CTCount=6001;
+                 P->SoCStateRegs.bit.CalMeth=0;
+             }
+         }
+         switch (P->state)
+         {
+
+             case SOC_STATE_RUNNING:
+                  if(P->SoCStateRegs.bit.CalMeth==0)
+                  {
+                      // 60Ah
+                       P->AVGXF         =   P->CellAgvVoltageF;
+                       P->SysSocInitF = P->SOCbufF;
+                       CalEVE240AhSocInit(P);
+                      // P->SysPackSOCF = P->SOCbufF;
+                  }
+                  if(P->SoCStateRegs.bit.CalMeth==1)
+                  {
+
+                      P->SysSOCdtF = C_CTSampleTime*C_SocCumulativeTime; // CumulativeTime(1/3600) -> 누적시간
+                      P->SysPackAhNewF = P->SysSoCCTF * P->SysSOCdtF;
+                      P->SysPackAhF    = P->SysPackAhNewF + P->SysPackAhOldF;
+                      P->SysPackAhOldF = P->SysPackAhF;
+                      if(P->SysPackAhF <= -380.0)
+                      {
+                         P->SysPackAhF =-380.0;
+                      }
+                      if(P->SysPackAhF> 380.0)
+                      {
+                          P->SysPackAhF= 380.0;
+                      }
                       P->SysPackSOCBufF1 = P->SysPackAhF *C_EVE380AhNorm;// 1/48(0.0208)
                       P->SysPackSOCBufF2 = P->SysPackSOCBufF1*100.0; //--> 단위 변환 %
                       P->SysPackSOCF     = P->SysSocInitF+P->SysPackSOCBufF2;

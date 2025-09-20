@@ -231,7 +231,7 @@ struct SystemState_BIT
     unsigned int     ISOSPICOMERR           :1; // 29
     unsigned int     CellVoltOk             :1; // 30
     unsigned int     CellTempsOk            :1; // 31
-//    unsigned int     ISORegERR              :1; // 27
+    unsigned int     CANCOMEnable            :1; // 27
 //    unsigned int     RlyERR                 :1; // 29
 
 };

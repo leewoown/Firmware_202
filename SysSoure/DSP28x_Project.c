@@ -516,10 +516,12 @@ void SysCalVoltageHandle(SystemReg *s)
              s->SysVoltageMinNum=CellCount;
          }
     }
-    for(CellCount=0;CellCount<CellSize;CellCount++)
+  //  for(CellCount=0;CellCount<CellSize;CellCount++)
     s->SysCellMaxVoltageF    = SysCellMaxVoltageF;
     s->SysCellMinVoltageF    = SysCellMinVoltageF;
     s->SysCellDivVoltageF    = s->SysCellMaxVoltageF-s->SysCellMinVoltageF;
+
+
     CellSize = C_SysCellVoltEa;
     for(CellCount=0;CellCount<CellSize;CellCount++)
     {
@@ -549,30 +551,30 @@ void SysCalTemperatureHandle(SystemReg *s)
 {
 
     Uint16  CellCount=0;
-    Uint16  CellSize=0;
-    float32 SysCellMaxTemperatureF=0;
-    float32 SysCellMinTemperatureF=0;
+    Uint16  CellSize=30;
+    float32 tmax, tmin;
     float32 SysTemperatureBufF=0;
-    SysCellMaxTemperatureF =s->SysCelltemperatureF[0];
-    SysCellMinTemperatureF =s->SysCelltemperatureF[0];
-    CellSize = C_SysCellVoltEa;
-    for(CellCount=0;CellCount<CellSize;CellCount++)
+    tmax = tmin =s->SysCelltemperatureF[0];
+
+    for(CellCount=1;CellCount<CellSize;CellCount++)
     {
-         if (SysCellMaxTemperatureF <= s->SysCelltemperatureF[CellCount])
+         float32 t = s->SysCelltemperatureF[CellCount];
+         if (t >tmax)
          {
-             SysCellMaxTemperatureF    =  s->SysCelltemperatureF[CellCount];
+             tmax    = t;
              s->SysTemperatureMaxNum=CellCount;
          }
-         if (SysCellMinTemperatureF >= s->SysCelltemperatureF[CellCount])
+         if (t < tmin)
          {
-             SysCellMinTemperatureF    =  s->SysCelltemperatureF[CellCount];
+             tmin    = t;
              s->SysTemperatureMinNum=CellCount;
          }
     }
-    s->SysCellMaxTemperatureF    = SysCellMaxTemperatureF;
-    s->SysCellMinTemperatureF    = SysCellMinTemperatureF;
-    s->SysCellDivTemperatureF    = s->SysCellMaxTemperatureF-s->SysCellMinTemperatureF;
-    CellSize = C_SysCellVoltEa;
+
+    s->SysCellMaxTemperatureF    = tmax;
+    s->SysCellMinTemperatureF    = tmin;
+    s->SysCellDivTemperatureF    = tmax-tmin;
+
     for(CellCount=0;CellCount<CellSize;CellCount++)
     {
         SysTemperatureBufF = SysTemperatureBufF+ s->SysCelltemperatureF[CellCount];
