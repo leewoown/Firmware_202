@@ -64,11 +64,11 @@
 /*-------------------------------------------------------------------------------
 Next, definitions used in main file.
 -------------------------------------------------------------------------------*/
-#define TRUE    1
-#define FALSE   0
-#define TRUE    1
-#define ON      1
-#define OFF     0
+#define         TRUE    1
+#define         FALSE   0
+#define         TRUE    1
+#define         ON      1
+#define         OFF     0
 #define         Shift_RIGHT(val, bit)           ((val) >> (al))
 #define         Shift_LEFT(val,  bit)           ((val) << (val))
 #define         ComBine(Val_H, Val_L)           (((Val_H) << 8) | (Val_L))
@@ -80,11 +80,12 @@ Next, definitions used in main file.
 #define         ToggleBit(val, bit)             (val ^= BIT_MASK(bit))
 #define         bit_is_set(val, bit)            (val & BIT_MASK(bit))
 #define         bit_is_clear(val, bit)          (~val & BIT_MASK(bit))
-
-#define IS_OVER_AND_UNDER(A, MIN, MAX)   ((A) >= (MIN) && (A) <= (MAX))  // 이상 ~ 이하
-#define IS_ABOVE_AND_UNDER(A, MIN, MAX)  ((A) >  (MIN) && (A) <= (MAX))  // 초과 ~ 이하
-#define IS_OVER_AND_BELOW(A, MIN, MAX)   ((A) >= (MIN) && (A) <  (MAX))  // 이상 ~ 미만
-#define IS_ABOVE_AND_BELOW(A, MIN, MAX)  ((A) >  (MIN) && (A) <  (MAX))  // 초과 ~ 미만
+#define         Hyst_On(Value, SetValue)   ((Value) > (SetValue))   // 켜짐 조건
+#define         Hyst_Off(Value, RstValue)  ((Value) < (RstValue))   // 꺼짐 조건
+#define         IS_OVER_AND_UNDER(A, MIN, MAX)   ((A) >= (MIN) && (A) <= (MAX))  // 이상 ~ 이하
+#define         IS_ABOVE_AND_UNDER(A, MIN, MAX)  ((A) >  (MIN) && (A) <= (MAX))  // 초과 ~ 이하
+#define         IS_OVER_AND_BELOW(A, MIN, MAX)   ((A) >= (MIN) && (A) <  (MAX))  // 이상 ~ 미만
+#define         IS_ABOVE_AND_BELOW(A, MIN, MAX)  ((A) >  (MIN) && (A) <  (MAX))  // 초과 ~ 미만
 
 struct Data_WORD
 {
@@ -194,45 +195,45 @@ union DigitalOutPut_REG
 };
 typedef enum
 {
-   System_STATE_INIT,
-   System_STATE_STANDBY,
-   System_STATE_READY,
-   System_STATE_RUNING,
-   System_STATE_PROTECTER,
-   System_STATE_DATALOG,
-   System_STATE_ProtectHistory,
-   System_STATE_MANUALMode,
-   System_STATE_CLEAR
+   INIT,
+   STANDBY,
+   READY,
+   RUNING,
+   PROTECTER,
+   ChargerStop,
+   DATALOG,
+   ProtectHistory,
+   MANUALMode
+
 } SysState;
 struct SystemState_BIT
 {       // bits   description
-    unsigned int     SysStatus              :2; // 0,1
-    unsigned int     SysProtectStatus       :2; // 2,3
-    unsigned int     Systate                :3; // 4,5,6
-    unsigned int     SysRlyStatus           :3; // 7,8,9
-    unsigned int     SysSOCStatus           :2; // 10,11
+    unsigned int     SysSeqState            :3; // 0,1,2
+    unsigned int     RlySeqState            :3; // 3,4,5
+    unsigned int     SocSeqState            :2; // 6,7
+    unsigned int     PrtectStatus           :2; // 8,9
+    unsigned int     INITOK                 :1; // 10
+    unsigned int     CellInforRead          :1; // 11
     unsigned int     SysSocMode             :1; // 12
-    unsigned int     INITOK                 :1; // 13
+    unsigned int     SysBalaMode            :1; // 13
     unsigned int     SysBalanceEn           :1; // 14
-    unsigned int     SysBalanceMode         :1; // 15
-    unsigned int     SysDisCharMode         :1; // 16
-    unsigned int     SysChargerEn           :1; // 17
-    unsigned int     SysAalarm              :1; // 18
-    unsigned int     SysProtect             :1; // 19
-    unsigned int     NRlyDOStatus           :1; // 20
-    unsigned int     PRlyDOStatus           :1; // 21
-    unsigned int     PreRlyDOStatus         :1; // 22
-    unsigned int     PwrHoldRlyDOStatus     :1; // 23
-    unsigned int     MSDERR                 :1; // 24
-    unsigned int     RlyERR                 :1; // 25
-    unsigned int     HMICOMEnable           :1; // 26
-    unsigned int     HMIBalanceMode         :1; // 27
-    unsigned int     CANCOMERR              :1; // 28
-    unsigned int     ISOSPICOMERR           :1; // 29
-    unsigned int     CellVoltOk             :1; // 30
-    unsigned int     CellTempsOk            :1; // 31
-    unsigned int     CANCOMEnable            :1; // 27
-//    unsigned int     RlyERR                 :1; // 29
+    unsigned int     SysDisCharMode         :1; // 15
+    unsigned int     SysAalarm              :1; // 16
+    unsigned int     SysFault               :1; // 17
+    unsigned int     SysPrtct               :1; // 18
+    unsigned int     NRlyDOStatus           :1; // 19
+    unsigned int     PRlyDOStatus           :1; // 20
+    unsigned int     PreRlyDOStatus         :1; // 21
+    unsigned int     PwrHoldRlyDOStatus     :1; // 22
+    unsigned int     MSDERR                 :1; // 23
+    unsigned int     RlyERR                 :1; // 24
+    unsigned int     HMICOMEnable           :1; // 25
+    unsigned int     HMIBalanceMode         :1; // 26
+    unsigned int     CANCOMERR              :1; // 27
+    unsigned int     ISOSPICOMERR           :1; // 28
+    unsigned int     CellVoltOk             :1; // 29
+    unsigned int     CellTempsOk            :1; // 30
+    unsigned int     CANCOMEnable           :1; // 31
 
 };
 union SystemState_REG
@@ -252,10 +253,10 @@ struct SystemAlarm_BIT
     unsigned int     CellVolt_OV                :1; // 6
     unsigned int     CellVolt_UN                :1; // 7
     unsigned int     CellVolt_BL                :1; // 8
-    unsigned int     CellTempsDisch_OT          :1; // 9
-    unsigned int     CellTempsCharg_OT          :1; // 10
-    unsigned int     CellTempsDisCh_UT          :1; // 11
-    unsigned int     CellTempsCharg_UT          :1; // 12
+    unsigned int     CellTemps_OT               :1; // 9
+    unsigned int     SW10                      :1; // 10
+    unsigned int     CellTemps_UT               :1; // 11
+    unsigned int     SW12                      :1; // 12
     unsigned int     CellTemp_BL                :1; // 13
     unsigned int     PackDischarUnPWR_BL        :1; // 14
     unsigned int     PackCharUnPWR_BL           :1; // 15
@@ -293,7 +294,7 @@ struct SystemFault_BIT
     unsigned int     CellVolt_OV                :1; // 6
     unsigned int     CellVolt_UN                :1; // 7
     unsigned int     CellVolt_BL                :1; // 8
-    unsigned int     CellTempsDisch_OT          :1; // 9
+    unsigned int     CellTemps_OT          :1; // 9
     unsigned int     CellTempsCharg_OT          :1; // 10
     unsigned int     CellTempsDisCh_UT          :1; // 11
     unsigned int     CellTempsCharg_UT          :1; // 12
@@ -335,9 +336,9 @@ struct SystemProtect_BIT
     unsigned int     CellVolt_OV                :1; // 6
     unsigned int     CellVolt_UN                :1; // 7
     unsigned int     CellVolt_BL                :1; // 8
-    unsigned int     CellTempsDisch_OT          :1; // 9
+    unsigned int     CellTemps_OT          :1; // 9
     unsigned int     CellTempsCharg_OT          :1; // 10
-    unsigned int     CellTempsDisCh_UT          :1; // 11
+    unsigned int     CellTemps_UT          :1; // 11
     unsigned int     CellTempsCharg_UT          :1; // 12
     unsigned int     CellTemp_BL                :1; // 13
     unsigned int     PackDischarUnPWR_BL        :1; // 14
@@ -490,6 +491,7 @@ typedef struct System_Date
     Uint16  Test;
     Uint16  Maincount;
     Uint16  MainIsr1;
+    Uint16  InitValuleCnt;
     Uint16  CANRXCOUNT;
     Uint16  CanComEable;
     Uint16  CANRXMailBox00Count;
@@ -536,7 +538,7 @@ typedef struct System_Date
     float32 MDCellTempsAgvF[6];
     Uint16  MDNumber;
     Uint16  MDNumCout;
-
+    Uint16  SysAlarmCont[16];
     float32 SysCellMaxVoltageF;
     float32 SysCellMinVoltageF;
     float32 SysCellAgvVoltageF;
@@ -625,13 +627,13 @@ union VCUCOMMAND_REG
 struct HMICOMMAND_BIT
 {       // bits   description
    unsigned int     HMI_MODE            :1; // 0
-   unsigned int     HMI_RlyEN           :1; // 1
-   unsigned int     HMI_CellVoltReq     :1; // 2
-   unsigned int     HMI_CellTempsReq    :1; // 3
-   unsigned int     HMI_CellBalaEn      :1; // 4
-   unsigned int     HMICMD05            :1; // 5
-   unsigned int     HMICMD06            :1; // 6
-   unsigned int     HMICMD07            :1; // 7
+   unsigned int     HMI_CellVoltReq     :1; // 1
+   unsigned int     HMI_CellTempsReq    :1; // 2
+   unsigned int     HMI_CellBalaEn      :1; // 3
+   unsigned int     N_Rly               :1; // 4
+   unsigned int     Pre_Rly             :1; // 5
+   unsigned int     P_Rly               :1; // 6
+   unsigned int     PWRHoldRly          :1; // 7
    unsigned int     HMI_Reset           :1; // 8
    unsigned int     HMICMD09            :1; // 9
    unsigned int     HMICMD10            :1; // 10
@@ -693,6 +695,30 @@ union ChargerSate_REG
 {
    unsigned int     all;
    struct ChargerState_BIT bit;
+};
+struct ChargerOutState_BIT
+{       // bits   description
+    unsigned int     Char_DOSTatue      :1; // 0
+    unsigned int     Char_ACOV          :1; // 1
+    unsigned int     Char_ACUn          :1; // 2
+    unsigned int     NotUsed03          :1; // 3
+    unsigned int     Char_DcOV          :1; // 4
+    unsigned int     Char_DcUn          :1; // 5
+    unsigned int     Char_DcOC          :1; // 6
+    unsigned int     Char_CANErr        :1; // 7
+    unsigned int     NotUsed08          :1; // 8
+    unsigned int     NotUsed09          :1; // 9
+    unsigned int     NotUsed10          :1; // 10
+    unsigned int     NotUsed11          :1; // 11
+    unsigned int     NotUsed12          :1; // 12
+    unsigned int     NotUsed13          :1; // 13
+    unsigned int     NotUsed14          :1; // 14
+    unsigned int     NotUsed15          :1; // 15
+};
+union ChargerOutSate_REG
+{
+   unsigned int     all;
+   struct ChargerOutState_BIT bit;
 };
 typedef struct CANA_DATA
 {
@@ -757,17 +783,20 @@ typedef struct CANA_DATA
     Uint16 CANCom_0x61DDate2;
     Uint16 CANCom_0x61DDate3;
     Uint16 SlaveBMSNumCout;
-
     Uint16 SlaveBMSErrCout[4];
     //Uint16
     Uint16 VcuRxFlg;
     Uint16 CharRxFlg;
     Uint16 VcuCharRxCout;
+    Uint16 ChargerSWVer;
+    Uint16 ChargerConstVoltage;
+    Uint16 ChargerConstCurrent;
     union  BATStatus_REG              SysStatus;
     union  DigitalOutPut_REG          DigitalOutPutReg;
     union  VCUCOMMAND_REG             PMSCMDRegs;
     union  HMICOMMAND_REG             HMICMDRegs;
     union  ChargerSate_REG            ChargerStateRegs;
+    union  ChargerOutSate_REG         ChargerResgsStauts;
 }CANAReg;
 
 typedef enum

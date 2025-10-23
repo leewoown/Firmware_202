@@ -100,7 +100,7 @@ typedef struct PrtectRelay_Date
     /*
      *
      */
-    ProtectRelayState StateMachine;
+    ProtectRelayState RlyMachine;
     Uint16 WakeupOn_ProRlyOnCount;
     Uint16 WakeupOn_ProRlyOffCount;
     Uint16 WakeupOn_PRlyOnCount;

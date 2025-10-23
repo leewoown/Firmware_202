@@ -16,7 +16,7 @@ extern void ProtectRlyOnHandle(PrtectRelayReg *P);
 extern void ProtectRlyOffInit(PrtectRelayReg *P);
 extern void ProtectRlyOffHandle(PrtectRelayReg *P);
 extern void ProtectRlyEMSHandle(PrtectRelayReg *P);
-
+extern void RlySeqHandle(PrtectRelayReg *P);
 
 void ProtectRlyVarINIT(PrtectRelayReg *P)
 {
@@ -34,29 +34,121 @@ void ProtectRlyVarINIT(PrtectRelayReg *P)
     P->WakeupOn_TimeCount=0;
     P->WakeupOff_TimeCount=0;
 }
+void RlySeqHandle(PrtectRelayReg *P)
+{
+    switch(P->RlyMachine)
+    {
+        case PrtctRly_INIT :
+             ProtectRlyVarINIT(P);
+             P->RlyMachine=PrtctRly_STANDBY;
+        break;
+        case PrtctRly_STANDBY:
+             if((P->State.bit.PRlyDI==1)||(P->State.bit.NRlyDI==1))
+             {
+                P->State.bit.RlyFaulttSate=1;
+                P->RlyMachine=PrtctRly_RLYProtect;
+             }
+             P->State.bit.WakeuPOnEND=0;
+             P->RlyMachine=PrtctRly_Ready;
+        break;
+        case PrtctRly_Ready :
+            if(P->State.bit.RlyFaulttSate==1)
+            {
+                P->RlyMachine=PrtctRly_RLYProtect;
+            }
+            if(P->State.bit.WakeUpEN==1)
+            {
+                P->RlyMachine=PrtctRly_RuningON;
+            }
 
+        break;
+        case PrtctRly_RuningON:
+                P->State.bit.NRlyDO=1;
+                delay_ms(50);
+                if(P->State.bit.NRlyDI==1)
+                {
+                   P->State.bit.PreRlyDO=1;
+                }
+                else
+                {
+                    P->State.bit.FaultSeqErr=1;
+                }
+                delay_ms(50);
+                P->State.bit.PRlyDO=1;
+                delay_ms(150);
+                if(P->State.bit.PRlyDI==1)
+                {
+                    P->State.bit.PreRlyDO=0;
+                   // P->State.bit.WakeuPOnEND=1;
+                }
+                else
+                {
+                     P->State.bit.FaultSeqErr=1;
+                }
+                if(P->State.bit.WakeUpEN==0)
+                {
+                    P->RlyMachine=PrtctRly_RuningOFF;
+                }
+                if(P->State.bit.RlyFaulttSate==1)
+                {
+                    P->RlyMachine=PrtctRly_RLYProtect;
+                }
+
+        break;
+        case PrtctRly_RuningOFF:
+                P->State.bit.NRlyDO=0;
+                delay_ms(50);
+                P->State.bit.PreRlyDO=0;
+                delay_ms(50);
+                if(P->State.bit.NRlyDI==0)
+                {
+                   P->State.bit.PRlyDO=0;
+                }
+                else
+                {
+                    P->State.bit.FaultSeqErr=1;
+                }
+                delay_ms(50);
+                if(P->State.bit.PRlyDI==0)
+                {
+                    P->RlyMachine=PrtctRly_Ready;
+                    P->State.bit.WakeUpEN=0;
+                }
+
+        break;
+        case PrtctRly_ProtectpOFF:
+
+        break;
+        case PrtctRly_RLYProtect:
+        break;
+        case PrtctRly_CLEAR:
+        break;
+        default :
+        break;
+    }
+}
 void ProtectRlySateCheck(PrtectRelayReg *P)
 {
-      switch(P->StateMachine)
+      switch(P->RlyMachine)
       {
           case PrtctRly_INIT :
                ProtectRlyVarINIT(P);
-               P->StateMachine=PrtctRly_STANDBY;
+               P->RlyMachine=PrtctRly_STANDBY;
           break;
           case PrtctRly_STANDBY :
                if((P->State.bit.PRlyDI==1)||(P->State.bit.NRlyDI==1))
                {
                    P->State.bit.RlyFaulttSate=1;
-                   P->StateMachine=PrtctRly_RLYProtect;
+                   P->RlyMachine=PrtctRly_RLYProtect;
                }
-               P->StateMachine=PrtctRly_Ready;
+               P->RlyMachine=PrtctRly_Ready;
           break;
           case PrtctRly_Ready :
                 ProtectRlyOnInit(P);
                 ProtectRlyOffInit(P);
                if(P->State.bit.WakeUpEN==1)
                {
-                  P->StateMachine =PrtctRly_RuningON;
+                  P->RlyMachine =PrtctRly_RuningON;
                }
           break;
           case PrtctRly_RuningON :
@@ -67,11 +159,11 @@ void ProtectRlySateCheck(PrtectRelayReg *P)
               {
                   P->WakeupOn_TimeCount=P->WakeupOn_TimeCount+10;
                   P->State.bit.WakeupOnTiemrErr=1;
-                  P->StateMachine=PrtctRly_RLYProtect;
+                  P->RlyMachine=PrtctRly_RLYProtect;
               }
               if(P->State.bit.WakeUpEN==0)
               {
-                  P->StateMachine =PrtctRly_RuningOFF;
+                  P->RlyMachine =PrtctRly_RuningOFF;
               }
           break;
           case PrtctRly_RuningOFF :
@@ -82,16 +174,16 @@ void ProtectRlySateCheck(PrtectRelayReg *P)
                {
                    P->WakeupOff_TimeCount = WakeUpOFFTimeOut+10;
                    P->State.bit.WakeupOFFTiemrErr=1;
-                   P->StateMachine=PrtctRly_RLYProtect;
+                   P->RlyMachine=PrtctRly_RLYProtect;
                }
                if((P->State.bit.PRlyDI==0)&&(P->State.bit.NRlyDI==0))
                {
-                   P->StateMachine =PrtctRly_Ready;
+                   P->RlyMachine =PrtctRly_Ready;
                }
           break;
           case PrtctRly_ProtectpOFF :
                ProtectRlyEMSHandle(P);
-               P->StateMachine =PrtctRly_CLEAR;
+               P->RlyMachine =PrtctRly_CLEAR;
           break;
           case PrtctRly_RLYProtect :
           //     P->State.bit.FaultSeqErr=1;
@@ -103,7 +195,7 @@ void ProtectRlySateCheck(PrtectRelayReg *P)
               ProtectRlyVarINIT(P);
               ProtectRlyOnInit(P);
               ProtectRlyOffInit(P);
-              P->StateMachine =PrtctRly_INIT;
+              P->RlyMachine =PrtctRly_INIT;
           break;
           default :
           break;

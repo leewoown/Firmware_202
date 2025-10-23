@@ -358,10 +358,10 @@ Parameter
 #define     C_PackCHARG_OCFault                     180.0//500.0
 #define     C_PackSOC_OVFault                       101.0
 #define     C_PackSOC_UNFault                       -0.1//-0.1
-#define     C_PackVolt_OVFault                      58.5 // Cell 4.25V * 24
-#define     C_PackVolt_UNFault                      40.6 // Cell 2.80V * 24
-#define     C_CellVolt_OVFault                      4.25
-#define     C_CellVolt_UNFault                      2.80
+#define     C_PackVolt_OVFault                      54.0// Cell 4.25V * 24
+#define     C_PackVolt_UNFault                      40.0 // Cell 2.80V * 24
+#define     C_CellVolt_OVFault                      3.63
+#define     C_CellVolt_UNFault                      2.7
 #define     C_CellVolt_UBFault                      0.5
 #define     C_CellTempsDISCH_OTFault                60.0
 #define     C_CellTempsCHARG_OTFault                50.0
