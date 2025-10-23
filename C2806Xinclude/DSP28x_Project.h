@@ -195,12 +195,12 @@ union DigitalOutPut_REG
 };
 typedef enum
 {
-   INIT,
-   STANDBY,
-   READY,
-   RUNING,
-   PROTECTER,
-   ChargerStop,
+   INIT, //0
+   STANDBY,//1
+   READY,//2
+   RUNING,//3
+   ChargerStop,//4
+   PROTECTER,//5
    DATALOG,
    ProtectHistory,
    MANUALMode
@@ -348,7 +348,7 @@ struct SystemProtect_BIT
     unsigned int     PackCAN_Err                :1; // 18
     unsigned int     PackCT_Err                 :1; // 19
     unsigned int     PackISOReg_Err             :1; // 20
-    unsigned int     SW21                       :1; // 21
+    unsigned int     MSD_Err                    :1; // 21
     unsigned int     SW22                       :1; // 22
     unsigned int     SW23                       :1; // 23
     unsigned int     SW24                       :1; // 24
@@ -588,7 +588,7 @@ typedef struct System_Date
     union       SystemFault_REG             SysFaultReg;
   //  union       SystemFault_REG             SysFaultBufReg;
     union       SystemProtect_REG           SysProtectReg;
-    union       SystemProtect_REG           SysProtectBufReg;
+//    union       SystemProtect_REG           SysProtectBufReg;
     union       DigitalInput_REG            SysDigitalInputReg;
     union       DigitalOutPut_REG           SysDigitalOutPutReg;
     union       Currnet_Reg                 SysCurrentData;
@@ -736,6 +736,8 @@ typedef struct CANA_DATA
     Uint16 SysPackSOH;
 
     Uint16 SysState;
+    Uint16 DiviceState;
+    Uint16 ProtectState;
     Uint16 SysPackVotageBuf;
     Uint16 SysCHARGPWRContinty;
     Uint16 SysDISCHAPWRContinty;

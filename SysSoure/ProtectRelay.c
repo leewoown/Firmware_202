@@ -38,7 +38,7 @@ void RlySeqHandle(PrtectRelayReg *P)
 {
     switch(P->RlyMachine)
     {
-        case PrtctRly_INIT :
+        case PrtctRly_INIT : //0
              ProtectRlyVarINIT(P);
              P->RlyMachine=PrtctRly_STANDBY;
         break;
@@ -46,15 +46,15 @@ void RlySeqHandle(PrtectRelayReg *P)
              if((P->State.bit.PRlyDI==1)||(P->State.bit.NRlyDI==1))
              {
                 P->State.bit.RlyFaulttSate=1;
-                P->RlyMachine=PrtctRly_RLYProtect;
+            //    P->RlyMachine=PrtctRly_RLYProtect;
              }
              P->State.bit.WakeuPOnEND=0;
              P->RlyMachine=PrtctRly_Ready;
         break;
-        case PrtctRly_Ready :
+        case PrtctRly_Ready ://1
             if(P->State.bit.RlyFaulttSate==1)
             {
-                P->RlyMachine=PrtctRly_RLYProtect;
+              //  P->RlyMachine=PrtctRly_RLYProtect;
             }
             if(P->State.bit.WakeUpEN==1)
             {
@@ -62,7 +62,7 @@ void RlySeqHandle(PrtectRelayReg *P)
             }
 
         break;
-        case PrtctRly_RuningON:
+        case PrtctRly_RuningON://2
                 P->State.bit.NRlyDO=1;
                 delay_ms(50);
                 if(P->State.bit.NRlyDI==1)
@@ -91,7 +91,7 @@ void RlySeqHandle(PrtectRelayReg *P)
                 }
                 if(P->State.bit.RlyFaulttSate==1)
                 {
-                    P->RlyMachine=PrtctRly_RLYProtect;
+                    //P->RlyMachine=PrtctRly_RLYProtect;
                 }
 
         break;
@@ -115,14 +115,16 @@ void RlySeqHandle(PrtectRelayReg *P)
                     P->State.bit.WakeUpEN=0;
                 }
 
-        break;
-        case PrtctRly_ProtectpOFF:
-
-        break;
+        break;//5
+     /*   case PrtctRly_ProtectpOFF:
+              P->RlyMachine=PrtctRly_RuningOFF://4
+        break;//6
         case PrtctRly_RLYProtect:
+             P->RlyMachine=PrtctRly_RuningOFF://4
         break;
         case PrtctRly_CLEAR:
         break;
+     */
         default :
         break;
     }
@@ -139,7 +141,7 @@ void ProtectRlySateCheck(PrtectRelayReg *P)
                if((P->State.bit.PRlyDI==1)||(P->State.bit.NRlyDI==1))
                {
                    P->State.bit.RlyFaulttSate=1;
-                   P->RlyMachine=PrtctRly_RLYProtect;
+                //   P->RlyMachine=PrtctRly_RLYProtect;
                }
                P->RlyMachine=PrtctRly_Ready;
           break;
@@ -174,7 +176,7 @@ void ProtectRlySateCheck(PrtectRelayReg *P)
                {
                    P->WakeupOff_TimeCount = WakeUpOFFTimeOut+10;
                    P->State.bit.WakeupOFFTiemrErr=1;
-                   P->RlyMachine=PrtctRly_RLYProtect;
+                  // P->RlyMachine=PrtctRly_RLYProtect;
                }
                if((P->State.bit.PRlyDI==0)&&(P->State.bit.NRlyDI==0))
                {
