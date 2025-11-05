@@ -790,6 +790,7 @@ typedef struct CANA_DATA
     Uint16 VcuRxFlg;
     Uint16 CharRxFlg;
     Uint16 VcuCharRxCout;
+    Uint16 CharRxCount;
     Uint16 ChargerSWVer;
     Uint16 ChargerConstVoltage;
     Uint16 ChargerConstCurrent;
