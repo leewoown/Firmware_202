@@ -525,6 +525,8 @@ typedef struct System_Date
     float32 SysCellVoltageF[C_SysCellVoltEa];
     float32 SysCelltemperatureF[C_SysCellTempEa];
 
+    float32 TargetPackVoltF;
+    float32 TargetPackSocF;
     float32 SysPackVoltageF;
     float32 SysPackParallelVoltageF;
     float32 SysPackCurrentAsbF;
@@ -749,7 +751,9 @@ typedef struct CANA_DATA
     Uint16 SysSoHCapacity;
 
     Uint16 CharCONSTVolt;
+    Uint16 CharCONSTSOC;
     int16  CahrConstantCurrt;
+
     Uint16 MDNumber;
     Uint16 MDVoltage[6];
     Uint16 MDCellVoltAgv[6];

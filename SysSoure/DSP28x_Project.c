@@ -591,7 +591,7 @@ void SysCalCurrentHandle(SystemReg *s)
     CurrentCT  =  CurrentCT - 0x80000000;
 
     Currentbuf        =  ((float)CurrentCT)/1000;          // (mA to A) CAB500 resolution 1mA
-    s->SysPackCurrentF  = -1.0 * Currentbuf;    // Decide Current sensor's direction
+    s->SysPackCurrentF  = 1.0 * Currentbuf;    // Decide Current sensor's direction
 
     if(s->SysPackCurrentF>=500.0)
     {

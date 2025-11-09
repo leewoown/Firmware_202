@@ -866,7 +866,7 @@ void hermite_soc_40_60(SocReg *P)
 }
 void CalEVE240AhSocInit(SocReg *P)
 {
-    P->AVGXF= CLAMP(P->CellAgvVoltageF, V_MIN, V_MAX);
+    P->AVGXF=P->CellAgvVoltageF; //CLAMP(P->CellAgvVoltageF, V_MIN, V_MAX);
     if (P->AVGXF < V_Soc00)
     {
         P->AVGXF  =V_Soc00;
