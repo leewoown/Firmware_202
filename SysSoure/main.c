@@ -284,9 +284,10 @@ void main(void)
                  if(SysRegs.SysStateReg.bit.INITOK==0)
                  {
 
-                     for(SysRegs.InitValuleCnt=0;SysRegs.InitValuleCnt>35;SysRegs.InitValuleCnt++)
+                     for(SysRegs.InitValuleCnt=0;SysRegs.InitValuleCnt<100;SysRegs.InitValuleCnt++)
                      {
-                         SysRegs.SysStateReg.bit.CellVoltOk=1;
+
+
                          Slave0Regs.ID=BMS_ID_0;
                          Slave0Regs.SlaveCh=C_Slave_ACh;
                          Slave0Regs.Balance.all = 0x0000;
@@ -295,7 +296,8 @@ void main(void)
                          Slave0Regs.ID=BMS_ID_0;
                          Slave0Regs.SlaveCh=C_Slave_ACh;
                          SlaveVoltagHandler(&Slave0Regs);
-                         delay_ms(1);
+                         delay_ms(10);
+
                          Slave1Regs.ID=BMS_ID_1;
                          Slave1Regs.SlaveCh=C_Slave_ACh;
                          Slave1Regs.Balance.all = 0x0000;
@@ -329,19 +331,21 @@ void main(void)
                          memcpy(&SysRegs.SysCellVoltageF[7],        &Slave1Regs.CellVoltageF[0],sizeof(float32)*8);
                          memcpy(&SysRegs.SysCellVoltageF[15],       &Slave2Regs.CellVoltageF[0],sizeof(float32)*7);
                          memcpy(&SysRegs.SysCellVoltageF[22],       &Slave3Regs.CellVoltageF[0],sizeof(float32)*8);
-                         SysCalVoltageHandle(&SysRegs);
+                         SysRegs.SysStateReg.bit.CellVoltOk=1;
 
-                         EV240AhSocRegs.CellAgvVoltageF=3.30f;//SysRegs.SysCellAgvVoltageF;
+
+                     }
+                     if(SysRegs.SysStateReg.bit.CellVoltOk==1)
+                     {
+                         SysCalVoltageHandle(&SysRegs);
+                         EV240AhSocRegs.CellAgvVoltageF=SysRegs.SysCellAgvVoltageF;
                          CalEVE240AhSocInit(&EV240AhSocRegs);
-                         delay_ms(300);
                      }
                      SysRegs.SysStateReg.bit.INITOK=1;
                  }
                  if(SysRegs.SysStateReg.bit.INITOK==1)
                  {
-
-                     EV240AhSocRegs.CellAgvVoltageF=SysRegs.SysCellAgvVoltageF;
-                     CalEVE240AhSocInit(&EV240AhSocRegs);
+                    // EV240AhSocRegs.CellAgvVoltageF=SysRegs.SysCellAgvVoltageF;
                      EV240AhSocRegs.state =SOC_STATE_RUNNING;
                      SysRegs.SysMachine=READY;
                  }
@@ -927,21 +931,21 @@ interrupt void cpu_timer0_isr(void)
         EV240AhSocRegs.SysSoCCTF       = SysRegs.SysPackCurrentF;
         EV240AhSocRegs.SysSoCCTAbsF    = SysRegs.SysPackCurrentAsbF;
         EV240AhSocRegs.state =SOC_STATE_RUNNING;
-        CalEVE240AhSocHandle(&EV240AhSocRegs);
         if(EV240AhSocRegs.SoCStateRegs.bit.CalMeth==0)
         {
-            EV240AhSocRegs.SysSocInitF=45;
+
             SysRegs.SysSOCF=EV240AhSocRegs.SysSocInitF;
         }
         if(EV240AhSocRegs.SoCStateRegs.bit.CalMeth==1)
         {
             SysRegs.SysSOCF=EV240AhSocRegs.SysPackSOCF;
         }
+        CalEVE240AhSocHandle(&EV240AhSocRegs);
     }
    /*
     * Battery Alarm & Fault & Protect Check
     */
-   //SysAlarmtCheck(&SysRegs);
+    SysAlarmtCheck(&SysRegs);
     SysRegs.SysAlarmReg.Word.DataH=0;
     SysRegs.SysAlarmReg.Word.DataL=0;
 
@@ -1135,8 +1139,6 @@ interrupt void cpu_timer0_isr(void)
        case 10:
 
                SysRegs.SysSOHF=100.0;
-            //   SysRegs.SysSOCF=50.0;
-               //CANARegs.SysPackPT  = (unsigned int)(SysRegs.SysPackVoltageF*10);
                CANARegs.SysPackPT  = (unsigned int)(SysRegs.SysPackParallelVoltageF*10);
                CANARegs.SysPackCT  = (int)(SysRegs.SysPackCurrentF*10);
                CANARegs.SysPackSOC = (int)(SysRegs.SysSOCF*10);

@@ -867,14 +867,8 @@ void hermite_soc_40_60(SocReg *P)
 void CalEVE240AhSocInit(SocReg *P)
 {
     P->AVGXF=P->CellAgvVoltageF; //CLAMP(P->CellAgvVoltageF, V_MIN, V_MAX);
-    if (P->AVGXF < V_Soc00)
-    {
-        P->AVGXF  =V_Soc00;
-    }
-    if (P->AVGXF > V_Soc100)
-    {
-        P->AVGXF  =V_Soc100;
-    }
+    if (P->AVGXF < V_Soc00) { P->AVGXF  = V_Soc00;}
+    if (P->AVGXF > V_Soc100){ P->AVGXF  =V_Soc100;}
 
     if (P->AVGXF < V_Soc20)  // [2.9000, 3.2790]
     {
@@ -931,9 +925,10 @@ void CalEVE240AhSocHandle(SocReg *P)
                   {
                       // 60Ah
                        P->AVGXF         =   P->CellAgvVoltageF;
-                       P->SysSocInitF = P->SOCbufF;
                        CalEVE240AhSocInit(P);
-                      // P->SysPackSOCF = P->SOCbufF;
+                       P->SysPackSOCF = P->SysSocInitF
+                       //P->SysPackSOCF = P->SOCbufF;
+                       //P->SysSocInitF = P->SOCbufF;
                   }
                   if(P->SoCStateRegs.bit.CalMeth==1)
                   {
@@ -950,7 +945,7 @@ void CalEVE240AhSocHandle(SocReg *P)
                       {
                           P->SysPackAhF= 380.0;
                       }
-                      P->SysPackSOCBufF1 = P->SysPackAhF *C_EVE380AhNorm;// 1/48(0.0208)
+                      P->SysPackSOCBufF1 = P->SysPackAhF *C_EVE380AhNorm;// 0.002631//1/380Ah;
                       P->SysPackSOCBufF2 = P->SysPackSOCBufF1*100.0; //--> 단위 변환 %
                       P->SysPackSOCF     = P->SysSocInitF+P->SysPackSOCBufF2;
                   }
