@@ -1397,7 +1397,7 @@ interrupt void cpu_timer0_isr(void)
        break;
        case 10:
 
-               CANARegs.CharCONSTVolt=540;
+               CANARegs.CharCONSTVolt=545;
                CANARegs.CahrConstantCurrt =300;
                CANARegs.CharCONSTSOC=1000;
                CANARegs.SysPackPT  = (unsigned int)(SysRegs.SysPackParallelVoltageF*10);
@@ -1417,7 +1417,7 @@ interrupt void cpu_timer0_isr(void)
                SysRegs.TargetPackSocF   = (float32)(CANARegs.CharCONSTSOC/10.0f);
                if(SysRegs.SysStateReg.bit.SysDisCharMode == 0)
                {
-                   if ((SysRegs.SysPackParallelVoltageF >= SysRegs.TargetPackVoltF) || (SysRegs.SysSOCF >= SysRegs.TargetPackSocF))
+                   if (SysRegs.SysPackParallelVoltageF >= SysRegs.TargetPackVoltF)// || (SysRegs.SysSOCF >= SysRegs.TargetPackSocF))
                    {
                        if(SysRegs.SysPackCurrentAsbF<= 1.0F)
                        {
