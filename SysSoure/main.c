@@ -349,9 +349,12 @@ void main(void)
                      EV240AhSocRegs.state =SOC_STATE_RUNNING;
                      SysRegs.SysMachine=READY;
                  }
+                 PrtectRelayRegs.State.bit.WakeUpEN=1;
             case READY://2
+
                    EV240AhSocRegs.state =SOC_STATE_RUNNING;
                    PrtectRelayRegs.State.bit.WakeUpEN=1;
+
                    if(SysRegs.SysStateReg.bit.SysPrtct==1)
                    {
                      //    SysRegs.SysMachine=PROTECTER;
@@ -360,19 +363,20 @@ void main(void)
 
             break;
             case RUNING://3
+                CANARegs.DiviceState=0;
                      if(SysRegs.SysStateReg.bit.SysDisCharMode==1)
                      {
                             CANARegs.DiviceState=2;
                      }
                      else
                      {
-                            CANARegs.DiviceState=2;
+                            CANARegs.DiviceState=3;
                      }
                      if(SysRegs.SysStateReg.bit.SysPrtct==1)
                      {
                          // SysRegs.SysMachine=PROTECTER;
                      }
-                     if(SysRegs.SysPackParallelVoltageF>=52.5f)//||(SysRegs.SysCellMaxVoltageF>3.60F))//||SysRegs.SysSOCF>=100.0)
+                     if(SysRegs.SysPackParallelVoltageF>=54.0f)//||(SysRegs.SysCellMaxVoltageF>3.60F))//||SysRegs.SysSOCF>=100.0)
                      {
                         SysRegs.SysMachine=ChargerStop;
                      }
@@ -853,19 +857,26 @@ void main(void)
        /*
         *
         */
-       SysRegs.SysStateReg.bit.NRlyDOStatus= SysRegs.SysDigitalOutPutReg.bit.NRlyOUT;
-       SysRegs.SysStateReg.bit.PRlyDOStatus= SysRegs.SysDigitalOutPutReg.bit.PRlyOUT;
+       SysRegs.SysDigitalOutPutReg.bit.NRlyOUT=1;
+       delay_ms(100);
+       SysRegs.SysDigitalOutPutReg.bit.PRlyOUT=1;
+       SysRegs.SysDigitalOutPutReg.bit.ProRlyOUT=1;
+       delay_ms(500);
+       SysRegs.SysDigitalOutPutReg.bit.ProRlyOUT=0;
+       SysDigitalOutput(&SysRegs);
+      // SysRegs.SysStateReg.bit.NRlyDOStatus= SysRegs.SysDigitalOutPutReg.bit.NRlyOUT;
+     //  SysRegs.SysStateReg.bit.PRlyDOStatus= SysRegs.SysDigitalOutPutReg.bit.PRlyOUT;
 
-       PrtectRelayRegs.State.bit.NRlyDI=SysRegs.SysDigitalOutPutReg.bit.NRlyOUT;
-       PrtectRelayRegs.State.bit.PRlyDI=SysRegs.SysDigitalOutPutReg.bit.PRlyOUT;
+     //  PrtectRelayRegs.State.bit.NRlyDI=SysRegs.SysDigitalOutPutReg.bit.NRlyOUT;
+     //  PrtectRelayRegs.State.bit.PRlyDI=SysRegs.SysDigitalOutPutReg.bit.PRlyOUT;
+       CANATX(0x610,8,CANARegs.ProductInfro,CANARegs.SysConFig,Product_Voltage,Product_Capacity);
 
+    //   RlySeqHandle(&PrtectRelayRegs);
 
-       RlySeqHandle(&PrtectRelayRegs);
-
-       SysRegs.SysDigitalOutPutReg.bit.NRlyOUT=PrtectRelayRegs.State.bit.NRlyDO;
-       SysRegs.SysDigitalOutPutReg.bit.PRlyOUT=PrtectRelayRegs.State.bit.PRlyDO;
-       SysRegs.SysDigitalOutPutReg.bit.ProRlyOUT=PrtectRelayRegs.State.bit.PreRlyDO;
-       SysRegs.SysProtectReg.bit.PackRly_Err=PrtectRelayRegs.State.bit.RlyFaulttSate;
+     //  SysRegs.SysDigitalOutPutReg.bit.NRlyOUT=PrtectRelayRegs.State.bit.NRlyDO;
+     //  SysRegs.SysDigitalOutPutReg.bit.PRlyOUT=PrtectRelayRegs.State.bit.PRlyDO;
+    //   SysRegs.SysDigitalOutPutReg.bit.ProRlyOUT=PrtectRelayRegs.State.bit.PreRlyDO;
+    //   SysRegs.SysProtectReg.bit.PackRly_Err=PrtectRelayRegs.State.bit.RlyFaulttSate;
         if(SysRegs.Maincount>3000){SysRegs.Maincount=0;}
 
     }
@@ -954,28 +965,30 @@ interrupt void cpu_timer0_isr(void)
    {
        CANARegs.ProtectState=1;
        SysRegs.SysStateReg.bit.SysAalarm=1;
-       SysRegs.SysStateReg.bit.PrtectStatus=1;
+      // SysRegs.SysStateReg.bit.PrtectStatus=1;
        CANARegs.ProtectState=1;
    }
    else
    {
        SysRegs.SysStateReg.bit.SysAalarm=0;
-       SysRegs.SysStateReg.bit.PrtectStatus=0;
+       //SysRegs.SysStateReg.bit.PrtectStatus=0;
+       CANARegs.ProtectState=0;
    }
-   //SysFaultCheck(&SysRegs);
    SysRegs.SysFaultReg.Word.DataH=0;
    SysRegs.SysFaultReg.Word.DataL=0;
+   //SysFaultCheck(&SysRegs);
+   SysRegs.SysStateReg.bit.SysFault=0;
    if((SysRegs.SysFaultReg.all > 0)&&(SysRegs.SysStateReg.bit.INITOK==1))
    {
-       CANARegs.ProtectState=2;
-       SysRegs.SysStateReg.bit.SysFault=1;
-       SysRegs.SysStateReg.bit.PrtectStatus=2;
+   //    CANARegs.ProtectState=2;
+    //   SysRegs.SysStateReg.bit.SysFault=1;
+     //  SysRegs.SysStateReg.bit.PrtectStatus=2;
    }
    else if(SysRegs.SysStateReg.bit.SysAalarm==0);
    {
-       CANARegs.ProtectState=0;
-       SysRegs.SysStateReg.bit.SysFault=0;
-       SysRegs.SysStateReg.bit.PrtectStatus=0;
+     //  CANARegs.ProtectState=0;
+     //  SysRegs.SysStateReg.bit.SysFault=0;
+     //  SysRegs.SysStateReg.bit.PrtectStatus=0;
    }
    //SysProtectCheck(&SysRegs)
    SysRegs.SysProtectReg.Word.DataH=0;
@@ -983,22 +996,22 @@ interrupt void cpu_timer0_isr(void)
    if((SysRegs.SysProtectReg.all> 0)&&(SysRegs.SysStateReg.bit.INITOK==1))
    {
 
-      CANARegs.ProtectState=3;
-      SysRegs.SysStateReg.bit.PrtectStatus=3;
-      SysRegs.SysStateReg.bit.SysPrtct=1;
+     // CANARegs.ProtectState=3;
+     // SysRegs.SysStateReg.bit.SysPrtct=1;
+    //  SysRegs.SysStateReg.bit.PrtectStatus=3;
    }
    switch(SysRegs.SysRegTimer5msecCount)
    {
        case 1:
-               SysRegs.SysStateReg.bit.PrtectStatus=0;
+//               SysRegs.SysStateReg.bit.PrtectStatus=0;
                if(SysRegs.SysStateReg.bit.SysAalarm==1)
                {
-                   SysRegs.SysStateReg.bit.PrtectStatus=1;
+//                   SysRegs.SysStateReg.bit.PrtectStatus=1;
                    SysRegs.SysDigitalOutPutReg.bit.LEDAlarmOUT=1;
                }
                if(SysRegs.SysStateReg.bit.SysPrtct==1)
                {
-                   SysRegs.SysStateReg.bit.PrtectStatus=2;
+ //                  SysRegs.SysStateReg.bit.PrtectStatus=2;
                    SysRegs.SysDigitalOutPutReg.bit.LEDProtectOUT=1;
                  //  SysRegs.SysMachine=PROTECTER;
                }
@@ -1153,8 +1166,8 @@ interrupt void cpu_timer0_isr(void)
                 SysRegs.SysStateReg.bit.SysSeqState        = SysRegs.SysMachine;
                 SysRegs.SysStateReg.bit.RlySeqState        = PrtectRelayRegs.RlyMachine;
                 SysRegs.SysStateReg.bit.SocSeqState        = EV240AhSocRegs.state;
-                SysRegs.SysStateReg.bit.CellInforRead      = CANARegs.ChargerResgsStauts.bit.Char_DOSTatue;
-                SysRegs.SysStateReg.bit.SysSocMode         = EV240AhSocRegs.SoCStateRegs.bit.CalMeth=1;
+                SysRegs.SysStateReg.bit.ChargerWakeUp      = CANARegs.ChargerResgsStauts.bit.Char_DOSTatue;
+                SysRegs.SysStateReg.bit.SysSocMode         = EV240AhSocRegs.SoCStateRegs.bit.CalMeth;
                 SysRegs.SysStateReg.bit.NRlyDOStatus       = SysRegs.SysDigitalOutPutReg.bit.NRlyOUT;
                 SysRegs.SysStateReg.bit.PRlyDOStatus       = SysRegs.SysDigitalOutPutReg.bit.PRlyOUT;
                 SysRegs.SysStateReg.bit.PRlyDOStatus       = SysRegs.SysDigitalOutPutReg.bit.ProRlyOUT;
@@ -1169,8 +1182,7 @@ interrupt void cpu_timer0_isr(void)
                 CANARegs.SysStatus.bit.PoRly               = SysRegs.SysDigitalOutPutReg.bit.PRlyOUT;
                 CANARegs.SysStatus.bit.PreCharRly          = SysRegs.SysDigitalOutPutReg.bit.ProRlyOUT;
                 CANARegs.SysStatus.bit.MSDAux              = PrtectRelayRegs.State.bit.WakeUpEN;
-
-         //      CANARegs.SysPackAh                 =(int)(SysRegs.SysAhF*10);
+                CANARegs.SysStatus.bit.ChargerEn           = CANARegs.ChargerResgsStauts.bit.Char_DOSTatue;
                 if(SysRegs.CanComEable==1)
                 {
                     CANATX(0x612,8,CANARegs.SysState,CANARegs.SysStatus.all,SysRegs.SysStateReg.Word.DataL,SysRegs.SysStateReg.Word.DataH);
@@ -1485,7 +1497,7 @@ interrupt void cpu_timer0_isr(void)
  //  SysRegs.SysStateReg.bit.PreRlyDOStatus=PrtectRelayRegs.State.bit.ProRlyDI;
 
 
-   SysDigitalOutput(&SysRegs);
+ //  SysDigitalOutput(&SysRegs);
    InitECan();
    // Acknowledge this interrupt to receive more interrupts from group 1
 

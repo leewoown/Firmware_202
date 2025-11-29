@@ -211,9 +211,10 @@ struct SystemState_BIT
     unsigned int     SysSeqState            :3; // 0,1,2
     unsigned int     RlySeqState            :3; // 3,4,5
     unsigned int     SocSeqState            :2; // 6,7
-    unsigned int     PrtectStatus           :2; // 8,9
-    unsigned int     INITOK                 :1; // 10
-    unsigned int     CellInforRead          :1; // 11
+    unsigned int     INITOK                 :1; // 8
+    unsigned int     CANCOMEnable           :1; // 9
+    unsigned int     VCURlyWakeUp           :1; // 10
+    unsigned int     ChargerWakeUp          :1; // 11
     unsigned int     SysSocMode             :1; // 12
     unsigned int     SysBalaMode            :1; // 13
     unsigned int     SysBalanceEn           :1; // 14
@@ -225,15 +226,15 @@ struct SystemState_BIT
     unsigned int     PRlyDOStatus           :1; // 20
     unsigned int     PreRlyDOStatus         :1; // 21
     unsigned int     PwrHoldRlyDOStatus     :1; // 22
-    unsigned int     MSDERR                 :1; // 23
-    unsigned int     RlyERR                 :1; // 24
-    unsigned int     HMICOMEnable           :1; // 25
-    unsigned int     HMIBalanceMode         :1; // 26
+    unsigned int     CellVoltOk             :1; // 23
+    unsigned int     CellTempsOk            :1; // 24
+    unsigned int     MSDERR                 :1; // 25
+    unsigned int     RlyERR                 :1; // 26
     unsigned int     CANCOMERR              :1; // 27
     unsigned int     ISOSPICOMERR           :1; // 28
-    unsigned int     CellVoltOk             :1; // 29
-    unsigned int     CellTempsOk            :1; // 30
-    unsigned int     CANCOMEnable           :1; // 31
+    unsigned int     IMDRegERR              :1; // 29
+    unsigned int     HMICOMEnable           :1; // 30
+    unsigned int     HMIBalanceMode         :1; // 31
 
 };
 union SystemState_REG
@@ -657,7 +658,7 @@ struct BATStatus_BIT
     unsigned int     PoRly            :1; // 2
     unsigned int     PreCharRly       :1; // 3
     unsigned int     MSDAux           :1; // 4
-    unsigned int     STATE05          :1; // 5
+    unsigned int     ChargerEn        :1; // 5
     unsigned int     STATE06          :1; // 6
     unsigned int     STATE07          :1; // 7
     unsigned int     STATE08          :1; // 8

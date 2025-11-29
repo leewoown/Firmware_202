@@ -926,7 +926,7 @@ void CalEVE240AhSocHandle(SocReg *P)
                       // 60Ah
                        P->AVGXF         =   P->CellAgvVoltageF;
                        CalEVE240AhSocInit(P);
-                       P->SysPackSOCF = P->SysSocInitF
+                       P->SysPackSOCF = P->SysSocInitF;
                        //P->SysPackSOCF = P->SOCbufF;
                        //P->SysSocInitF = P->SOCbufF;
                   }
