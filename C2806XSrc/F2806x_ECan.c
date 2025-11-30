@@ -88,6 +88,7 @@ void InitECana(void)
            ECanaShadow.CANMC.all = ECanaRegs.CANMC.all;
            ECanaShadow.CANMC.bit.SCB = 1;  // eCAN Mode. 모든 Mail Box를 사용할 수 있다.
            ECanaShadow.CANMC.bit.ABO = 1;  ///
+           ECanaShadow.CANMC.bit.DBO = 0;
            ECanaRegs.CANMC.all = ECanaShadow.CANMC.all;
 
 
@@ -211,10 +212,8 @@ void InitECana(void)
        /* Configure bit timing parameters for eCANA*/
 
            ECanaShadow.CANMC.all = ECanaRegs.CANMC.all;
-
            ECanaShadow.CANMC.bit.CCR = 1;            // Set CCR = 1
            ECanaRegs.CANMC.all = ECanaShadow.CANMC.all;
-
            // Wait until the CPU has been granted permission to change the configuration registers
            do
            {
@@ -230,7 +229,7 @@ void InitECana(void)
            /* Write to the mailbox RAM field, 이건 아직 잘 모르겠네... */
            //AMI가 1, IDE =0 이면 The RECEIVED message had a standard identifier
            //AMI = 1 일때 Filtering Criterion must be satisfied on order to receive message
-           ECanaShadow.CANGAM.all = ECanaRegs.CANGAM.all;
+           ECanaShadow.CANGAM.all     = ECanaRegs.CANGAM.all;
            ECanaShadow.CANGAM.bit.AMI = 0;
            //ECanaShadow.CANGAM.all = 0xFFFFFFFF; //byCHOO
            ECanaRegs.CANGAM.all   = ECanaShadow.CANGAM.all;
@@ -272,28 +271,31 @@ void InitECana(void)
            ECanaShadow.CANBTC.bit.TSEG2REG = 4;
            ECanaShadow.CANBTC.bit.TSEG1REG = 13;
            ECanaShadow.CANBTC.bit.SAM = 1;  //ByCHOO : SAM : Thripple Sampling. BRP > 4 일 경우만 가능하다고 하는데.. 그러면 BRPREG가 3보다 커야 하는 것 아닌가?
+           ECanaRegs.CANBTC.all = ECanaShadow.CANBTC.all;
            #endif
 
            #if(CAN_500KBPS)
            ECanaShadow.CANBTC.bit.BRPREG =  3;
-           ECanaShadow.CANBTC.bit.TSEG2REG = 4;
            ECanaShadow.CANBTC.bit.TSEG1REG = 13;
+           ECanaShadow.CANBTC.bit.TSEG2REG = 4;
            ECanaShadow.CANBTC.bit.SAM = 1;  //ByCHOO : SAM : Thripple Sampling. BRP > 4 일 경우만 가능하다고 하는데.. 그러면 BRPREG가 3보다 커야 하는 것 아닌가?
+           ECanaRegs.CANBTC.all = ECanaShadow.CANBTC.all;
            #endif
 
            #if(CAN_250KBPS)
            ECanaShadow.CANBTC.bit.BRPREG = 11;
-           ECanaShadow.CANBTC.bit.TSEG2REG = 1;
            ECanaShadow.CANBTC.bit.TSEG1REG = 6;
+           ECanaShadow.CANBTC.bit.TSEG2REG = 1;
            ECanaShadow.CANBTC.bit.SAM = 1;
+           ECanaRegs.CANBTC.all = ECanaShadow.CANBTC.all;
            #endif
 
-           ECanaRegs.CANBTC.all = ECanaShadow.CANBTC.all;
            ECanaShadow.CANMC.all = ECanaRegs.CANMC.all;
            ECanaShadow.CANMC.bit.CCR = 0 ;                // Set CCR = 0
            ECanaRegs.CANMC.all = ECanaShadow.CANMC.all;
-           ECanaShadow.CANES.all = ECanaRegs.CANES.all;///
+
            // Wait until the CPU no longer has permission to change the configuration registers
+           ECanaShadow.CANES.all = ECanaRegs.CANES.all;///
            do
            {
              ECanaShadow.CANES.all = ECanaRegs.CANES.all;
@@ -393,7 +395,6 @@ void InitECana(void)
 
            //Mailbox 별로 Interrupt를 Mask 함 Mask 된 것만 인터럽트 발생 가능
            ECanaShadow.CANMIM.all = ECanaRegs.CANMIM.all;
-
            ECanaShadow.CANMIM.bit.MIM0 = 1;
            ECanaShadow.CANMIM.bit.MIM1 = 1;
            ECanaShadow.CANMIM.bit.MIM2 = 1;
@@ -405,7 +406,6 @@ void InitECana(void)
            ECanaShadow.CANMIM.bit.MIM8 = 0;
            ECanaShadow.CANMIM.bit.MIM9 = 0;
            ECanaShadow.CANMIM.bit.MIM10 =0;
-
            ECanaShadow.CANMIM.bit.MIM11 = 0;
            ECanaShadow.CANMIM.bit.MIM12 = 0;
            ECanaShadow.CANMIM.bit.MIM13 = 0;
@@ -416,7 +416,6 @@ void InitECana(void)
            ECanaShadow.CANMIM.bit.MIM18 = 0;
            ECanaShadow.CANMIM.bit.MIM19 = 0;
            ECanaShadow.CANMIM.bit.MIM20 = 0;
-
            ECanaShadow.CANMIM.bit.MIM21 = 0;
            ECanaShadow.CANMIM.bit.MIM22 = 0;
            ECanaShadow.CANMIM.bit.MIM23 = 0;

@@ -308,10 +308,9 @@ Parameter
 
 
 #define     C_CellShutdownFault             2.6
-#define     C_CellBalanLimtVolt             3.0
+#define     C_CellBalanLimtVolt             2.5
 #define     C_BalanceDivVoltage             0.01
-#define     C_PackBalanCurrent              5.0
-
+#define     C_PackBalanEnableCurrent        2.0
 
 
 #define     C_CTDirection                 1.0

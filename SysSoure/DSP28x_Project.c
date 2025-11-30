@@ -37,7 +37,7 @@ void TempTemps(SystemReg *s)
 void CANATX(unsigned int ID, unsigned char Length, unsigned int Data0, unsigned int Data1,unsigned int Data2,unsigned int Data3)
 {
     struct ECAN_REGS ECanaShadow;
-   // unsigned int CANWatchDog;
+    unsigned int CANWatchDog=0;
     unsigned int Data0Low, Data0High, Data1Low, Data1High;
     unsigned int Data2Low, Data2High, Data3Low, Data3High;
 
@@ -52,18 +52,16 @@ void CANATX(unsigned int ID, unsigned char Length, unsigned int Data0, unsigned 
     Data3Low  = 0x00ff&Data3;
     Data3High = 0x00ff&(Data3>>8);
 
-
-
     EALLOW;
+    ECanaShadow.CANME.all = ECanaRegs.CANME.all;
     ECanaShadow.CANME.bit.ME31=0;
     ECanaRegs.CANME.bit.ME31= ECanaShadow.CANME.bit.ME31;
 
-    ECanaMboxes.MBOX31.MSGID.bit.STDMSGID=ID;
+    ECanaMboxes.MBOX31.MSGID.all = 0UL;
+    ECanaMboxes.MBOX31.MSGID.bit.IDE = 0U;                 // 표준 프레임
+    ECanaMboxes.MBOX31.MSGID.bit.STDMSGID = (Uint16)(ID & 0x07FFU); // 11-bit
 
-    ECanaShadow.CANME.bit.ME31=1;
-    ECanaRegs.CANME.bit.ME31= ECanaShadow.CANME.bit.ME31;
-    EDIS;
-
+    ECanaMboxes.MBOX31.MSGCTRL.bit.RTR = 0U;
     ECanaMboxes.MBOX31.MSGCTRL.bit.DLC=Length;
 
     ECanaMboxes.MBOX31.MDL.byte.BYTE0=Data0Low;
@@ -75,27 +73,24 @@ void CANATX(unsigned int ID, unsigned char Length, unsigned int Data0, unsigned 
     ECanaMboxes.MBOX31.MDH.byte.BYTE6=Data3Low;
     ECanaMboxes.MBOX31.MDH.byte.BYTE7=Data3High;
 
-    //CAN Tx Request
-    ECanaShadow.CANTRS.all=0;
-    ECanaShadow.CANTRS.bit.TRS31= 1;
-    ECanaRegs.CANTRS.all = ECanaShadow.CANTRS.all;
-    do
-    {
-        ECanaShadow.CANTA.all = ECanaRegs.CANTA.all;
-        //  CANWatchDog++;
-        //  if(CANWatchDog>20)
-        //  {
-        //      ECanaShadow.CANTA.bit.TA31=0;
-        //  }
-    }
-    while(!ECanaShadow.CANTA.bit.TA31);
+    ECanaShadow.CANME.all = ECanaRegs.CANME.all;
+    ECanaShadow.CANME.bit.ME31 = 1U;
+    ECanaRegs.CANME.all = ECanaShadow.CANME.all;
+    EDIS;
+    ECanaRegs.CANTRS.bit.TRS31 = 1U;
 
-    //Tx Flag Clear
-    //InitECan();
-    ECanaShadow.CANTA.all = 0;
-    ECanaShadow.CANTA.bit.TA31=1;                   // Clear TA5
-    ECanaRegs.CANTA.all = ECanaShadow.CANTA.all;
-   //
+    while (ECanaRegs.CANTA.bit.TA31 == 0U)
+    {
+        if (++CANWatchDog > 2000U)
+        {
+           break; // 타임아웃
+       }
+    }
+    // TA31 플래그 클리어
+    if (ECanaRegs.CANTA.bit.TA31 == 1U)
+    {
+       ECanaRegs.CANTA.bit.TA31 = 1U;
+    }
 }
 void SysTimerINIT(SystemReg *s)
 {
