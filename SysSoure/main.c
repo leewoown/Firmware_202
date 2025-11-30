@@ -224,8 +224,9 @@ void main(void)
     CANARegs.HMICMDRegs.all=0;
     SysRegs.SysStateReg.Word.DataH=0;
     SysRegs.SysStateReg.Word.DataL=0;
-    SysRegs.SysStateReg.bit.CANCOMEnable=1;
-    SysRegs.CanComEable=1;
+    SysRegs.SysDigitalOutPutReg.bit.NRlyOUT=0;
+    SysRegs.SysDigitalOutPutReg.bit.PRlyOUT=0;
+    SysRegs.SysDigitalOutPutReg.bit.ProRlyOUT=0;
     while(1)
     {
         SysRegs.Maincount++;
@@ -241,10 +242,12 @@ void main(void)
                  SysRegs.SysDigitalOutPutReg.bit.LEDAlarmOUT=0;
                  SysRegs.SysDigitalOutPutReg.bit.LEDFaultOUT=0;
                  SysRegs.SysDigitalOutPutReg.bit.LEDProtectOUT=0;
+
                  SysTimerINIT(&SysRegs);
                  SysVarINIT(&SysRegs);
                  CANRegVarINIT(&CANARegs);
                  MDCalInit(&SysRegs);
+                 PrtectRelayRegs.RlyMachine= PrtctRly_INIT;
                  CalEVE240AhRegsInit(&EV240AhSocRegs);
                  SysRegs.SysStateReg.bit.SysBalaMode=0;
                  SysRegs.SysStateReg.bit.INITOK=0;
@@ -252,8 +255,7 @@ void main(void)
                  SysRegs.SysAlarmReg.all=0;
                  SysRegs.SysProtectReg.all=0;
                  SysRegs.SysStateReg.all=0;
-                 SysRegs.CanComEable=1;
-                 SysRegs.SysStateReg.bit.CANCOMEnable=1;
+
                  //CalFrey60AhRegsInit(&Frey60AhSocRegs);
                  Slave0Regs.ID=BMS_ID_0;
                  Slave0Regs.SlaveCh=C_Slave_ACh;
@@ -270,6 +272,13 @@ void main(void)
                  Slave3Regs.ID=BMS_ID_3;
                  Slave3Regs.SlaveCh=C_Slave_ACh;
                  SlaveBMSIint(&Slave3Regs);
+                 SysRegs.SysDigitalOutPutReg.bit.NRlyOUT=0;
+                 SysRegs.SysDigitalOutPutReg.bit.PRlyOUT=0;
+                 SysRegs.SysDigitalOutPutReg.bit.ProRlyOUT=0;
+
+                 CANARegs.SysStatus.bit.NegRly=0;
+                 CANARegs.SysStatus.bit.PoRly=0;
+                 CANARegs.SysStatus.bit.PreCharRly=0;
 
                  SysRegs.SysStateReg.bit.INITOK=0;
                  PrtectRelayRegs.RlyMachine=PrtctRly_STANDBY;
@@ -283,7 +292,7 @@ void main(void)
                  SysRegs.CanComEable=1;
                  if(SysRegs.SysStateReg.bit.INITOK==0)
                  {
-                     for(SysRegs.InitValuleCnt=0;SysRegs.InitValuleCnt<100;SysRegs.InitValuleCnt++)
+                     for(SysRegs.InitValuleCnt=0;SysRegs.InitValuleCnt<20;SysRegs.InitValuleCnt++)
                      {
                          Slave0Regs.ID=BMS_ID_0;
                          Slave0Regs.SlaveCh=C_Slave_ACh;
@@ -332,6 +341,8 @@ void main(void)
                          EV240AhSocRegs.CellAgvVoltageF=SysRegs.SysCellAgvVoltageF;
                          CalEVE240AhSocInit(&EV240AhSocRegs);
                      }
+                     SysRegs.CanComEable=1;
+                     SysRegs.SysStateReg.bit.CANCOMEnable=1;
                      SysRegs.SysStateReg.bit.INITOK=1;
                  }
                  if(SysRegs.SysStateReg.bit.INITOK==1)
@@ -339,7 +350,7 @@ void main(void)
                      EV240AhSocRegs.state =SOC_STATE_RUNNING;
                      SysRegs.SysMachine=READY;
                  }
-                 PrtectRelayRegs.State.bit.WakeUpEN=1;
+                 //PrtectRelayRegs.State.bit.WakeUpEN=1;
             case READY://2
                    EV240AhSocRegs.state =SOC_STATE_RUNNING;
                    PrtectRelayRegs.State.bit.WakeUpEN=1;
@@ -372,10 +383,10 @@ void main(void)
             case PROTECTER://5
 
             case MANUALMode://6
-                 SysRegs.SysDigitalOutPutReg.bit.NRlyOUT    = CANARegs.HMICMDRegs.bit.N_Rly;
-                 SysRegs.SysDigitalOutPutReg.bit.PRlyOUT    = CANARegs.HMICMDRegs.bit.P_Rly;
-                 SysRegs.SysDigitalOutPutReg.bit.ProRlyOUT  = CANARegs.HMICMDRegs.bit.Pre_Rly;
-                 SysRegs.SysDigitalOutPutReg.bit.PWRHOLD    = CANARegs.HMICMDRegs.bit.PWRHoldRly;
+           //      SysRegs.SysDigitalOutPutReg.bit.NRlyOUT    = CANARegs.HMICMDRegs.bit.N_Rly;
+          //       SysRegs.SysDigitalOutPutReg.bit.PRlyOUT    = CANARegs.HMICMDRegs.bit.P_Rly;
+           //      SysRegs.SysDigitalOutPutReg.bit.ProRlyOUT  = CANARegs.HMICMDRegs.bit.Pre_Rly;
+            //     SysRegs.SysDigitalOutPutReg.bit.PWRHOLD    = CANARegs.HMICMDRegs.bit.PWRHoldRly;
                  if((CANARegs.HMICMDRegs.bit.HMI_MODE==1)&&(CANARegs.HMICMDRegs.bit.HMI_Reset==1))
                  {
                        CANARegs.HMICMDRegs.bit.HMI_Reset=0;
@@ -805,15 +816,14 @@ void main(void)
        memcpy(&CANARegs.SysCelltemperature[7],    &Slave1Regs.CellTemperature[0],sizeof(int16)*8);
        memcpy(&CANARegs.SysCelltemperature[15],   &Slave2Regs.CellTemperature[0],sizeof(int16)*7);
        memcpy(&CANARegs.SysCelltemperature[22],   &Slave3Regs.CellTemperature[0],sizeof(int16)*8);
+       if(SysRegs.SysStateReg.bit.INITOK==1)
+        {
 
-       SysRegs.SysStateReg.bit.NRlyDOStatus= SysRegs.SysDigitalOutPutReg.bit.NRlyOUT;
-       SysRegs.SysStateReg.bit.PRlyDOStatus= SysRegs.SysDigitalOutPutReg.bit.PRlyOUT;
-       SysRegs.SysStateReg.bit.PreRlyDOStatus=SysRegs.SysDigitalOutPutReg.bit.ProRlyOUT;
-       RlySeqHandle(&PrtectRelayRegs);
-       SysRegs.SysDigitalOutPutReg.bit.NRlyOUT=PrtectRelayRegs.State.bit.NRlyDO;
-       SysRegs.SysDigitalOutPutReg.bit.PRlyOUT=PrtectRelayRegs.State.bit.PRlyDO;
-       SysRegs.SysDigitalOutPutReg.bit.ProRlyOUT=PrtectRelayRegs.State.bit.PreRlyDO;
-       SysRegs.SysProtectReg.bit.PackRly_Err=PrtectRelayRegs.State.bit.RlyFaulttSate;
+            RlySeqHandle(&PrtectRelayRegs);
+
+        }
+
+
       if(SysRegs.Maincount>3000){SysRegs.Maincount=0;}
 
     }
@@ -1071,6 +1081,7 @@ interrupt void cpu_timer0_isr(void)
                }
        break;
        case 12:
+
                 CANARegs.SysState                          = ComBine(CANARegs.ProtectState,CANARegs.DiviceState);
                 SysRegs.SysStateReg.bit.SysSeqState        = SysRegs.SysMachine;
                 SysRegs.SysStateReg.bit.RlySeqState        = PrtectRelayRegs.RlyMachine;
@@ -1406,15 +1417,26 @@ interrupt void cpu_timer0_isr(void)
    /*
     *
     */
-  // SysRegs.SysStateReg.bit.HMICOMEnable=CANARegs.HMICMDRegs.bit.HMI_MODE;
-  // SysRegs.SysStateReg.bit.HMIBalanceMode=CANARegs.HMICMDRegs.bit.HMI_CellBalaEn;
-  // SysRegs.SysStateReg.bit.NRlyDOStatus=SysRegs.SysDigitalInputReg.bit.NAUX;
-  // SysRegs.SysStateReg.bit.PRlyDOStatus=SysRegs.SysDigitalInputReg.bit.PAUX;
-  // SysRegs.SysStateReg.bit.PreRlyDOStatus=PrtectRelayRegs.State.bit.ProRlyDI;
   if(SysRegs.SysStateReg.bit.HMICOMEnable==1)  { SysRegs.SysMachine=MANUALMode;}
-  SysDigitalOutput(&SysRegs);
 
+  if(SysRegs.SysStateReg.bit.INITOK==1)
+  {
+       SysRegs.SysDigitalOutPutReg.bit.NRlyOUT=PrtectRelayRegs.State.bit.NRlyDO;
+       SysRegs.SysDigitalOutPutReg.bit.PRlyOUT=PrtectRelayRegs.State.bit.PRlyDO;
+       SysRegs.SysDigitalOutPutReg.bit.ProRlyOUT=PrtectRelayRegs.State.bit.PreRlyDO;
 
+       SysDigitalOutput(&SysRegs);
+
+       SysRegs.SysStateReg.bit.NRlyDOStatus= SysRegs.SysDigitalOutPutReg.bit.NRlyOUT;
+       SysRegs.SysStateReg.bit.PRlyDOStatus= SysRegs.SysDigitalOutPutReg.bit.PRlyOUT;
+       SysRegs.SysStateReg.bit.PreRlyDOStatus=SysRegs.SysDigitalOutPutReg.bit.ProRlyOUT;
+  }
+  else
+  {
+      SysRegs.SysDigitalOutPutReg.bit.NRlyOUT=0;
+      SysRegs.SysDigitalOutPutReg.bit.PRlyOUT=0;
+      SysRegs.SysDigitalOutPutReg.bit.ProRlyOUT=0;
+  }
 //   LEDSysState_L;
    if(SysRegs.MainIsr1>3000) {SysRegs.MainIsr1=0;}
 
