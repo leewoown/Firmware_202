@@ -220,43 +220,31 @@ void main(void)
     PrtectRelayRegs.RlyMachine= PrtctRly_INIT;
     EV240AhSocRegs.state=SOC_STATE_IDLE;
     SysRegs.SysMachine =INIT;
-    CANARegs.PMSCMDRegs.all=0;
-    CANARegs.HMICMDRegs.all=0;
-    SysRegs.SysStateReg.Word.DataH=0;
-    SysRegs.SysStateReg.Word.DataL=0;
-    SysRegs.SysDigitalOutPutReg.bit.NRlyOUT=0;
-    SysRegs.SysDigitalOutPutReg.bit.PRlyOUT=0;
-    SysRegs.SysDigitalOutPutReg.bit.ProRlyOUT=0;
+    CANARegs.PMSCMDRegs.all=0x0000;
+    CANARegs.HMICMDRegs.all=0x0000;
+
     while(1)
     {
         SysRegs.Maincount++;
-        if(SysRegs.SysStateReg.bit.HMICOMEnable==1)
-        {
-            SysRegs.SysMachine= MANUALMode;
-        }
+
 
         switch(SysRegs.SysMachine)
         {
             case INIT: //0
                  CANARegs.DiviceState=0;
-                 SysRegs.SysDigitalOutPutReg.bit.LEDAlarmOUT=0;
-                 SysRegs.SysDigitalOutPutReg.bit.LEDFaultOUT=0;
-                 SysRegs.SysDigitalOutPutReg.bit.LEDProtectOUT=0;
-
                  SysTimerINIT(&SysRegs);
                  SysVarINIT(&SysRegs);
+                 SysDigitalOutput(&SysRegs);
                  CANRegVarINIT(&CANARegs);
                  MDCalInit(&SysRegs);
                  PrtectRelayRegs.RlyMachine= PrtctRly_INIT;
                  CalEVE240AhRegsInit(&EV240AhSocRegs);
-                 SysRegs.SysStateReg.bit.SysBalaMode=0;
-                 SysRegs.SysStateReg.bit.INITOK=0;
-                 SysRegs.SysStateReg.all=0;
-                 SysRegs.SysAlarmReg.all=0;
-                 SysRegs.SysProtectReg.all=0;
-                 SysRegs.SysStateReg.all=0;
-
-                 //CalFrey60AhRegsInit(&Frey60AhSocRegs);
+                 SysRegs.SysStateReg.Word.DataH=0;
+                 SysRegs.SysStateReg.Word.DataL=0;
+                 SysRegs.SysAlarmReg.Word.DataH=0;
+                 SysRegs.SysAlarmReg.Word.DataL=0;
+                 SysRegs.SysProtectReg.Word.DataH=0;
+                 SysRegs.SysProtectReg.Word.DataL=0;
                  Slave0Regs.ID=BMS_ID_0;
                  Slave0Regs.SlaveCh=C_Slave_ACh;
                  SlaveBMSIint(&Slave0Regs);
@@ -272,89 +260,75 @@ void main(void)
                  Slave3Regs.ID=BMS_ID_3;
                  Slave3Regs.SlaveCh=C_Slave_ACh;
                  SlaveBMSIint(&Slave3Regs);
-                 SysRegs.SysDigitalOutPutReg.bit.NRlyOUT=0;
-                 SysRegs.SysDigitalOutPutReg.bit.PRlyOUT=0;
-                 SysRegs.SysDigitalOutPutReg.bit.ProRlyOUT=0;
-
-                 CANARegs.SysStatus.bit.NegRly=0;
-                 CANARegs.SysStatus.bit.PoRly=0;
-                 CANARegs.SysStatus.bit.PreCharRly=0;
-
-                 SysRegs.SysStateReg.bit.INITOK=0;
-                 PrtectRelayRegs.RlyMachine=PrtctRly_STANDBY;
+           //      SysRegs.SysDigitalOutPutReg.bit.NRlyOUT=0;
+           //      SysRegs.SysDigitalOutPutReg.bit.PRlyOUT=0;
+            //     SysRegs.SysDigitalOutPutReg.bit.ProRlyOUT=0;
+           //      CANARegs.SysStatus.bit.NegRly=0;
+           //      CANARegs.SysStatus.bit.PoRly=0;
+           //      CANARegs.SysStatus.bit.PreCharRly=0;
                  EV240AhSocRegs.state=SOC_STATE_IDLE;
                  SysRegs.SysMachine=STANDBY;
-
+                 delay_ms(100);
             break;
             case STANDBY://1
-                 CANARegs.DiviceState=1;
-                 SysRegs.SysStateReg.bit.CANCOMEnable=1;
-                 SysRegs.CanComEable=1;
-                 if(SysRegs.SysStateReg.bit.INITOK==0)
-                 {
-                     for(SysRegs.InitValuleCnt=0;SysRegs.InitValuleCnt<20;SysRegs.InitValuleCnt++)
-                     {
-                         Slave0Regs.ID=BMS_ID_0;
-                         Slave0Regs.SlaveCh=C_Slave_ACh;
-                         Slave0Regs.Balance.all = 0x0000;
-                         SlaveBmsBalance(&Slave0Regs);
-                         Slave0Regs.StateMachine = STATE_BATREAD;
-                         Slave0Regs.ID=BMS_ID_0;
-                         Slave0Regs.SlaveCh=C_Slave_ACh;
-                         SlaveVoltagHandler(&Slave0Regs);
-                         delay_ms(10);
-                         Slave1Regs.ID=BMS_ID_1;
-                         Slave1Regs.SlaveCh=C_Slave_ACh;
-                         Slave1Regs.Balance.all = 0x0000;
-                         SlaveBmsBalance(&Slave1Regs);
-                         Slave1Regs.StateMachine = STATE_BATREAD;
-                         Slave1Regs.ID=BMS_ID_1;
-                         Slave1Regs.SlaveCh=C_Slave_ACh;
-                         SlaveVoltagHandler(&Slave1Regs);
-                         delay_ms(10);
-                         Slave2Regs.ID=BMS_ID_2;
-                         Slave2Regs.SlaveCh=C_Slave_ACh;
-                         Slave2Regs.Balance.all = 0x0000;
-                         SlaveBmsBalance(&Slave2Regs);
-                         Slave2Regs.StateMachine = STATE_BATREAD;
-                         Slave2Regs.ID=BMS_ID_2;
-                         Slave2Regs.SlaveCh=C_Slave_ACh;
-                         SlaveVoltagHandler(&Slave2Regs);
-                         delay_ms(10);
-                         Slave3Regs.ID=BMS_ID_3;
-                         Slave3Regs.SlaveCh=C_Slave_ACh;
-                         Slave3Regs.Balance.all = 0x0000;
-                         SlaveBmsBalance(&Slave3Regs);
-                         Slave3Regs.StateMachine = STATE_BATREAD;
-                         Slave3Regs.ID=BMS_ID_3;
-                         Slave3Regs.SlaveCh=C_Slave_ACh;
-                         SlaveVoltagHandler(&Slave3Regs);
-                         memcpy(&SysRegs.SysCellVoltageF[0],        &Slave0Regs.CellVoltageF[0],sizeof(float32)*7);
-                         memcpy(&SysRegs.SysCellVoltageF[7],        &Slave1Regs.CellVoltageF[0],sizeof(float32)*8);
-                         memcpy(&SysRegs.SysCellVoltageF[15],       &Slave2Regs.CellVoltageF[0],sizeof(float32)*7);
-                         memcpy(&SysRegs.SysCellVoltageF[22],       &Slave3Regs.CellVoltageF[0],sizeof(float32)*8);
-                         SysRegs.SysStateReg.bit.CellVoltOk=1;
-                     }
-                     if(SysRegs.SysStateReg.bit.CellVoltOk==1)
-                     {
-                         SysCalVoltageHandle(&SysRegs);
-                         EV240AhSocRegs.CellAgvVoltageF=SysRegs.SysCellAgvVoltageF;
-                         CalEVE240AhSocInit(&EV240AhSocRegs);
-                     }
+                     CANARegs.DiviceState=1;
                      SysRegs.CanComEable=1;
                      SysRegs.SysStateReg.bit.CANCOMEnable=1;
-                     SysRegs.SysStateReg.bit.INITOK=1;
-                 }
-                 if(SysRegs.SysStateReg.bit.INITOK==1)
-                 {
+                     if(SysRegs.SysStateReg.bit.INITOK==0)
+                     {
+                         for(SysRegs.InitValuleCnt=0;SysRegs.InitValuleCnt<20;SysRegs.InitValuleCnt++)
+                         {
+                             Slave0Regs.ID=BMS_ID_0;
+                             Slave0Regs.SlaveCh=C_Slave_ACh;
+                             Slave0Regs.Balance.all = 0x0000;
+                             SlaveBmsBalance(&Slave0Regs);
+                             Slave0Regs.StateMachine = STATE_BATREAD;
+                             Slave0Regs.ID=BMS_ID_0;
+                             Slave0Regs.SlaveCh=C_Slave_ACh;
+                             SlaveVoltagHandler(&Slave0Regs);
+                             delay_ms(10);
+                             Slave1Regs.ID=BMS_ID_1;
+                             Slave1Regs.SlaveCh=C_Slave_ACh;
+                             Slave1Regs.Balance.all = 0x0000;
+                             SlaveBmsBalance(&Slave1Regs);
+                             Slave1Regs.StateMachine = STATE_BATREAD;
+                             Slave1Regs.ID=BMS_ID_1;
+                             Slave1Regs.SlaveCh=C_Slave_ACh;
+                             SlaveVoltagHandler(&Slave1Regs);
+                             delay_ms(10);
+                             Slave2Regs.ID=BMS_ID_2;
+                             Slave2Regs.SlaveCh=C_Slave_ACh;
+                             Slave2Regs.Balance.all = 0x0000;
+                             SlaveBmsBalance(&Slave2Regs);
+                             Slave2Regs.StateMachine = STATE_BATREAD;
+                             Slave2Regs.ID=BMS_ID_2;
+                             Slave2Regs.SlaveCh=C_Slave_ACh;
+                             SlaveVoltagHandler(&Slave2Regs);
+                             delay_ms(10);
+                             Slave3Regs.ID=BMS_ID_3;
+                             Slave3Regs.SlaveCh=C_Slave_ACh;
+                             Slave3Regs.Balance.all = 0x0000;
+                             SlaveBmsBalance(&Slave3Regs);
+                             Slave3Regs.StateMachine = STATE_BATREAD;
+                             Slave3Regs.ID=BMS_ID_3;
+                             Slave3Regs.SlaveCh=C_Slave_ACh;
+                             SlaveVoltagHandler(&Slave3Regs);
+                             memcpy(&SysRegs.SysCellVoltageF[0],        &Slave0Regs.CellVoltageF[0],sizeof(float32)*7);
+                             memcpy(&SysRegs.SysCellVoltageF[7],        &Slave1Regs.CellVoltageF[0],sizeof(float32)*8);
+                             memcpy(&SysRegs.SysCellVoltageF[15],       &Slave2Regs.CellVoltageF[0],sizeof(float32)*7);
+                             memcpy(&SysRegs.SysCellVoltageF[22],       &Slave3Regs.CellVoltageF[0],sizeof(float32)*8);
+
+                             SysCalVoltageHandle(&SysRegs);
+                             EV240AhSocRegs.CellAgvVoltageF=SysRegs.SysCellAgvVoltageF;
+                             CalEVE240AhSocInit(&EV240AhSocRegs);
+                             SysRegs.SysStateReg.bit.INITOK=1;
+                         }
+                     }
                      EV240AhSocRegs.state =SOC_STATE_RUNNING;
                      SysRegs.SysMachine=READY;
-                 }
-                 //PrtectRelayRegs.State.bit.WakeUpEN=1;
+            break;
             case READY://2
-                   EV240AhSocRegs.state =SOC_STATE_RUNNING;
-                   PrtectRelayRegs.State.bit.WakeUpEN=1;
-
+                   PrtectRelayRegs.State.bit.WakeUpEN = (CANARegs.PMSCMDRegs.bit.RlyOFF == 1u) ? 1u : 0u;
                    if(SysRegs.SysStateReg.bit.SysPrtct==1)
                    {
                      //    SysRegs.SysMachine=PROTECTER;
@@ -379,6 +353,7 @@ void main(void)
                      {
                         SysRegs.SysMachine=ChargerStop;
                      }
+                     PrtectRelayRegs.State.bit.WakeUpEN = (CANARegs.PMSCMDRegs.bit.RlyOFF == 0u) ? 1u : 0u;
             break;
             case PROTECTER://5
 
@@ -852,7 +827,8 @@ interrupt void cpu_timer0_isr(void)
    /*
     *
     */
-   SysRegs.SysDigitalOutPutReg.bit.PWRHOLD   = (CANARegs.PMSCMDRegs.bit.RUNStatus == 0u);
+   SysRegs.SysStateReg.bit.PwrHoldRlyDOStatus = (SysRegs.SysCellDivVoltageF > 0.002f) ? 1u : 0u;
+   if(SysRegs.SysStateReg.bit.HMICOMEnable==1) {SysRegs.SysMachine= MANUALMode;}
    /*
     * DigitalInput detection
     * 릴레이 변경으로 삭제
@@ -1414,9 +1390,7 @@ interrupt void cpu_timer0_isr(void)
        default :
        break;
    }
-   /*
-    *
-    */
+
   if(SysRegs.SysStateReg.bit.HMICOMEnable==1)  { SysRegs.SysMachine=MANUALMode;}
 
   if(SysRegs.SysStateReg.bit.INITOK==1)
@@ -1424,18 +1398,20 @@ interrupt void cpu_timer0_isr(void)
        SysRegs.SysDigitalOutPutReg.bit.NRlyOUT=PrtectRelayRegs.State.bit.NRlyDO;
        SysRegs.SysDigitalOutPutReg.bit.PRlyOUT=PrtectRelayRegs.State.bit.PRlyDO;
        SysRegs.SysDigitalOutPutReg.bit.ProRlyOUT=PrtectRelayRegs.State.bit.PreRlyDO;
-
+       SysRegs.SysDigitalOutPutReg.bit.PWRHOLD=SysRegs.SysStateReg.bit.PwrHoldRlyDOStatus;
        SysDigitalOutput(&SysRegs);
 
        SysRegs.SysStateReg.bit.NRlyDOStatus= SysRegs.SysDigitalOutPutReg.bit.NRlyOUT;
        SysRegs.SysStateReg.bit.PRlyDOStatus= SysRegs.SysDigitalOutPutReg.bit.PRlyOUT;
        SysRegs.SysStateReg.bit.PreRlyDOStatus=SysRegs.SysDigitalOutPutReg.bit.ProRlyOUT;
+
   }
   else
   {
       SysRegs.SysDigitalOutPutReg.bit.NRlyOUT=0;
       SysRegs.SysDigitalOutPutReg.bit.PRlyOUT=0;
       SysRegs.SysDigitalOutPutReg.bit.ProRlyOUT=0;
+      SysDigitalOutput(&SysRegs);
   }
 //   LEDSysState_L;
    if(SysRegs.MainIsr1>3000) {SysRegs.MainIsr1=0;}

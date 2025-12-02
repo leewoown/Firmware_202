@@ -614,7 +614,7 @@ struct VCUCOMMAND_BIT
    unsigned int     PCCMD06         :1; // 6
    unsigned int     PCCMD07         :1; // 7
    unsigned int     PrtctReset      :1; // 8
-   unsigned int     RUNStatus       :1; // 9
+   unsigned int     RlyOFF          :1; // 9
    unsigned int     PCCMD10         :1; // 10
    unsigned int     PCCMD11         :1; // 11
    unsigned int     PCCMD12         :1; // 12

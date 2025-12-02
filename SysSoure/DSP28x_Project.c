@@ -120,17 +120,16 @@ void SysVarINIT(SystemReg *s)
     s->SysStateReg.all=0;
     s->SysAlarmReg.all=0;
     s->SysFaultReg.all=0;
-   // s->SysFaultBufReg.all=0;
+
     s->SysProtectReg.all=0;
-    //s->SysProtectBufReg.all=0;
-    s->SysDigitalInputReg.all=0;
-    s->SysDigitalOutPutReg.all=0;
+
+    s->SysDigitalInputReg.all=0x0000;
+    s->SysDigitalOutPutReg.all=0x0000;
     s->SysCurrentData.all=0x80000000;
- //   s->PackCOMERR.all=0;
     s->SlaveISOSPIErrReg.all=0;
     s->IDSWReg.all=0;
     s->InitValuleCnt=0;
-//    s->PackCOMERR.all=0;
+
 
     s->Test=0;
     s->Maincount=0;
@@ -236,7 +235,6 @@ void SysVarINIT(SystemReg *s)
     s->SlaveReadTempsEn.bit.SlaveBMS10=1;
     s->SlaveReadTempsEn.bit.SlaveBMS11=1;
 
-
     memset(&s->SlaveVoltErrCount[0],0,sizeof(Uint16)*32);
     memset(&s->SysAlarmCont[0],0,sizeof(Uint16)*16);
     memset(&s->SlaveTempsErrCount[0],0,sizeof(Uint16)*32);
@@ -322,7 +320,6 @@ void CANRegVarINIT(CANAReg *P)
     P->HMICMDRegs.all =0;
     P->ChargerStateRegs.all=0;
     P->SysStatus.all=0;
-    P->DigitalOutPutReg.all=0;
     P->VcuRxFlg=0;
     P->CharRxFlg=0;
     P->VcuCharRxCout=0;
@@ -1420,12 +1417,12 @@ void SysDigitalOutput(SystemReg *sys)
     }
     if(sys->SysDigitalOutPutReg.bit.PWRHOLD==1)
     {
-        LatchResetRlyON;
         LatchSetRlyON;
+       LatchResetRlyON;
     }
     else
     {
-        LatchResetRlyOFF;
+        LatchSetRlyOFF;
         LatchResetRlyOFF;
     }
 }
