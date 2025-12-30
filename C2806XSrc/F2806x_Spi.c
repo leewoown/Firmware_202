@@ -182,9 +182,12 @@ void SPI_Write(unsigned int WRData)
 unsigned int SPI_Read(void)
 {
     Uint16 ReadData;
-    Uint16 Dummy=0x0000;
+    Uint16 Dummy=0x0000U;
+
     SpiaRegs.SPICCR.bit.SPICHAR = 0x07;
+
     Dummy = (Dummy<<8)&0xFF00;
+
     while(SpiaRegs.SPISTS.bit.BUFFULL_FLAG);
     SpiaRegs.SPITXBUF = Dummy;              // Send
     while(SpiaRegs.SPISTS.bit.INT_FLAG!=1); // Wait for Tx전송이 끝났거나 수신이 시작되면 1이됨.

@@ -21,6 +21,7 @@ Note: In this software, the default inverter is supposed to be DMC1500 board.
 #include "F2806x_Device.h"      // F2806x Headerfile Include File
 #include "F2806x_Examples.h"    // F2806x Examples Include File
 #include "DSP28x_Project.h"
+
 #ifndef PARAMETER_H
 #define PARAMETER_H
 
@@ -296,11 +297,11 @@ Parameter
 #define     CellTempSampleTime   250
 
 #define     Product_Type                       3   // 24.09.21
-#define     Product_Version                    10   // 24.09.21
+#define     Product_Version                    00   // 24.09.21
 #define     Product_SysCellVauleS              15
 #define     Product_SysCellVauleP              2
-#define     Product_Voltage                    512 // 3.664*24
-#define     Product_Capacity                   460  //
+#define     Product_Voltage                    480 // 3.2*15
+#define     Product_Capacity                   4600  //
 
 
 #define     C_PackVoltMax                   540 //3.65*24

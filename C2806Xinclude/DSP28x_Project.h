@@ -87,6 +87,19 @@ Next, definitions used in main file.
 #define         IS_OVER_AND_BELOW(A, MIN, MAX)   ((A) >= (MIN) && (A) <  (MAX))  // 이상 ~ 미만
 #define         IS_ABOVE_AND_BELOW(A, MIN, MAX)  ((A) >  (MIN) && (A) <  (MAX))  // 초과 ~ 미만
 
+
+/* buf[pos..pos+3]로부터 Uint32 (LE) */
+#define GET_U32_LE(buf, pos) \
+    ( (Uint32)( ((Uint32)((buf)[(pos)])       ) | \
+                ((Uint32)((buf)[(pos) + 1U]) << 8)  | \
+                ((Uint32)((buf)[(pos) + 2U]) << 16) | \
+                ((Uint32)((buf)[(pos) + 3U]) << 24) ) )
+
+/* int16 (LE): 조합은 Uint16로 하고 마지막에 signed 캐스팅 */
+#define GET_I16_LE(buf, pos) \
+    ( (int16)GET_U16_LE((buf), (pos)) )
+
+
 struct Data_WORD
 {
     unsigned int DataL;
@@ -193,6 +206,7 @@ union DigitalOutPut_REG
    unsigned int     all;
    struct DigitalOutPut_BIT bit;
 };
+
 typedef enum
 {
    INIT, //0
@@ -206,6 +220,13 @@ typedef enum
    MANUALMode
 
 } SysState;
+typedef enum
+{
+    SOC_ZONE_GA = 0u,   /* 가: 0~20% */
+    SOC_ZONE_NA,        /* 나: 20~40% */
+    SOC_ZONE_DA,        /* 다: 40~80% */
+    SOC_ZONE_RA         /* 라: 80~100% */
+} SocInitZone;
 struct SystemState_BIT
 {       // bits   description
     unsigned int     SysSeqState            :3; // 0,1,2
@@ -585,6 +606,7 @@ typedef struct System_Date
     Uint16 SlaveVoltErrCount[32];
 
     SysState    SysMachine;
+    SocInitZone SysSocInitRule;
     union       ParentDeviceCMD_REG         PMSysCMDResg;
     union       SystemState_REG             SysStateReg;
     union       SystemAlarm_REG             SysAlarmReg;

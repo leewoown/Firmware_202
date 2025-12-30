@@ -10,6 +10,7 @@
 #include "ProtectRelay.h"
 #include "BAT_LTC6802.h"
 #include "BATAlgorithm.h"
+#include "NVRAM.h"
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
@@ -79,9 +80,10 @@ void SysProtectCheck(SystemReg *s);
 //void CalFrey60AhRegsInit(SocReg *P);
 //void CalFrey60AhSocInit(SocReg *P);
 //void CalFrey60AhSocHandle(SocReg *P);
-
-
-
+void NVRAM_AZoneSaveHandler(NVRZoneAReg *p);
+void NVRAM_AZoneReadHandler(NVRZoneAReg *p);
+void NVRAM_RecognizeAndInit(NVRZoneAReg *p);
+void NVRAM_StateTest(void);
 
 /*
  *
@@ -113,6 +115,8 @@ void SlaveBMSDigiteldoutOHandler(SlaveReg *P);
 void SalveTempsHandler(SlaveReg *s);
 void TempTemps(SystemReg *s);
 void RlySeqHandle(PrtectRelayReg *P);
+
+
 /*
  *  인터럽트 함수 선언
  */
@@ -131,6 +135,12 @@ SlaveReg        Slave0Regs;
 SlaveReg        Slave1Regs;
 SlaveReg        Slave2Regs;
 SlaveReg        Slave3Regs;
+
+NVRAllReg       NVRAllRegs;
+NVRZoneAReg     NVRZoneAWRRegs;
+NVRZoneAReg     NVRZoneARDRegs;
+NVRZoneAReg     NVRZoneAInitRegs;
+
 
 CANAReg         CANARegs;
 //SocReg          Farasis52AhSocRegs;
@@ -271,6 +281,7 @@ void main(void)
                  delay_ms(100);
             break;
             case STANDBY://1
+
                      CANARegs.DiviceState=1;
                      SysRegs.CanComEable=1;
                      SysRegs.SysStateReg.bit.CANCOMEnable=1;
@@ -321,10 +332,15 @@ void main(void)
                              SysCalVoltageHandle(&SysRegs);
                              EV240AhSocRegs.CellAgvVoltageF=SysRegs.SysCellAgvVoltageF;
                              CalEVE240AhSocInit(&EV240AhSocRegs);
+
+                             NVRAM_RecognizeAndInit(&NVRZoneAInitRegs);
+                             NVRZoneAWRRegs.SysTimeTick=NVRZoneAInitRegs.SysTimeTick;
+                             NVRZoneAWRRegs.LastSOC =NVRZoneAInitRegs.LastSOC;
                              SysRegs.SysStateReg.bit.INITOK=1;
                          }
                      }
                      EV240AhSocRegs.state =SOC_STATE_RUNNING;
+                     NVRAllRegs.SEQ=NVRAM_AZoneSave;
                      SysRegs.SysMachine=READY;
             break;
             case READY://2
@@ -797,8 +813,47 @@ void main(void)
             RlySeqHandle(&PrtectRelayRegs);
 
         }
+      // NVRAM_StateTest();
+       if((NVRAllRegs.SEQTimeTick>100)&&(SysRegs.SysStateReg.bit.INITOK==1))
+       {
 
+           switch(NVRAllRegs.SEQ)
+           {
+               case NVRAM_AZoneSave :
+                     NVRAllRegs.DebugCount++;
+                     NVRZoneAWRRegs.MetaVersion=Product_Version;
+                     NVRZoneAWRRegs.LastState = NVRZoneAWRRegs.SysTimeTick++;
+                     NVRAM_AZoneSaveHandler(&NVRZoneAWRRegs);
+                     NVRAllRegs.SEQ=NVRAM_BZoneSave;
+               break;
+               case NVRAM_BZoneSave :
+                    NVRAM_AZoneReadHandler(&NVRZoneARDRegs);
+                    if(NVRAllRegs.DebugCount>200)
+                    {
+                        NVRAllRegs.DebugCount=0;
+                    }
+                    NVRAllRegs.SEQ=NVRAM_AZoneSave;
+               break;
+               case NVRAM_CZoneSave :
 
+               break;
+               case NVRAM_AZoneRead :
+
+               break;
+               case NVRAM_BZoneRead :
+
+               break;
+               case NVRAM_CZoneRead :
+
+               break;
+               case NVRAM_MANUALMode :
+
+               break;
+               default :
+               break;
+           }
+           NVRAllRegs.SEQTimeTick=0;
+       }
       if(SysRegs.Maincount>3000){SysRegs.Maincount=0;}
 
     }
@@ -808,6 +863,8 @@ interrupt void cpu_timer0_isr(void)
 {
    //LEDSysState_T;
    SysRegs.MainIsr1++;
+   g_SysTimeTick++;
+   NVRAllRegs.SEQTimeTick++;
    SysRegs.SysRegTimer5msecCount++;
    SysRegs.SysRegTimer10msecCount++;
    SysRegs.SysRegTimer50msecCount++;
@@ -827,7 +884,7 @@ interrupt void cpu_timer0_isr(void)
    /*
     *
     */
-   SysRegs.SysStateReg.bit.PwrHoldRlyDOStatus = (SysRegs.SysCellDivVoltageF > 0.002f) ? 1u : 0u;
+   SysRegs.SysStateReg.bit.PwrHoldRlyDOStatus = (SysRegs.SysCellDivVoltageF > 0.009f) ? 1u : 0u;
    if(SysRegs.SysStateReg.bit.HMICOMEnable==1) {SysRegs.SysMachine= MANUALMode;}
    /*
     * DigitalInput detection
@@ -933,7 +990,6 @@ interrupt void cpu_timer0_isr(void)
                    memcpy(&SysRegs.SysCellVoltageF[22],       &Slave3Regs.CellVoltageF[0],sizeof(float32)*8);
                    SysCalVoltageHandle(&SysRegs);
                    SysRegs.SysStateReg.bit.CellVoltOk=0;
-          \
        break;
        case 2:
 
@@ -1309,8 +1365,8 @@ interrupt void cpu_timer0_isr(void)
                CANARegs.CharCONSTVolt=545;
                CANARegs.CahrConstantCurrt =300;
                CANARegs.CharCONSTSOC=1000;
-               CANARegs.SysPackPT  = (unsigned int)(SysRegs.SysPackParallelVoltageF*10);
-               CANARegs.SysPackCT  = (unsigned int)(SysRegs.SysPackCurrentAsbF*10);
+               CANARegs.SysPackPT  = (unsigned int)(SysRegs.SysPackParallelVoltageF*10);//545;//(unsigned int)(SysRegs.SysPackParallelVoltageF*10);
+               CANARegs.SysPackCT  = (unsigned int)(SysRegs.SysPackCurrentAsbF*10);//300;(unsigned int)(SysRegs.SysPackCurrentAsbF*10);
                if(SysRegs.CanComEable==1)
                {
                    CANATX(0x61E,8,CANARegs.CharCONSTVolt,CANARegs.CahrConstantCurrt,CANARegs.SysPackPT,CANARegs.SysPackCT);
@@ -1326,7 +1382,7 @@ interrupt void cpu_timer0_isr(void)
                SysRegs.TargetPackSocF   = (float32)(CANARegs.CharCONSTSOC/10.0f);
                if(SysRegs.SysStateReg.bit.SysDisCharMode == 0)
                {
-                   if (SysRegs.SysPackParallelVoltageF >= SysRegs.TargetPackVoltF)// || (SysRegs.SysSOCF >= SysRegs.TargetPackSocF))
+                   if (SysRegs.SysPackParallelVoltageF >= SysRegs.TargetPackVoltF)
                    {
                        if(SysRegs.SysPackCurrentAsbF<= 1.0F)
                        {

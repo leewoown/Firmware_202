@@ -42,18 +42,19 @@ SysSoure/main.obj: D:/202\ 15S2P_PackBMSR0/F28069PackBMS/SysInclude/ProtectRelay
 SysSoure/main.obj: D:/202\ 15S2P_PackBMSR0/F28069PackBMS/SysInclude/BAT_LTC6802.h
 SysSoure/main.obj: D:/202\ 15S2P_PackBMSR0/F28069PackBMS/SysInclude/parameter.h
 SysSoure/main.obj: D:/202\ 15S2P_PackBMSR0/F28069PackBMS/SysInclude/BATAlgorithm.h
-SysSoure/main.obj: C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/stdio.h
+SysSoure/main.obj: D:/202\ 15S2P_PackBMSR0/F28069PackBMS/SysInclude/NVRAM.h
+SysSoure/main.obj: C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/string.h
 SysSoure/main.obj: C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/_ti_config.h
 SysSoure/main.obj: C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/linkage.h
+SysSoure/main.obj: C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/sys/cdefs.h
+SysSoure/main.obj: C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/xlocale/_string.h
+SysSoure/main.obj: C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/stdio.h
 SysSoure/main.obj: C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/stdarg.h
 SysSoure/main.obj: C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/sys/_types.h
-SysSoure/main.obj: C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/sys/cdefs.h
 SysSoure/main.obj: C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/machine/_types.h
 SysSoure/main.obj: C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/math.h
 SysSoure/main.obj: C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/_defs.h
 SysSoure/main.obj: C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/machine/_limits.h
-SysSoure/main.obj: C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/string.h
-SysSoure/main.obj: C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/xlocale/_string.h
 
 ../SysSoure/main.c:
 
@@ -139,17 +140,23 @@ D:/202\ 15S2P_PackBMSR0/F28069PackBMS/SysInclude/parameter.h:
 
 D:/202\ 15S2P_PackBMSR0/F28069PackBMS/SysInclude/BATAlgorithm.h:
 
-C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/stdio.h:
+D:/202\ 15S2P_PackBMSR0/F28069PackBMS/SysInclude/NVRAM.h:
+
+C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/string.h:
 
 C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/_ti_config.h:
 
 C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/linkage.h:
 
+C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/sys/cdefs.h:
+
+C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/xlocale/_string.h:
+
+C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/stdio.h:
+
 C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/stdarg.h:
 
 C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/sys/_types.h:
-
-C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/sys/cdefs.h:
 
 C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/machine/_types.h:
 
@@ -158,8 +165,4 @@ C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/math.h:
 C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/_defs.h:
 
 C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/machine/_limits.h:
-
-C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/string.h:
-
-C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/xlocale/_string.h:
 

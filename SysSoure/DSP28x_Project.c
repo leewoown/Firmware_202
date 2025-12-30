@@ -480,6 +480,37 @@ void MDCalVoltandTemsHandle(SystemReg *P)
   }
 
 }
+void SysCalSocIintHandle(SystemReg *s)
+{
+    static float32 CellVagF=0.0F;
+    const float32 V_Soc00F  = 2.9000F;
+    const float32 V_Soc20F  = 3.2790F;
+    const float32 V_Soc40F  = 3.3040F;
+    const float32 V_Soc80F  = 3.3410F;
+    const float32 V_Soc100F = 3.4510F;
+    CellVagF=s->SysCellAgvVoltageF;
+
+    if (CellVagF < V_Soc00F)  { CellVagF = V_Soc00F;  }
+    if (CellVagF > V_Soc100F) { CellVagF = V_Soc100F; }
+
+    if (CellVagF < V_Soc20F)
+    {
+        return s->SysSocInitRule=SOC_ZONE_GA;
+    }
+    else if (CellVagF < V_Soc40F)
+    {
+        return s->SysSocInitRule=SOC_ZONE_NA;
+    }
+    else if (CellVagF < V_Soc80F)
+    {
+        return s->SysSocInitRule=SOC_ZONE_DA;
+    }
+    else
+    {
+        return s->SysSocInitRule=SOC_ZONE_DA;
+    }
+}
+
 void SysCalVoltageHandle(SystemReg *s)
 {
 
@@ -583,7 +614,7 @@ void SysCalCurrentHandle(SystemReg *s)
     CurrentCT  =  CurrentCT - 0x80000000;
 
     Currentbuf        =  ((float)CurrentCT)/1000;          // (mA to A) CAB500 resolution 1mA
-    s->SysPackCurrentF  = 1.0 * Currentbuf;    // Decide Current sensor's direction
+    s->SysPackCurrentF  = -1.0 * Currentbuf;    // Decide Current sensor's direction
 
     if(s->SysPackCurrentF>=500.0)
     {
