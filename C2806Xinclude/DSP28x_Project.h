@@ -161,9 +161,9 @@ struct DigitalInPut_BIT
    unsigned int     PAUX                    :1;   // 0
    unsigned int     NAUX                    :1;   // 1
    unsigned int     EMGSWStauts             :1;   // 2
-   unsigned int     CANRX0                  :1;   // 3
-   unsigned int     CANRX1                  :1;   // 4
-   unsigned int     SW05                    :1;   // 5
+   unsigned int     CANRX1                  :1;   // 3
+   unsigned int     CANRX0                  :1;   // 4
+   unsigned int     killSW                  :1;   // 5
    unsigned int     SW06                    :1;   // 6
    unsigned int     SW07                    :1;   // 7
    unsigned int     SW08                    :1;   // 8
@@ -222,19 +222,19 @@ typedef enum
 } SysState;
 typedef enum
 {
-    SOC_ZONE_GA = 0u,   /* 가: 0~20% */
-    SOC_ZONE_NA,        /* 나: 20~40% */
-    SOC_ZONE_DA,        /* 다: 40~80% */
-    SOC_ZONE_RA         /* 라: 80~100% */
+    SOC_ZONE_NVR,    /* 가: 0~20% */
+    SOC_ZONE_cellVolt,        /* 나: 20~40% */
+
 } SocInitZone;
 struct SystemState_BIT
-{       // bits   description
+{
+    // bits   description
     unsigned int     SysSeqState            :3; // 0,1,2
     unsigned int     RlySeqState            :3; // 3,4,5
     unsigned int     SocSeqState            :2; // 6,7
     unsigned int     INITOK                 :1; // 8
     unsigned int     CANCOMEnable           :1; // 9
-    unsigned int     VCURlyWakeUp           :1; // 10
+    unsigned int     VCUWakeUp              :1; // 10
     unsigned int     ChargerWakeUp          :1; // 11
     unsigned int     SysSocMode             :1; // 12
     unsigned int     SysBalaMode            :1; // 13
@@ -266,8 +266,7 @@ union SystemState_REG
 };
 struct SystemAlarm_BIT
 {       // bits   description
-    unsigned int     PackVDisChar_OC            :1; // 0
-    unsigned int     PackVChar_OC               :1; // 1
+    unsigned int     PackVCur_OC                :1; // 0
     unsigned int     PackVSOC_OV                :1; // 2
     unsigned int     PackVSOC_UN                :1; // 3
     unsigned int     PackVolt_OV                :1; // 4
@@ -275,13 +274,11 @@ struct SystemAlarm_BIT
     unsigned int     CellVolt_OV                :1; // 6
     unsigned int     CellVolt_UN                :1; // 7
     unsigned int     CellVolt_BL                :1; // 8
-    unsigned int     CellTemps_OT               :1; // 9
-    unsigned int     SW10                      :1; // 10
-    unsigned int     CellTemps_UT               :1; // 11
-    unsigned int     SW12                      :1; // 12
-    unsigned int     CellTemp_BL                :1; // 13
-    unsigned int     PackDischarUnPWR_BL        :1; // 14
-    unsigned int     PackCharUnPWR_BL           :1; // 15
+    unsigned int     CellTemp_OT               :1; // 9
+    unsigned int     CellTemp_UT               :1; // 11
+    unsigned int     CellTemp_BL                :1; // 12
+    unsigned int     PackDischarUnPWR_BL        :1; // 13
+    unsigned int     PackCharUnPWR_BL           :1; // 14
     unsigned int     SW16                       :1; // 16
     unsigned int     SW17                       :1; // 17
     unsigned int     SW18                       :1; // 18
@@ -307,8 +304,7 @@ union SystemAlarm_REG
 };
 struct SystemFault_BIT
 {       // bits   description
-    unsigned int     PackVDisChar_OC            :1; // 0
-    unsigned int     PackVChar_OC               :1; // 1
+    unsigned int     PackVCur_OC                :1; // 0
     unsigned int     PackVSOC_OV                :1; // 2
     unsigned int     PackVSOC_UN                :1; // 3
     unsigned int     PackVolt_OV                :1; // 4
@@ -316,13 +312,12 @@ struct SystemFault_BIT
     unsigned int     CellVolt_OV                :1; // 6
     unsigned int     CellVolt_UN                :1; // 7
     unsigned int     CellVolt_BL                :1; // 8
-    unsigned int     CellTemps_OT          :1; // 9
-    unsigned int     CellTempsCharg_OT          :1; // 10
-    unsigned int     CellTempsDisCh_UT          :1; // 11
-    unsigned int     CellTempsCharg_UT          :1; // 12
-    unsigned int     CellTemp_BL                :1; // 13
-    unsigned int     PackDischarUnPWR_BL        :1; // 14
-    unsigned int     PackCharUnPWR_BL           :1; // 15
+    unsigned int     CellTemp_OT               :1; // 9
+    unsigned int     CellTemp_UT               :1; // 11
+    unsigned int     CellTemp_BL                :1; // 12
+    unsigned int     PackDischarUnPWR_BL        :1; // 13
+    unsigned int     PackCharUnPWR_BL           :1; // 14
+    unsigned int     SW15                       :1; // 15
     unsigned int     SW16                       :1; // 16
     unsigned int     SW17                       :1; // 17
     unsigned int     SW18                       :1; // 18
@@ -349,28 +344,27 @@ union SystemFault_REG
 };
 struct SystemProtect_BIT
 {       // bits   description
-    unsigned int     PackVDisChar_OC            :1; // 0
-    unsigned int     PackVChar_OC               :1; // 1
-    unsigned int     PackVSOC_OV                :1; // 2
-    unsigned int     PackVSOC_UN                :1; // 3
-    unsigned int     PackVolt_OV                :1; // 4
-    unsigned int     PackVolt_UN                :1; // 5
-    unsigned int     CellVolt_OV                :1; // 6
-    unsigned int     CellVolt_UN                :1; // 7
-    unsigned int     CellVolt_BL                :1; // 8
-    unsigned int     CellTemps_OT          :1; // 9
-    unsigned int     CellTempsCharg_OT          :1; // 10
-    unsigned int     CellTemps_UT          :1; // 11
-    unsigned int     CellTempsCharg_UT          :1; // 12
-    unsigned int     CellTemp_BL                :1; // 13
-    unsigned int     PackDischarUnPWR_BL        :1; // 14
-    unsigned int     PackCharUnPWR_BL           :1; // 15
-    unsigned int     PackRly_Err                :1; // 16
-    unsigned int     PackIOSPI_Err              :1; // 17
-    unsigned int     PackCAN_Err                :1; // 18
-    unsigned int     PackCT_Err                 :1; // 19
-    unsigned int     PackISOReg_Err             :1; // 20
-    unsigned int     MSD_Err                    :1; // 21
+    unsigned int     PackVCur_OC                :1; // 00
+    unsigned int     PackVSOC_OV                :1; // 01
+    unsigned int     PackVSOC_UN                :1; // 02
+    unsigned int     PackVolt_OV                :1; // 03
+    unsigned int     PackVolt_UN                :1; // 04
+    unsigned int     CellVolt_OV                :1; // 05
+    unsigned int     CellVolt_UN                :1; // 06
+    unsigned int     CellVolt_BL                :1; // 07
+    unsigned int     CellTemp_OT                :1; // 08
+    unsigned int     CellTemp_UT                :1; // 09
+    unsigned int     CellTemp_BL                :1; // 11
+    unsigned int     PackRly_Err                :1; // 12
+    unsigned int     MSD_Err                    :1; // 13
+    unsigned int     PackISOReg_Err             :1; // 14
+    unsigned int     PackIOSPI_Err              :1; // 15
+    unsigned int     PackVCUCAN_Err             :1; // 16
+    unsigned int     PackCharCAN_Err            :1; // 17
+    unsigned int     PackCTCAN_Err              :1; // 18
+    unsigned int     PackDischarPWR_BL          :1; // 19
+    unsigned int     PackCharPWR_BL             :1; // 20
+    unsigned int     Cell_IRErr                 :1; // 21
     unsigned int     SW22                       :1; // 22
     unsigned int     SW23                       :1; // 23
     unsigned int     SW24                       :1; // 24
@@ -538,6 +532,7 @@ typedef struct System_Date
     Uint16  VoltTempsReadCount;
     Uint16  RelayCheck;
     Uint16  VCUCANErrCheck;
+    Uint16  CHACANErrCheck;
     Uint16  CTCANErrCheck;
     Uint16  HMICANErrCheck;
     Uint16  SysVoltageMaxNum;
@@ -563,6 +558,7 @@ typedef struct System_Date
     Uint16  MDNumber;
     Uint16  MDNumCout;
     Uint16  SysAlarmCont[16];
+    Uint16  SysFalutCont[16];
     float32 SysCellMaxVoltageF;
     float32 SysCellMinVoltageF;
     float32 SysCellAgvVoltageF;
@@ -600,7 +596,7 @@ typedef struct System_Date
     unsigned int StartBATOUTOffCount;
 
 
-    Uint16 ProtectDelayCount[32];
+   // Uint16 ProtectDelayCount[32];
     Uint16 SlaveTempsErrCount[32];
     Uint16 SlaveBalanErrCount[32];
     Uint16 SlaveVoltErrCount[32];
@@ -611,13 +607,11 @@ typedef struct System_Date
     union       SystemState_REG             SysStateReg;
     union       SystemAlarm_REG             SysAlarmReg;
     union       SystemFault_REG             SysFaultReg;
-  //  union       SystemFault_REG             SysFaultBufReg;
     union       SystemProtect_REG           SysProtectReg;
-//    union       SystemProtect_REG           SysProtectBufReg;
     union       DigitalInput_REG            SysDigitalInputReg;
     union       DigitalOutPut_REG           SysDigitalOutPutReg;
     union       Currnet_Reg                 SysCurrentData;
- //   union       WORD2BYTE_Reg               PackCOMERR;
+
     union       SlaveBMSCOMERR_REG          SlaveISOSPIErrReg;
     union       SlaveBMSEnable_REG          SlaveReadTempsEn;
     union       SlaveBMSEnable_REG          SlaveReadVoltEn;
@@ -679,10 +673,10 @@ struct BATStatus_BIT
     unsigned int     NegRly           :1; // 1
     unsigned int     PoRly            :1; // 2
     unsigned int     PreCharRly       :1; // 3
-    unsigned int     MSDAux           :1; // 4
+    unsigned int     WakeUpEn         :1; // 4
     unsigned int     ChargerEn        :1; // 5
-    unsigned int     STATE06          :1; // 6
-    unsigned int     STATE07          :1; // 7
+    unsigned int     KillSWstatus     :1; // 6
+    unsigned int     PWMBMS_Hold      :1; // 7
     unsigned int     STATE08          :1; // 8
     unsigned int     STATE09          :1; // 9
     unsigned int     STATE10          :1; // 10
@@ -772,7 +766,8 @@ typedef struct CANA_DATA
     Uint16 SysPackIsoRegs;
     Uint16 SysCellInRegsMax;
     Uint16 SysSoHCapacity;
-
+    Uint16 SysTimeTickDataL;
+    Uint16 SysTimeTickDataH;
     Uint16 CharCONSTVolt;
     Uint16 CharCONSTSOC;
     int16  CahrConstantCurrt;

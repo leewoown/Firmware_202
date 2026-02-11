@@ -746,7 +746,7 @@ void CalFrey60AhSocHandle(SocReg *P)
 }
 
 #endif
-#define C_EVE380AhNorm        0.002631//1/380Ah;
+#define C_EVE380AhNorm        0.00271//1/360Ah;
 extern void CalEVE240AhRegsInit(SocReg *P);
 extern void CalEVE240AhSocInit(SocReg *P);
 extern void CalEVE240AhSocHandle(SocReg *P);
@@ -899,11 +899,110 @@ void CalEVE240AhSocInit(SocReg *P)
 
 void CalEVE240AhSocHandle(SocReg *P)
 {
+    /* 1ms tick 누적 */
     P->SysTime++;
+    /* (선택) 평균전압 갱신 */
     P->AVGXF         =   P->CellAgvVoltageF;
+    /* 50ms 주기 확정 */
+    if(P->SysTime < (Uint16)C_SocSamPleCount)
+    {
+        P->state=SOC_STATE_CalWaitMode;
+        return;
+    }
+    P->SysTime=0u;
+    /* 5) INITOK 가드: 측정(전압/온도) 1회 이상 완료 전에는 SOC 연산/초기화 금지 */
+    if(P->SoCStateRegs.bit.INITOK == 0u)
+    {
+        /* INITOK 이전: 필요 시 마지막 SOC 유지(여기서는 아무것도 안 함) */
+        return;
+        P->state=SOC_STATE_IDLE;
+    }
+
+    /* ---- CalMeth 결정(기존 로직 유지) ---- */
+    if(P->SysSoCCTAbsF >= C_SocInitCTVaule)
+    {
+        P->SoCStateRegs.bit.CalMeth = 1u;
+        P->CTCount = 0u;
+    }
+    else
+    {
+        P->CTCount++;
+        if(P->CTCount > 6000u)
+        {
+            P->CTCount = 6001u;
+            P->SoCStateRegs.bit.CalMeth = 0u;
+        }
+    }
+
+    /* 2) CalMeth 전환 엣지 검출 + Ah 누적 리셋 */
+    {
+        static Uint16 prevCalMeth_u16 = 0u; /* 함수 최초 진입 시 0으로 시작 */
+        Uint16 curCalMeth_u16 = (Uint16)P->SoCStateRegs.bit.CalMeth;
+
+        if(curCalMeth_u16 != prevCalMeth_u16)
+        {
+            /* CalMeth 전환 순간: 누적값 오염/점프 방지 */
+            P->SysPackAhNewF    = 0.0F;
+            P->SysPackAhF       = 0.0F;
+            P->SysPackAhOldF    = 0.0F;
+            P->SysPackSOCBufF1  = 0.0F;
+            P->SysPackSOCBufF2  = 0.0F;
+            P->state=SOC_STATE_InitRegs;
+        }
+        prevCalMeth_u16 = curCalMeth_u16;
+    }
+    /* 1) 50ms마다 항상 계산(상태머신 제거/보정) */
+    if(P->SoCStateRegs.bit.CalMeth == 0u)
+    {
+        /* OCV 기반 초기화(평탄구간 등) */
+        P->AVGXF = P->CellAgvVoltageF;
+
+        /* 4) CalEVE240AhSocInit: 평균전압(및 온도 등) 기반으로 초기 SOC(SysSocInitF)를 산출하는 초기화 함수로 해석됨 */
+        CalEVE240AhSocInit(P);
+        P->state=SOC_STATE_InitSos;
+        /* 초기화 SOC 반영 */
+        P->SysPackSOCF = P->SysSocInitF;
+    }
+    else /* CalMeth == 1 */
+    {
+        /* CT(적류적산) 기반 SOC 업데이트 */
+        P->SysSOCdtF = (C_CTSampleTime * C_SocCumulativeTime); /* 0.05 * (1/3600) */
+        /* 전류(A) * 시간(h) = Ah
+           SysSoCCTF는 “부호 포함 전류”로 가정(충전 +, 방전 - 또는 반대) */
+        P->SysPackAhNewF = (P->SysSoCCTF * P->SysSOCdtF);
+        P->SysPackAhF    = (P->SysPackAhNewF + P->SysPackAhOldF);
+        P->SysPackAhOldF = P->SysPackAhF;
+
+        /* Ah 누적 클램프(용량 380Ah 기준) */
+        if(P->SysPackAhF <= -368.0F)
+        {
+            P->SysPackAhF = -368.0F;
+        }
+        else if(P->SysPackAhF >= 368.0F)
+        {
+            P->SysPackAhF = 368.0F;
+        }
+
+        /* Ah -> SOC% 변환 */
+        P->SysPackSOCBufF1 = (P->SysPackAhF * C_EVE380AhNorm); /* (Ah)*(1/380) */
+        P->SysPackSOCBufF2 = (P->SysPackSOCBufF1 * 100.0F);
+        P->SysPackSOCF     = (P->SysSocInitF + P->SysPackSOCBufF2);
+        P->state=SOC_STATE_CalAhSos;
+    }
+    /* 3) SOC 0~100% 클램프 */
+    if(P->SysPackSOCF < 0)
+    {
+        P->SysPackSOCF = 0;
+    }
+    else if(P->SysPackSOCF > 100)
+    {
+        P->SysPackSOCF = 100;
+    }
+    /*
+
     if(P->SysTime>=C_SocSamPleCount)
      {
-         if(P->SysSoCCTAbsF>=C_SocInitCTVaule)
+         if(P->SysSoCCTAbsF < (Uint16)C_SocSamPleCount)
          {
              P->SoCStateRegs.bit.CalMeth=1;
              P->CTCount=0;
@@ -962,7 +1061,7 @@ void CalEVE240AhSocHandle(SocReg *P)
              break;
          }
          P->SysTime=0;
-     }
+     }*/
 }
 
 #endif

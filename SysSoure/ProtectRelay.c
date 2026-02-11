@@ -16,6 +16,7 @@ extern void RlySeqHandle(PrtectRelayReg *P);
 
 void ProtectRlyVarINIT(PrtectRelayReg *P)
 {
+    P->RlyMachine= PrtctRly_INIT;
     P->State.bit.NRlyDO=0;
     P->State.bit.PRlyDO=0;
     P->State.bit.PreRlyDO=0;
@@ -32,6 +33,8 @@ void ProtectRlyVarINIT(PrtectRelayReg *P)
     P->Protect_NRlyOffCount=0;
     P->WakeupOn_TimeCount=0;
     P->WakeupOff_TimeCount=0;
+    P->State.bit.WakeuPOnEND=0;
+    P->State.bit.WakeuPOnEND=0;
 }
 void RlySeqHandle(PrtectRelayReg *P)
 {
@@ -44,19 +47,16 @@ void RlySeqHandle(PrtectRelayReg *P)
              P->State.bit.PRlyDO=0;
              P->RlyMachine=PrtctRly_STANDBY;
         break;
-        case PrtctRly_STANDBY:
-            P->State.bit.NRlyDO=0;
-            P->State.bit.PreRlyDO=0;
-            P->State.bit.PRlyDO=0;
+        case PrtctRly_STANDBY://1
              if((P->State.bit.PRlyDI==1)||(P->State.bit.NRlyDI==1))
              {
              //   P->State.bit.RlyFaulttSate=1;
             //    P->RlyMachine=PrtctRly_RLYProtect;
              }
-             P->State.bit.WakeuPOnEND=0;
+        //     P->State.bit.WakeuPOnEND=0;
              P->RlyMachine=PrtctRly_Ready;
         break;
-        case PrtctRly_Ready ://1
+        case PrtctRly_Ready ://2
              if((P->State.bit.WakeUpEN==1)&&(P->State.bit.WakeuPOnEND==0))
              {
                  P->RlyMachine=PrtctRly_RuningON;
@@ -65,8 +65,9 @@ void RlySeqHandle(PrtectRelayReg *P)
              {
                 P->RlyMachine=PrtctRly_RuningOFF;
              }
+
         break;
-        case PrtctRly_RuningON://2
+        case PrtctRly_RuningON://3
                 P->State.bit.NRlyDO=1;
                 P->State.bit.PRlyDO=0;
                 delay_ms(100);
@@ -95,7 +96,7 @@ void RlySeqHandle(PrtectRelayReg *P)
                     P->RlyMachine=PrtctRly_Ready;
                 }
         break;
-        case PrtctRly_RuningOFF:
+        case PrtctRly_RuningOFF://2
 
                     P->State.bit.NRlyDO=0;
                     delay_ms(50);
@@ -103,8 +104,12 @@ void RlySeqHandle(PrtectRelayReg *P)
                     delay_ms(50);
                     P->State.bit.PRlyDO =0;
                     delay_ms(50);
-                    P->RlyMachine=PrtctRly_Ready;
-                    P->State.bit.WakeuPOnEND=0;
+                    if((P->State.bit.NRlyDO==0)&&(P->State.bit.PreRlyDO==0)&&(P->State.bit.PRlyDO==0))
+                    {
+                        P->RlyMachine=PrtctRly_Ready;
+                        P->State.bit.WakeuPOnEND=0;
+                    }
+
 
 
         break;//5

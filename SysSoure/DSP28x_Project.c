@@ -18,7 +18,7 @@ extern void SysCalTemperatureHandle(SystemReg *s);
 extern void MDCalVoltandTemsHandle(SystemReg *P);
 extern void SysFaultCheck(SystemReg *s);
 extern void SysAlarmtCheck(SystemReg *s);
-
+extern void SysCalSocIintHandle(SystemReg *s);
 extern int float32ToInt(float32 Vaule, Uint32 Num);
 extern void TempTemps(SystemReg *s);
 //extern SystemReg       SysRegs;
@@ -117,7 +117,8 @@ void SysVarINIT(SystemReg *s)
 {
     s->CanComEable=0;
     s->PMSysCMDResg.all=0;
-    s->SysStateReg.all=0;
+    s->SysStateReg.Word.DataH=0X0000;
+    s->SysStateReg.Word.DataL=0X0000;
     s->SysAlarmReg.all=0;
     s->SysFaultReg.all=0;
 
@@ -239,7 +240,7 @@ void SysVarINIT(SystemReg *s)
     memset(&s->SysAlarmCont[0],0,sizeof(Uint16)*16);
     memset(&s->SlaveTempsErrCount[0],0,sizeof(Uint16)*32);
     memset(&s->SlaveBalanErrCount[0],0,sizeof(Uint16)*32);
-    memset(&s->ProtectDelayCount[0],0,sizeof(Uint16)*32);
+   // memset(&s->ProtectDelayCount[0],0,sizeof(Uint16)*32);
     memset(&s->SysCellVoltageF[0],0.0,sizeof(float32)*C_SysCellVoltEa);
     memset(&s->SysCelltemperatureF[0],0.0,sizeof(float32)*C_SysCellTempEa);
     memset(&s->MDVoltageF[0],0.0,sizeof(float32)*6);
@@ -483,6 +484,7 @@ void MDCalVoltandTemsHandle(SystemReg *P)
 void SysCalSocIintHandle(SystemReg *s)
 {
     static float32 CellVagF=0.0F;
+
     const float32 V_Soc00F  = 2.9000F;
     const float32 V_Soc20F  = 3.2790F;
     const float32 V_Soc40F  = 3.3040F;
@@ -495,20 +497,25 @@ void SysCalSocIintHandle(SystemReg *s)
 
     if (CellVagF < V_Soc20F)
     {
-        return s->SysSocInitRule=SOC_ZONE_GA;
+        /* 가 구간 (0~20%) → 전압 기반 */
+        s->SysSocInitRule = SOC_ZONE_cellVolt;
     }
     else if (CellVagF < V_Soc40F)
     {
-        return s->SysSocInitRule=SOC_ZONE_NA;
+        /* 나 구간 (20~40%) → NVR */
+        s->SysSocInitRule = SOC_ZONE_NVR;
     }
     else if (CellVagF < V_Soc80F)
     {
-        return s->SysSocInitRule=SOC_ZONE_DA;
+        /* 다 구간 (40~80%) → NVR */
+        s->SysSocInitRule = SOC_ZONE_NVR;
     }
     else
     {
-        return s->SysSocInitRule=SOC_ZONE_DA;
+        /* 라 구간 (80~100%) → 전압 기반 */
+        s->SysSocInitRule = SOC_ZONE_cellVolt;
     }
+
 }
 
 void SysCalVoltageHandle(SystemReg *s)
@@ -640,52 +647,52 @@ void SysAlarmtCheck(SystemReg *s)
     if(s->SysStateReg.bit.SysDisCharMode==1)
     {
     // 과전류 Alarm,유지시간카운터배열값:0,유지시간;100msec
-        if(Hyst_On(s->SysPackCurrentAsbF,500.0f))
+        if(Hyst_On(s->SysPackCurrentAsbF,200.0f))
         {
              if(s->SysAlarmCont[0]< 100){++s->SysAlarmCont[0];}
              if(s->SysAlarmCont[0]>=100)
              {
-                 s->SysAlarmReg.bit.PackVDisChar_OC=1;
+                 s->SysAlarmReg.bit.PackVCur_OC=1;
              }
          }
          else
          {
-             if(s->SysAlarmReg.bit.PackVDisChar_OC==0)
+             if(s->SysAlarmReg.bit.PackVCur_OC==0)
              {
                  s->SysAlarmCont[0]=0;
              }
-             if(Hyst_Off(s->SysPackCurrentAsbF,456.0f))
+             if(Hyst_Off(s->SysPackCurrentAsbF,190.0f))
              {
                  s->SysAlarmCont[0]=0;
-                 s->SysAlarmReg.bit.PackVDisChar_OC=0;
+                 s->SysAlarmReg.bit.PackVCur_OC=0;
              }
          }
     }
     else
     {
-        if(Hyst_On(s->SysPackCurrentAsbF,50.0f))
+        if(Hyst_On(s->SysPackCurrentAsbF,30.0f))
         {
              if(s->SysAlarmCont[0]< 100){++s->SysAlarmCont[0];}
              if(s->SysAlarmCont[0]>=100)
              {
-                 s->SysAlarmReg.bit.PackVChar_OC=1;
+                 s->SysAlarmReg.bit.PackVCur_OC=1;
              }
          }
          else
          {
-             if(s->SysAlarmReg.bit.PackVChar_OC==0)
+             if(s->SysAlarmReg.bit.PackVCur_OC==0)
              {
                  s->SysAlarmCont[0]=0;
              }
-             if(Hyst_Off(s->SysPackCurrentAsbF,456.0f))
+             if(Hyst_Off(s->SysPackCurrentAsbF,28.0f))
              {
                  s->SysAlarmCont[0]=0;
-                 s->SysAlarmReg.bit.PackVChar_OC=0;
+                 s->SysAlarmReg.bit.PackVCur_OC=0;
              }
          }
     }
      // 팩 과충전 Alarm,유지시간카운터배열값:1,유지시간;100msec
-     if(Hyst_On(s->SysSOCF,100.1f))
+     if(Hyst_On(s->SysSOCF,100.0f))
      {
          if(s->SysAlarmCont[1]< 100){++s->SysAlarmCont[1];}
          if(s->SysAlarmCont[1]>=100)
@@ -706,9 +713,10 @@ void SysAlarmtCheck(SystemReg *s)
          }
      }
      // 팩 저충전,유지시간카운터배열값:2,유지시간;100msec
-     if(Hyst_Off(s->SysSOCF,5.0f))
+     if(Hyst_Off(s->SysSOCF,30.0f))
      {
          if(s->SysAlarmCont[2]< 100){++s->SysAlarmCont[2];}
+         if(s->SysAlarmCont[2]>=100)
          {
              s->SysAlarmReg.bit.PackVSOC_UN=1;
          }
@@ -719,14 +727,14 @@ void SysAlarmtCheck(SystemReg *s)
          {
              s->SysAlarmCont[2]=0;
          }
-         if(Hyst_On(s->SysSOCF,5.25f))
+         if(Hyst_On(s->SysSOCF,30.9f))
          {
              s->SysAlarmCont[2]=0;
              s->SysAlarmReg.bit.PackVSOC_UN=0;
          }
      }
      // 팩 과전압 Alarm,유지시간카운터배열값:3,유지시간;100msec
-     if(Hyst_On(s->SysPackVoltageF,53.90f))
+     if(Hyst_On(s->SysPackVoltageF,51.8f))
      {
          if(s->SysAlarmCont[3]< 100){++s->SysAlarmCont[3];}
          if(s->SysAlarmCont[3]>=100)
@@ -740,14 +748,14 @@ void SysAlarmtCheck(SystemReg *s)
          {
              s->SysAlarmCont[3]=0;
          }
-         if(Hyst_Off(s->SysPackVoltageF,52.0f))
+         if(Hyst_Off(s->SysPackVoltageF,50.2f))
          {
              s->SysAlarmCont[3]=0;
              s->SysAlarmReg.bit.PackVolt_OV=0;
          }
      }
      // 팩 저전압 Alarm,유지시간카운터배열값:4,유지시간;100msec
-     if(Hyst_Off(s->SysPackVoltageF,30.0f))
+     if(Hyst_Off(s->SysPackVoltageF,46.5f))
      {
          if(s->SysAlarmCont[4]< 100){++s->SysAlarmCont[4];}
          if(s->SysAlarmCont[4]>=100)
@@ -761,89 +769,89 @@ void SysAlarmtCheck(SystemReg *s)
          {
              s->SysAlarmCont[4]=0;
          }
-         if(Hyst_On(s->SysPackVoltageF,33.4f))
+         if(Hyst_On(s->SysPackVoltageF,48.8f))
          {
              s->SysAlarmCont[4]=0;
              s->SysAlarmReg.bit.PackVolt_UN=0;
          }
      }
-     // 팩 저전압 Alarm,유지시간카운터배열값:5,유지시간;100msec
-     if(Hyst_On(s->SysCellAgvTemperatureF,55.0f))
+     // 셀 저온 Alarm,유지시간카운터배열값:5,유지시간;100msec
+     if(Hyst_On(s->SysCellAgvTemperatureF,45.0f))
      {
          if(s->SysAlarmCont[5]< 100){++s->SysAlarmCont[5];}
          if(s->SysAlarmCont[5]>=100)
          {
-             s->SysAlarmReg.bit.CellTemps_OT=1;
+             s->SysAlarmReg.bit.CellTemp_OT=1;
          }
      }
      else
      {
-         if(s->SysAlarmReg.bit.CellTemps_OT==0)
+         if(s->SysAlarmReg.bit.CellTemp_OT==0)
          {
              s->SysAlarmCont[5]=0;
          }
-         if(Hyst_Off(s->SysCellAgvTemperatureF,52.3f))
+         if(Hyst_Off(s->SysCellAgvTemperatureF,42.8f))
          {
              s->SysAlarmCont[5]=0;
-             s->SysAlarmReg.bit.CellTemps_OT=0;
+             s->SysAlarmReg.bit.CellTemp_OT=0;
          }
      }
      // 팩 저온 Alarm,유지시간카운터배열값:6,유지시간;100msec
      if(s->SysStateReg.bit.SysDisCharMode==1)
      {
-         if(Hyst_Off(s->SysCellAgvTemperatureF,-15.0f))
+         if(Hyst_Off(s->SysCellAgvTemperatureF,-10.0f))
          {
              if(s->SysAlarmCont[6]< 100){++s->SysAlarmCont[6];}
              if(s->SysAlarmCont[6]>=100)
              {
-                 s->SysAlarmReg.bit.CellTemps_UT=1;
+                 s->SysAlarmReg.bit.CellTemp_UT=1;
              }
          }
          else
          {
-             if(s->SysAlarmReg.bit.CellTemps_UT==0)
+             if(s->SysAlarmReg.bit.CellTemp_UT==0)
              {
                  s->SysAlarmCont[6]=0;
              }
-             if(Hyst_On(s->SysCellAgvTemperatureF,0.0f))
+             if(Hyst_On(s->SysCellAgvTemperatureF,-5.0f))
              {
                  s->SysAlarmCont[6]=0;
-                 s->SysAlarmReg.bit.CellTemps_UT=0;
+                 s->SysAlarmReg.bit.CellTemp_UT=0;
              }
          }
      }
      else if(s->SysStateReg.bit.SysDisCharMode==0)
      {
 
-          if(Hyst_Off(s->SysCellAgvTemperatureF,-15.0f))
+          if(Hyst_Off(s->SysCellAgvTemperatureF,0.0f))
           {
                  if(s->SysAlarmCont[6]< 100){++s->SysAlarmCont[6];}
                  if(s->SysAlarmCont[6]>=100)
                  {
-                     s->SysAlarmReg.bit.CellTemps_UT=1;
+                     s->SysAlarmReg.bit.CellTemp_UT=1;
                  }
           }
           else
           {
-               if(s->SysAlarmReg.bit.CellTemps_UT==0)
+               if(s->SysAlarmReg.bit.CellTemp_UT==0)
                {
                      s->SysAlarmCont[6]=0;
                }
-                 if(Hyst_On(s->SysCellAgvTemperatureF,0.0f))
+                 if(Hyst_On(s->SysCellAgvTemperatureF,1.0f))
                {
                      s->SysAlarmCont[6]=0;
-                     s->SysAlarmReg.bit.CellTemps_UT=0;
+                     s->SysAlarmReg.bit.CellTemp_UT=0;
                }
            }
 
      }
      // 셀 과전압 Alarm,유지시간카운터배열값:8,유지시간:00msec
-     if(Hyst_On(s->SysCellMaxVoltageF,4.18f))
+     if(Hyst_On(s->SysCellMaxVoltageF,3.45f))
      {
          if(s->SysAlarmCont[8]< 100){++s->SysAlarmCont[8];}
          if(s->SysAlarmCont[8]>=100)
          {
-             s->SysAlarmReg.bit.PackVolt_OV=1;
+             s->SysAlarmReg.bit.CellVolt_OV=1;
          }
      }
      else
@@ -852,14 +860,14 @@ void SysAlarmtCheck(SystemReg *s)
          {
              s->SysAlarmCont[8]=0;
          }
-         if(Hyst_Off(s->SysCellMaxVoltageF,4.15f))
+         if(Hyst_Off(s->SysCellMaxVoltageF,3.433f))
          {
              s->SysAlarmCont[8]=0;
-             s->SysAlarmReg.bit.PackVolt_OV=0;
+             s->SysAlarmReg.bit.CellVolt_OV=0;
          }
      }
      // 셀 저전압 Alarm,유지시간카운터배열값:9,유지시간:100msec
-     if(Hyst_Off(s->SysCellMinVoltageF,2.80f))
+     if(Hyst_Off(s->SysCellMinVoltageF,3.100f))
      {
          if(s->SysAlarmCont[9]< 100){++s->SysAlarmCont[8];}
          if(s->SysAlarmCont[9]>=100)
@@ -873,14 +881,14 @@ void SysAlarmtCheck(SystemReg *s)
          {
              s->SysAlarmCont[9]=0;
          }
-         if(Hyst_On(s->SysCellMinVoltageF,2.94f))
+         if(Hyst_On(s->SysCellMinVoltageF,3.116f))
          {
              s->SysAlarmCont[9]=0;
              s->SysAlarmReg.bit.CellVolt_UN=0;
          }
      }
      // 셀 전압 편차 Alarm,유지시간카운터배열값:10,유지시간:100msec
-     if(Hyst_On(s->SysCellDivVoltageF,0.45f))
+     if(Hyst_On(s->SysCellDivVoltageF,0.1f))
      {
          if(s->SysAlarmCont[10]< 100){++s->SysAlarmCont[10];}
          if(s->SysAlarmCont[10]>=100)
@@ -894,14 +902,14 @@ void SysAlarmtCheck(SystemReg *s)
          {
              s->SysAlarmCont[10]=0;
          }
-         if(Hyst_Off(s->SysCellDivVoltageF,0.32f))
+         if(Hyst_Off(s->SysCellDivVoltageF,0.01f))
          {
              s->SysAlarmCont[10]=0;
              s->SysAlarmReg.bit.CellVolt_BL=0;
          }
      }
      // 셀 온도 편차 Alarm,유지시간카운터배열값:13,유지시간:100msec
-     if(Hyst_On(s->SysCellDivTemperatureF,8.0f))
+     if(Hyst_On(s->SysCellDivTemperatureF,10.0f))
      {
          if(s->SysAlarmCont[13]< 100){++s->SysAlarmCont[13];}
          if(s->SysAlarmCont[13]>=100)
@@ -915,94 +923,300 @@ void SysAlarmtCheck(SystemReg *s)
          {
              s->SysAlarmCont[13]=0;
          }
-         if(Hyst_Off(s->SysCellDivTemperatureF,4.0f))
+         if(Hyst_Off(s->SysCellDivTemperatureF,5.0f))
          {
              s->SysAlarmCont[13]=0;
              s->SysAlarmReg.bit.CellTemp_BL=0;
          }
      }
-
-
 }
 void SysFaultCheck(SystemReg *s)
 {
     if(s->SysStateReg.bit.SysDisCharMode==1)
     {
-        if(s->SysPackCurrentAsbF>=500)
+    // 과전류 Alarm,유지시간카운터배열값:0,유지시간;100msec
+        if(Hyst_On(s->SysPackCurrentAsbF,300.0f))
         {
-            s->SysFaultReg.bit.PackVDisChar_OC=1;
-        }
+             if(s->SysFalutCont[0]< 100){++s->SysFalutCont[0];}
+             if(s->SysFalutCont[0]>=100)
+             {
+                 s->SysFaultReg.bit.PackVCur_OC=1;
+             }
+         }
+         else
+         {
+             if(s->SysAlarmReg.bit.PackVCur_OC==0)
+             {
+                 s->SysFalutCont[0]=0;
+             }
+             if(Hyst_Off(s->SysPackCurrentAsbF,270.0f))
+             {
+                 s->SysFalutCont[0]=0;
+                 s->SysFaultReg.bit.PackVCur_OC=0;
+             }
+         }
     }
-    if(s->SysStateReg.bit.SysDisCharMode==0)
+    else
     {
-        if(s->SysPackCurrentAsbF>=100.0)
+        if(Hyst_On(s->SysPackCurrentAsbF,60.0f))
         {
-            s->SysFaultReg.bit.PackVChar_OC=1;
-        }
+             if(s->SysFalutCont[0]< 100){++s->SysFalutCont[0];}
+             if(s->SysFalutCont[0]>=100)
+             {
+                 s->SysFaultReg.bit.PackVCur_OC=1;
+             }
+         }
+         else
+         {
+             if(s->SysAlarmReg.bit.PackVCur_OC==0)
+             {
+                 s->SysFalutCont[0]=0;
+             }
+             if(Hyst_Off(s->SysPackCurrentAsbF,28.0f))
+             {
+                 s->SysFalutCont[0]=0;
+                 s->SysFaultReg.bit.PackVCur_OC=0;
+             }
+         }
     }
-    if(s->SysSOCF >=C_PackSOC_OVFault)
-    {
-        s->SysFaultReg.bit.PackVSOC_OV=1;
-    }
-    if(s->SysSOCF <= C_PackSOC_UNFault)
-    {
-        s->SysFaultReg.bit.PackVSOC_UN=1;
-    }
-    if(s->SysPackVoltageF>=C_PackVolt_OVFault)
-    {
-        s->SysFaultReg.bit.PackVolt_OV=1;
-    }
-    if(s->SysPackVoltageF<= C_PackVolt_UNFault)
-    {
-        s->SysFaultReg.bit.PackVolt_UN=1;
-    }
-    if(s->SysCellMaxVoltageF>= C_CellVolt_OVFault)
-    {
-        s->SysFaultReg.bit.CellVolt_OV=1;
-    }
-    if(s->SysCellMinVoltageF<= C_CellVolt_UNFault)
-    {
-        s->SysFaultReg.bit.CellVolt_UN=1;
-    }
-    if(s->SysCellDivVoltageF>=C_CellVolt_UBFault)
-    {
-        s->SysFaultReg.bit.CellVolt_BL=1;
-    }
-    if(s->SysStateReg.bit.SysDisCharMode==1)
-    {
-        if(s->SysMaxTemperatureF>=C_CellTempsDISCH_OTFault)
-        {
-            s->SysFaultReg.bit.CellTemps_OT=1;
-        }
-        if(s->SysCellMinTemperatureF>=C_CellTempsDISCH_UTFault)
-        {
-            s->SysFaultReg.bit.CellTempsDisCh_UT=1;
-        }
-    }
-    if(s->SysStateReg.bit.SysDisCharMode==0)
-    {
-        if(s->SysMaxTemperatureF>=C_CellTempsCHARG_OTFault)
-        {
-            s->SysFaultReg.bit.CellTempsCharg_OT=1;
-        }
-        if(s->SysCellMinTemperatureF>=C_CellTempsCHARG_UTFault)
-        {
-            s->SysFaultReg.bit.CellTempsCharg_UT=1;
-        }
-    }
-    if(s->SysCellDivTemperatureF>=C_CellTemps_UBFault)
-    {
-        s->SysFaultReg.bit.CellTemp_BL=1;
-    }
+     // 팩 과충전 Alarm,유지시간카운터배열값:1,유지시간;100msec
+     if(Hyst_On(s->SysSOCF,102.0f))
+     {
+         if(s->SysFalutCont[1]< 100){++s->SysFalutCont[1];}
+         if(s->SysFalutCont[1]>=100)
+         {
+             s->SysFaultReg.bit.PackVSOC_OV=1;
+         }
+     }
+     else
+     {
+         if(s->SysAlarmReg.bit.PackVSOC_OV==0)
+         {
+             s->SysFalutCont[1]=0;
+         }
+         if(Hyst_Off(s->SysSOCF,98.9f))
+         {
+             s->SysFalutCont[1]=0;
+             s->SysFaultReg.bit.PackVSOC_OV=0;
+         }
+     }
+     // 팩 저충전,유지시간카운터배열값:2,유지시간;100msec
+     if(Hyst_Off(s->SysSOCF,15.0f))
+     {
+         if(s->SysFalutCont[2]< 100){++s->SysFalutCont[2];}
+         if(s->SysFalutCont[2]>=100)
+         {
+             s->SysFaultReg.bit.PackVSOC_UN=1;
+         }
+     }
+     else
+     {
+         if(s->SysAlarmReg.bit.PackVSOC_UN==0)
+         {
+             s->SysFalutCont[2]=0;
+         }
+         if(Hyst_On(s->SysSOCF,15.8f))
+         {
+             s->SysFalutCont[2]=0;
+             s->SysFaultReg.bit.PackVSOC_UN=0;
+         }
+     }
+     // 팩 과전압 Alarm,유지시간카운터배열값:3,유지시간;100msec
+     if(Hyst_On(s->SysPackVoltageF,52.5f))
+     {
+         if(s->SysFalutCont[3]< 100){++s->SysFalutCont[3];}
+         if(s->SysFalutCont[3]>=100)
+         {
+             s->SysFaultReg.bit.PackVolt_OV=1;
+         }
+     }
+     else
+     {
+         if(s->SysAlarmReg.bit.PackVolt_OV==0)
+         {
+             s->SysFalutCont[3]=0;
+         }
+         if(Hyst_Off(s->SysPackVoltageF,50.9f))
+         {
+             s->SysFalutCont[3]=0;
+             s->SysFaultReg.bit.PackVolt_OV=0;
+         }
+     }
+     // 팩 저전압 Alarm,유지시간카운터배열값:4,유지시간;100msec
+     if(Hyst_Off(s->SysPackVoltageF,45.0f))
+     {
+         if(s->SysFalutCont[4]< 100){++s->SysFalutCont[4];}
+         if(s->SysFalutCont[4]>=100)
+         {
+             s->SysFaultReg.bit.PackVolt_UN=1;
+         }
+     }
+     else
+     {
+         if(s->SysAlarmReg.bit.PackVolt_UN==0)
+         {
+             s->SysFalutCont[4]=0;
+         }
+         if(Hyst_On(s->SysPackVoltageF,47.3f))
+         {
+             s->SysFalutCont[4]=0;
+             s->SysFaultReg.bit.PackVolt_UN=0;
+         }
+     }
+     // 셀 고온 Alarm,유지시간카운터배열값:5,유지시간;100msec
+     if(Hyst_On(s->SysCellAgvTemperatureF,52.0f))
+     {
+         if(s->SysFalutCont[5]< 100){++s->SysFalutCont[5];}
+         if(s->SysFalutCont[5]>=100)
+         {
+             s->SysFaultReg.bit.CellTemp_OT=1;
+         }
+     }
+     else
+     {
+         if(s->SysAlarmReg.bit.CellTemp_OT==0)
+         {
+             s->SysFalutCont[5]=0;
+         }
+         if(Hyst_Off(s->SysCellAgvTemperatureF,49.4f))
+         {
+             s->SysFalutCont[5]=0;
+             s->SysFaultReg.bit.CellTemp_OT=0;
+         }
+     }
 
-    if(s->SysDISCHAPWRContintyDivF >= C_PackPWRDISCH_UBPrtct)
-    {
-        s->SysFaultReg.bit.PackDischarUnPWR_BL=1;
-    }
-    if(s->SysCHARGPWRContintyDivF >= C_PackPWRCHARG_UBPrtct)
-    {
-        s->SysFaultReg.bit.PackCharUnPWR_BL=1;
-    }
+     // 셀 저온 Alarm,유지시간카운터배열값:6,유지시간;100msec
+     if(s->SysStateReg.bit.SysDisCharMode==1)
+     {
+         if(Hyst_Off(s->SysCellAgvTemperatureF,-15.0f))
+         {
+             if(s->SysFalutCont[6]< 100){++s->SysFalutCont[6];}
+             if(s->SysFalutCont[6]>=100)
+             {
+                 s->SysFaultReg.bit.CellTemp_UT=1;
+             }
+         }
+         else
+         {
+             if(s->SysAlarmReg.bit.CellTemp_UT==0)
+             {
+                 s->SysFalutCont[6]=0;
+             }
+             if(Hyst_On(s->SysCellAgvTemperatureF,0.0f))
+             {
+                 s->SysFalutCont[6]=0;
+                 s->SysFaultReg.bit.CellTemp_UT=0;
+             }
+         }
+     }
+     else if(s->SysStateReg.bit.SysDisCharMode==0)
+     {
+          if(Hyst_Off(s->SysCellAgvTemperatureF,-10.0f))
+          {
+                 if(s->SysFalutCont[6]< 100){++s->SysFalutCont[6];}
+                 if(s->SysFalutCont[6]>=100)
+                 {
+                     s->SysFaultReg.bit.CellTemp_UT=1;
+                 }
+          }
+          else
+          {
+               if(s->SysAlarmReg.bit.CellTemp_UT==0)
+               {
+                     s->SysFalutCont[6]=0;
+               }
+                 if(Hyst_On(s->SysCellAgvTemperatureF,0.0f))
+               {
+                     s->SysFalutCont[6]=0;
+                     s->SysFaultReg.bit.CellTemp_UT=0;
+               }
+           }
+
+     }
+     // 셀 과전압 Alarm,유지시간카운터배열값:8,유지시간:00msec
+     if(Hyst_On(s->SysCellMaxVoltageF,3.500f))
+     {
+         if(s->SysFalutCont[8]< 100){++s->SysFalutCont[8];}
+         if(s->SysFalutCont[8]>=100)
+         {
+             s->SysFaultReg.bit.CellVolt_OV=1;
+         }
+     }
+     else
+     {
+         if(s->SysAlarmReg.bit.CellVolt_OV==0)
+         {
+             s->SysFalutCont[8]=0;
+         }
+         if(Hyst_Off(s->SysCellMaxVoltageF,3.483f))
+         {
+             s->SysFalutCont[8]=0;
+             s->SysFaultReg.bit.CellVolt_OV=0;
+         }
+     }
+     // 셀 저전압 Alarm,유지시간카운터배열값:9,유지시간:100msec
+     if(Hyst_Off(s->SysCellMinVoltageF,3.000f))
+     {
+         if(s->SysFalutCont[9]< 100){++s->SysFalutCont[9];}
+         if(s->SysFalutCont[9]>=100)
+         {
+             s->SysFaultReg.bit.CellVolt_UN=1;
+         }
+     }
+     else
+     {
+         if(s->SysAlarmReg.bit.CellVolt_UN==0)
+         {
+             s->SysFalutCont[9]=0;
+         }
+         if(Hyst_On(s->SysCellMinVoltageF,3.015f))
+         {
+             s->SysFalutCont[9]=0;
+             s->SysFaultReg.bit.CellVolt_UN=0;
+         }
+     }
+     // 셀 전압 편차 Alarm,유지시간카운터배열값:10,유지시간:100msec
+     if(Hyst_On(s->SysCellDivVoltageF,0.15f))
+     {
+         if(s->SysFalutCont[10]< 100){++s->SysFalutCont[10];}
+         if(s->SysFalutCont[10]>=100)
+         {
+             s->SysFaultReg.bit.CellVolt_BL=1;
+         }
+     }
+     else
+     {
+         if(s->SysAlarmReg.bit.CellVolt_BL==0)
+         {
+             s->SysFalutCont[10]=0;
+         }
+         if(Hyst_Off(s->SysCellDivVoltageF,0.01f))
+         {
+             s->SysFalutCont[10]=0;
+             s->SysFaultReg.bit.CellVolt_BL=0;
+         }
+     }
+     // 셀 온도 편차 Alarm,유지시간카운터배열값:13,유지시간:100msec
+     if(Hyst_On(s->SysCellDivTemperatureF,15.0f))
+     {
+         if(s->SysFalutCont[13]< 100){++s->SysFalutCont[13];}
+         if(s->SysFalutCont[13]>=100)
+         {
+             s->SysFaultReg.bit.CellTemp_BL=1;
+         }
+     }
+     else
+     {
+         if(s->SysAlarmReg.bit.CellTemp_BL==0)
+         {
+             s->SysFalutCont[13]=0;
+         }
+         if(Hyst_Off(s->SysCellDivTemperatureF,5.0f))
+         {
+             s->SysFalutCont[13]=0;
+             s->SysFaultReg.bit.CellTemp_BL=0;
+         }
+     }
 }
 void SysProtectCheck(SystemReg *s)
 {
@@ -1012,253 +1226,88 @@ void SysProtectCheck(SystemReg *s)
      */
     if(s->SysStateReg.bit.SysDisCharMode==1)
     {
-        if(s->SysPackCurrentAsbF>=C_PackDISCH_OCPrtct)
+        if(s->SysPackCurrentAsbF>=330.0f)
         {
-            s->ProtectDelayCount[0]++;
+           s->SysProtectReg.bit.PackVCur_OC=1;
         }
-        else
-        {
-            s->ProtectDelayCount[0]=0;
-
-        }
-        s->ProtectDelayCount[1]=0;
     }
     else
     {
-        if(s->SysPackCurrentAsbF>=C_PackCHARG_OCPrtct)
+        if(s->SysPackCurrentAsbF>=110.0f)
         {
-            s->ProtectDelayCount[1]++;
+            s->SysProtectReg.bit.PackVCur_OC=1;
         }
-        else
-        {
-            s->ProtectDelayCount[1]=0;
-        }
-        s->ProtectDelayCount[0]=0;
     }
     // SOC 과충전
-    if(s->SysSOCF>=C_PackSOC_OVPrtct)
+    if(s->SysSOCF>=105.0f)
     {
-        s->ProtectDelayCount[2]++;
-    }
-    else
-    {
-        s->ProtectDelayCount[2]=0;
+        s->SysProtectReg.bit.PackVSOC_OV=1;
     }
     // SOC 과방전
     if(s->SysSOCF<= C_PackSOC_UNPrtct)
     {
-        s->ProtectDelayCount[3]++;
-    }
-    else
-    {
-        s->ProtectDelayCount[3]=0;
+        s->SysProtectReg.bit.PackVSOC_UN=1;
     }
     //PACK 과전압
     if(s->SysPackParallelVoltageF>=C_PackVolt_OVPrtct)
     {
-        s->ProtectDelayCount[4]++;
-    }
-    else
-    {
-        s->ProtectDelayCount[4]=0;
+       s->SysProtectReg.bit.PackVolt_OV=1;
     }
     //PACK 저전압
     if(s->SysPackParallelVoltageF<=C_PackVolt_UNPrtct)
     {
-        s->ProtectDelayCount[5]++;
+        s->SysProtectReg.bit.PackVolt_UN=1;
     }
-    else
-    {
-        s->ProtectDelayCount[5]=0;
-    }
-    /*
-    if(s->SysPackVoltageF>=C_PackVolt_OVPrtct)
-    {
-        s->ProtectDelayCount[4]++;
-    }
-    else
-    {
-        s->ProtectDelayCount[4]=0;
-    }
-    //PACK 저전압
-    if(s->SysPackVoltageF<=C_PackVolt_UNPrtct)
-    {
-        s->ProtectDelayCount[5]++;
-    }
-    else
-    {
-        s->ProtectDelayCount[5]=0;
-    }*/
     //셀 과전압
     if(s->SysCellMaxVoltageF>=C_CellVolt_OVPrtct)
     {
-        s->ProtectDelayCount[6]++;
-    }
-    else
-    {
-        s->ProtectDelayCount[6]=0;
+        s->SysProtectReg.bit.CellVolt_OV=1;
     }
     //셀 저전압
     if(s->SysCellMinVoltageF<=C_CellVolt_UNPrtct)
     {
-        s->ProtectDelayCount[7]++;
-    }
-    else
-    {
-        s->ProtectDelayCount[7]=0;
+        s->SysProtectReg.bit.CellVolt_UN=1;
     }
     //셀 전압 불균형
     if(s->SysCellDivVoltageF>=C_CellVolt_UBPrtct)
     {
-        s->ProtectDelayCount[8]++;
+        s->SysProtectReg.bit.CellVolt_BL=1;
     }
-    else
+    //셀 과온 보호
+    if(s->SysMaxTemperatureF>=C_CellTempsDISCH_OTPrtct)
     {
-        s->ProtectDelayCount[8]=0;
+        s->SysProtectReg.bit.CellTemp_OT=1;
     }
-    // 방전 시에 셀 과온, 저온 보호
+    //셀 저온 보호
     if(s->SysStateReg.bit.SysDisCharMode==1)
     {
-        if(s->SysMaxTemperatureF>=C_CellTempsDISCH_OTPrtct)
-        {
-            s->ProtectDelayCount[9]++;
-        }
-        else
-        {
-            s->ProtectDelayCount[9]=0;
-        }
+
         if(s->SysCellMinTemperatureF<=C_CellTempsDISCH_UTPrtct)
         {
-            s->ProtectDelayCount[10]++;
+            s->SysProtectReg.bit.CellTemp_UT=1;
         }
-        else
-        {
-            s->ProtectDelayCount[10]=0;
-        }
-    }
-    if(s->SysStateReg.bit.SysDisCharMode==0)
+
+    }else if(s->SysStateReg.bit.SysDisCharMode==0)
     {
         if(s->SysCellMinTemperatureF>=C_CellTempsCHARG_OTPrtct)
         {
-            s->ProtectDelayCount[11]++;
-        }
-        else
-        {
-            s->ProtectDelayCount[11]=0;
-        }
-        if(s->SysCellMinTemperatureF<=C_CellTempsCHARG_UTPrtct)
-        {
-            s->ProtectDelayCount[12]++;
-        }
-        else
-        {
-            s->ProtectDelayCount[12]=0;
+            s->SysProtectReg.bit.CellTemp_UT=1;
         }
     }
     if(s->SysCellDivTemperatureF>=C_CellTemps_UBPrtct)
     {
-        s->ProtectDelayCount[13]++;
+        s->SysProtectReg.bit.CellTemp_BL=1;
     }
-    else
-    {
-        s->ProtectDelayCount[13]=0;
-    }
+
     if(s->SysDISCHAPWRContintyDivF>=C_PackPWRDISCH_UBPrtct)
     {
-        s->ProtectDelayCount[15]++;
-    }
-    else
-    {
-        s->ProtectDelayCount[15]=0;
+       // s->SysProtectReg.bit.PackCharUnPWR_BL=1;
     }
     if(s->SysCHARGPWRContintyDivF>=C_PackPWRCHARG_UBPrtct)
     {
-        s->ProtectDelayCount[14]++;
+       // s->SysProtectReg.bit.PackDischarUnPWR_BL=1;
     }
-    else
-    {
-        s->ProtectDelayCount[14]=0;
-    }
-    /*
-     *
-     */
-    if(s->ProtectDelayCount[0] > C_PackDISCHOC_PrtectDelay)// C_PackDISCHOC
-    {
-        s->SysProtectReg.bit.PackVDisChar_OC=1;
-    }
-    if(s->ProtectDelayCount[1] > C_PackCHARGOC_PrtectDelay)//C_PackCHARGOC
-    {
-        s->SysProtectReg.bit.PackVChar_OC=1;
-    }
-    if(s->ProtectDelayCount[2] > C_PackSOCOV_PrtectDelay)
-    {
-        s->SysProtectReg.bit.PackVSOC_OV=1;
-    }
-    if(s->ProtectDelayCount[3] > C_PackSOCUN_PrtectDelay)
-    {
-        s->SysProtectReg.bit.PackVSOC_UN=1;
-    }
-    if(s->ProtectDelayCount[4] > C_PackVoltOV_PrtectDelay)
-    {
-        s->SysProtectReg.bit.PackVolt_OV=1;
-    }
-    if(s->ProtectDelayCount[5] > C_PackVoltUV_PrtectDelay)
-    {
-        s->SysProtectReg.bit.PackVolt_UN=1;
-    }
-    if(s->ProtectDelayCount[6] > C_CellVoltOV_PrtectDelay)
-    {
-        s->SysProtectReg.bit.CellVolt_OV=1;
-    }
-    if(s->ProtectDelayCount[7] > C_CellVoltUN_PrtectDelay)
-    {
-        s->SysProtectReg.bit.CellVolt_UN=1;
-    }
-    if(s->ProtectDelayCount[8] > C_CellVoltUB_PrtectDelay)
-    {
-        s->SysProtectReg.bit.CellVolt_BL=1;
-    }
-    if(s->SysStateReg.bit.SysDisCharMode==1)
-    {
-        if(s->ProtectDelayCount[9] > C_CellTempsDISCHOT_PrtectDelay)
-        {
-            s->SysProtectReg.bit.CellTemps_OT=1;
-        }
-        if(s->ProtectDelayCount[10] > C_CellTempsCHARGOT_PrtectDelay)
-        {
-            s->SysProtectReg.bit.CellTemps_OT=1;
-        }
-        s->ProtectDelayCount[11]=0;
-        s->ProtectDelayCount[12]=0;
-    }
-    if(s->SysStateReg.bit.SysDisCharMode==0)
-    {
-        if(s->ProtectDelayCount[11] > C_CellTempsCHARGOT_PrtectDelay)
-        {
-            s->SysProtectReg.bit.CellTempsCharg_OT=1;
-        }
-        if(s->ProtectDelayCount[12] > C_CellTempsCHARGUT_PrtectDelay)
-        {
-            s->SysProtectReg.bit.CellTempsCharg_UT=1;
-        }
-        s->ProtectDelayCount[9]=0;
-        s->ProtectDelayCount[10]=0;
-    }
-    if(s->ProtectDelayCount[13] > C_CellTempsUB_PrtectDelay)
-    {
-        s->SysProtectReg.bit.CellTemp_BL=1;
-    }
-    if(s->ProtectDelayCount[14] > C_PackPWRCHARGUB_PrtectDelay)
-    {
-        s->SysProtectReg.bit.PackCharUnPWR_BL=1;
-    }
-    if(s->ProtectDelayCount[15] > C_PackPWRDISCHUB_PrtectDelay)
-    {
-        s->SysProtectReg.bit.PackDischarUnPWR_BL=1;
-    }
-    /*
-     * Relay 에러 체크
-     */
+    //Relay 에러 체크
     if((s->SysMachine==INIT)||(s->SysMachine==STANDBY))
     {
         if((s->SysDigitalInputReg.bit.NAUX==1)||(s->SysDigitalInputReg.bit.PAUX==1))
@@ -1266,32 +1315,37 @@ void SysProtectCheck(SystemReg *s)
             s->SysProtectReg.bit.PackRly_Err=1;
         }
     }
-    /*
-     * ISOSPI 통신 상태 체크
-     */
+     // ISOSPI 통신 상태 체크
     if(s->SlaveISOSPIErrReg.Word.DataL>0)
     {
         s->SysProtectReg.bit.PackIOSPI_Err=1;
     }
-    /*
-     * CAN 통신 상태 체크
-     */
+    //  CAN 통신 상태 체크
     s->CTCANErrCheck++;
     if(s->CTCANErrCheck>=50)
     {
-       s->SysProtectReg.bit.PackCT_Err=1;
+       s->SysProtectReg.bit.PackCTCAN_Err=1;
     }
-    s->VCUCANErrCheck++;
-    if(s->VCUCANErrCheck>=500)
+    if(s->SysStateReg.bit.SysDisCharMode==1)
     {
-       s->SysProtectReg.bit.PackCAN_Err=1;
+        s->VCUCANErrCheck++;
+        if(s->VCUCANErrCheck>=500)
+        {
+           s->SysProtectReg.bit.PackVCUCAN_Err=1;
+        }
     }
-    /*
-     *
-     */
+    else
+    {
+        s->CHACANErrCheck++;
+        if(s->CHACANErrCheck>=500)
+        {
+            s->SysProtectReg.bit.PackCharCAN_Err=1;
+        }
+    }
+    // 절연저항
     if(s->SysPackIsoRegsF<C_PackISORegsister_URPrtct)
     {
-        s->SysProtectReg.bit.PackISOReg_Err=1;
+       s->SysProtectReg.bit.PackISOReg_Err=1;
     }
 
 }
@@ -1371,6 +1425,14 @@ void SysDigitalInput(SystemReg *sys)
     {
         sys->SysDigitalInputReg.bit.NAUX=0;
     }
+    if(PRORlyState==0)
+    {
+        sys->SysDigitalInputReg.bit.killSW=1;
+    }
+    else
+    {
+        sys->SysDigitalInputReg.bit.killSW=0;
+    }
 /*    if(EMGSWDI==0)
     {
         sys->SysDigitalInputReg.bit.EMGSWStauts=1;
@@ -1449,7 +1511,7 @@ void SysDigitalOutput(SystemReg *sys)
     if(sys->SysDigitalOutPutReg.bit.PWRHOLD==1)
     {
         LatchSetRlyON;
-       LatchResetRlyON;
+        LatchResetRlyON;
     }
     else
     {
@@ -1490,7 +1552,7 @@ void ProtectRelayTimerHandle(TimerReg *timer)
       }
       // 타이머 증가
       timer->TimeCount++;
-      break;
+    break;
     case TIMER_STATE_EXPIRED:
          // 타이머 만료 처리
          timer->OutState = 1;
@@ -1513,18 +1575,37 @@ void ProtectRelayTimerHandle(TimerReg *timer)
 }
 void PWRHoldHandle(SystemReg *P)
 {
-    if(P->SysStateReg.bit.INITOK==0)
+    static Uint16 pwrHoldStateU16 = 0u; /* 내부 HOLD 상태 (0/1) */
+
+    if (P->SysDigitalInputReg.bit.killSW == 1)
     {
-        P->SysDigitalOutPutReg.bit.PWRHOLD=0;
+        pwrHoldStateU16 = 1u;
     }
-    if(P->SysStateReg.bit.INITOK==1)
+    else
     {
-        P->SysDigitalOutPutReg.bit.PWRHOLD=1;
+        /* 2) killSW = 0 */
+        if (P->SysStateReg.bit.VCUWakeUp == 0)
+        {
+            /* 운전 종료 상태 → HOLD 유지 */
+            pwrHoldStateU16 = 1u;
+        }
+        else
+        {
+            /* 운전 중 → 전압 편차로 HOLD 판단 */
+            if (P->SysCellDivVoltageF <= 0.01F)
+            {
+                pwrHoldStateU16 = 0u;
+            }
+            else
+            {
+                pwrHoldStateU16 = 1u;
+            }
+        }
+
     }
-    if(P->SysCellDivVoltageF<= C_BalanceDivVoltage)
-    {
-        P->SysDigitalOutPutReg.bit.PWRHOLD=0;
-    }
+    P->SysDigitalOutPutReg.bit.PWRHOLD     = pwrHoldStateU16;
+    P->SysStateReg.bit.PwrHoldRlyDOStatus  = pwrHoldStateU16;
+
 }
 
 

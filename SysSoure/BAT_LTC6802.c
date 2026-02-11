@@ -353,9 +353,9 @@ int SlaveBMSIint(SlaveReg *s)
         s->BATICDO.all=0;
         s->Balance.all=0;
         s->ErrorCount=0;
-        memset(&s->CellVoltage[0],3200,12);
-        memset(&s->CellVoltageBuf[0],3200,12);
-        memset(&s->CellVoltageF[0],3.2,sizeof(float32)*12);
+        memset(&s->CellVoltage[0],2600,12);
+        memset(&s->CellVoltageBuf[0],2600,12);
+        memset(&s->CellVoltageF[0],2.6,sizeof(float32)*12);
         memset(&s->DivVoltageF[0],0.0, sizeof(float32)*12);
 
         memset(&s->CellTemperatureADC[0],0,12);

@@ -248,14 +248,17 @@ typedef struct
 typedef enum
 {
   SOC_STATE_IDLE,
-  SOC_STATE_RUNNING,
-  SOC_STATE_Save,
-  SOC_STATE_CLEAR
+  SOC_STATE_InitRegs,
+  SOC_STATE_InitSos,
+  SOC_STATE_CalAhSos,
+  SOC_STATE_CalWaitMode,
+  SOC_STATE_NvrSlave,
+  SOC_STATE_NvrRead,
 } SoCState;
 struct SoCSate_BIT
 {       // bits   description
-  unsigned int     CalMeth         :1; // 0
-  unsigned int     State01         :1; // 1
+  unsigned int     INITOK         :1; // 0
+  unsigned int     CalMeth         :1; // 1
   unsigned int     State02         :1; // 2
   unsigned int     State03         :1; // 3
   unsigned int     State04         :1; // 4
