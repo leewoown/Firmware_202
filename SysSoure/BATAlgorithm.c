@@ -930,7 +930,8 @@ void CalEVE240AhSocHandle(SocReg *P)
         if(P->CTCount > 6000u)
         {
             P->CTCount = 6001u;
-            P->SoCStateRegs.bit.CalMeth = 0u;
+            //P->SoCStateRegs.bit.CalMeth = 0u;
+            P->SoCStateRegs.bit.CalMeth = 1u;
         }
     }
 

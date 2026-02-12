@@ -270,7 +270,8 @@ struct SystemAlarm_BIT
     unsigned int     PackVSOC_OV                :1; // 2
     unsigned int     PackVSOC_UN                :1; // 3
     unsigned int     PackVolt_OV                :1; // 4
-    unsigned int     PackVolt_UN                :1; // 5
+    unsigned int     PackVolt_UN
+    :1; // 5
     unsigned int     CellVolt_OV                :1; // 6
     unsigned int     CellVolt_UN                :1; // 7
     unsigned int     CellVolt_BL                :1; // 8

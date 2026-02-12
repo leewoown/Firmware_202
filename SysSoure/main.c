@@ -340,6 +340,7 @@ void main(void)
                              }
                              else if(SysRegs.SysSocInitRule == SOC_ZONE_NVR)
                              {
+
                                  NVRAM_AZoneReadHandler(&NVRZoneARDRegs);
                                  EV240AhSocRegs.SysSocInitF = NVRZoneARDRegs.LastSOC;
                              }
@@ -352,7 +353,14 @@ void main(void)
                      SysRegs.SysStateReg.bit.INITOK=1;
             break;
             case READY://2
-                   PrtectRelayRegs.State.bit.WakeUpEN     = (CANARegs.PMSCMDRegs.bit.RlyOFF == 1u) ? 1u : 0u;
+                   if(SysRegs.SysDigitalInputReg.bit.killSW==1)
+                   {
+                       PrtectRelayRegs.State.bit.WakeUpEN     = 1;
+                   }
+                   else
+                   {
+                       PrtectRelayRegs.State.bit.WakeUpEN = (CANARegs.PMSCMDRegs.bit.RlyOFF == 0u) ? 1u : 0u;
+                   }
                    if(SysRegs.SysStateReg.bit.SysPrtct==1)
                    {
                      //    SysRegs.SysMachine=PROTECTER;
@@ -378,7 +386,15 @@ void main(void)
                      {
                         SysRegs.SysMachine=ChargerStop;
                      }
-                     PrtectRelayRegs.State.bit.WakeUpEN = (CANARegs.PMSCMDRegs.bit.RlyOFF == 0u) ? 1u : 0u;
+                     if(SysRegs.SysDigitalInputReg.bit.killSW==1)
+                     {
+                          PrtectRelayRegs.State.bit.WakeUpEN = 1;
+                     }
+                     else
+                     {
+                         PrtectRelayRegs.State.bit.WakeUpEN != CANARegs.PMSCMDRegs.bit.RlyOFF;//== 0u) ? 1u : 0u;
+                     }
+                     //PrtectRelayRegs.State.bit.WakeUpEN = (CANARegs.PMSCMDRegs.bit.RlyOFF == 0u) ? 1u : 0u;
             break;
             case PROTECTER://5
 
@@ -935,9 +951,9 @@ interrupt void cpu_timer0_isr(void)
     * Battery Alarm & Fault & Protect Check
     */
     SysAlarmtCheck(&SysRegs);
-    SysRegs.SysAlarmReg.Word.DataH=0;
-    SysRegs.SysAlarmReg.Word.DataL=0;
-   CANARegs.ProtectState=0;
+   // SysRegs.SysAlarmReg.Word.DataH=0;
+   // SysRegs.SysAlarmReg.Word.DataL=0;
+   //CANARegs.ProtectState=0;
    if((SysRegs.SysAlarmReg.all > 0)&&(SysRegs.SysStateReg.bit.INITOK==1))
    {
        CANARegs.ProtectState=1;
@@ -951,15 +967,15 @@ interrupt void cpu_timer0_isr(void)
        //SysRegs.SysStateReg.bit.PrtectStatus=0;
        CANARegs.ProtectState=0;
    }
-   SysRegs.SysFaultReg.Word.DataH=0;
-   SysRegs.SysFaultReg.Word.DataL=0;
+   //SysRegs.SysFaultReg.Word.DataH=0;
+   //SysRegs.SysFaultReg.Word.DataL=0;
    SysFaultCheck(&SysRegs);
    SysRegs.SysStateReg.bit.SysFault=0;
    if((SysRegs.SysFaultReg.all > 0)&&(SysRegs.SysStateReg.bit.INITOK==1))
    {
-   //    CANARegs.ProtectState=2;
-    //   SysRegs.SysStateReg.bit.SysFault=1;
-     //  SysRegs.SysStateReg.bit.PrtectStatus=2;
+       CANARegs.ProtectState=2;
+       SysRegs.SysStateReg.bit.SysFault=1;
+      // SysRegs.SysStateReg.bit.PrtectStatus=2;
    }
    else if(SysRegs.SysStateReg.bit.SysAalarm==0);
    {
