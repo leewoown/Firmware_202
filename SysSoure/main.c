@@ -276,6 +276,7 @@ void main(void)
 
                  NVRAM_AZoneReadHandler(&NVRZoneARDRegs);
                  NVRAllRegs.SysTimeTick=NVRZoneARDRegs.SysTimeTick;
+                 if(SysRegs.SysStateReg.bit.AdminMode==1)  { SysRegs.SysMachine=MANUALMode;}
 
                 // delay_ms(100);
             break;
@@ -351,6 +352,7 @@ void main(void)
                      NVRAllRegs.SEQ=NVRAM_AZoneSave;
                      SysRegs.SysMachine=READY;
                      SysRegs.SysStateReg.bit.INITOK=1;
+                     if(SysRegs.SysStateReg.bit.AdminMode==1)  { SysRegs.SysMachine=MANUALMode;}
             break;
             case READY://2
                    if(SysRegs.SysDigitalInputReg.bit.killSW==1)
@@ -367,6 +369,7 @@ void main(void)
                        SysRegs.SysStateReg.bit.VCUWakeUp=1;
                    }
                    SysRegs.SysMachine=RUNING;
+                   if(SysRegs.SysStateReg.bit.AdminMode==1)  { SysRegs.SysMachine=MANUALMode;}
             break;
             case RUNING://3
                      SysRegs.SysStateReg.bit.SysDisCharMode =! CANARegs.ChargerResgsStauts.bit.Char_DOSTatue;
@@ -394,9 +397,11 @@ void main(void)
                      {
                          PrtectRelayRegs.State.bit.WakeUpEN != CANARegs.PMSCMDRegs.bit.RlyOFF;//== 0u) ? 1u : 0u;
                      }
+                     if(SysRegs.SysStateReg.bit.AdminMode==1)  { SysRegs.SysMachine=MANUALMode;}
                      //PrtectRelayRegs.State.bit.WakeUpEN = (CANARegs.PMSCMDRegs.bit.RlyOFF == 0u) ? 1u : 0u;
             break;
             case PROTECTER://5
+                    if(SysRegs.SysStateReg.bit.AdminMode==1) { SysRegs.SysMachine=MANUALMode;}
 
             case MANUALMode://6
            //     SysRegs.SysDigitalOutPutReg.bit.NRlyOUT    = CANARegs.HMICMDRegs.bit.N_Rly;
@@ -459,7 +464,7 @@ void main(void)
             // 셀 전압 Balance
             if(SysRegs.SysStateReg.bit.SysBalanceEn==1)
             {
-                if(SysRegs.SysStateReg.bit.HMICOMEnable==0)
+                if(SysRegs.SysStateReg.bit.AdminMode==0)
                 {
                     SysRegs.HMICANErrCheck=0;
                     CANARegs.HMICMDRegs.all=0;
@@ -472,7 +477,7 @@ void main(void)
                     //SysRegs.HMICANErrCheck++; CPU 인터럽트 1msec
                     if(SysRegs.HMICANErrCheck < 3001)
                     {
-                        if(SysRegs.SysStateReg.bit.HMIBalanceMode == 1u)
+                        if(SysRegs.SysStateReg.bit.AdminMode == 1u)
                         {
                             CANARegs.HMICEllTempsAgv=250;
                             SysRegs.BalanceRefVoltageF = (float32)(CANARegs.HMICEllVoltMin*0.001);
@@ -910,7 +915,6 @@ interrupt void cpu_timer0_isr(void)
     *
     */
    SysRegs.SysStateReg.bit.PwrHoldRlyDOStatus = (SysRegs.SysCellDivVoltageF > 0.009f) ? 1u : 0u;
-   if(SysRegs.SysStateReg.bit.HMICOMEnable==1) {SysRegs.SysMachine= MANUALMode;}
    /*
     * DigitalInput detection
     * 릴레이 변경으로 삭제
@@ -1160,7 +1164,8 @@ interrupt void cpu_timer0_isr(void)
                 SysRegs.SysStateReg.bit.MSDERR             = SysRegs.SysProtectReg.bit.MSD_Err;
                 SysRegs.SysStateReg.bit.RlyERR             = SysRegs.SysProtectReg.bit.PackRly_Err;
                 SysRegs.SysStateReg.bit.CANCOMERR          = SysRegs.SysProtectReg.bit.PackCharCAN_Err|SysRegs.SysProtectReg.bit.PackVCUCAN_Err|SysRegs.SysProtectReg.bit.PackCTCAN_Err;
-                SysRegs.SysStateReg.bit.ISOSPICOMERR       = SysRegs.SysProtectReg.bit.PackIOSPI_Err;
+
+            //    SysRegs.SysStateReg.bit.ISOSPICOMERR       = SysRegs.SysProtectReg.bit.PackIOSPI_Err;
                 SysRegs.SysStateReg.bit.CANCOMEnable       = SysRegs.CanComEable;
                 CANARegs.SysStatus.bit.BalanceMode         = SysRegs.SysStateReg.bit.SysBalaMode;
                 CANARegs.SysStatus.bit.NegRly              = SysRegs.SysStateReg.bit.NRlyDOStatus;
@@ -1482,7 +1487,7 @@ interrupt void cpu_timer0_isr(void)
        break;
    }
 
-  if(SysRegs.SysStateReg.bit.HMICOMEnable==1)  { SysRegs.SysMachine=MANUALMode;}
+
 
   if(SysRegs.SysStateReg.bit.INITOK==1)
   {
@@ -1497,13 +1502,7 @@ interrupt void cpu_timer0_isr(void)
        SysRegs.SysStateReg.bit.PwrHoldRlyDOStatus=SysRegs.SysDigitalOutPutReg.bit.PWRHOLD;
        //SysRegs.SysDigitalOutPutReg.bit.PWRHOLD=SysRegs.SysStateReg.bit.PwrHoldRlyDOStatus;
   }
-  else
-  {
- //     SysRegs.SysDigitalOutPutReg.bit.NRlyOUT=0;
- //     SysRegs.SysDigitalOutPutReg.bit.PRlyOUT=0;
- //     SysRegs.SysDigitalOutPutReg.bit.ProRlyOUT=0;
-    //  SysDigitalOutput(&SysRegs);
-  }
+
 //   LEDSysState_L;
    if(SysRegs.MainIsr1>3000) {SysRegs.MainIsr1=0;}
 
