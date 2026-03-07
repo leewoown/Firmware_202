@@ -119,10 +119,13 @@ void SysVarINIT(SystemReg *s)
     s->PMSysCMDResg.all=0;
     s->SysStateReg.Word.DataH=0X0000;
     s->SysStateReg.Word.DataL=0X0000;
-    s->SysAlarmReg.all=0;
-    s->SysFaultReg.all=0;
 
-    s->SysProtectReg.all=0;
+    s->SysAlarmReg.Word.DataH=0;
+    s->SysAlarmReg.Word.DataL=0;
+    s->SysFaultReg.Word.DataH=0;
+    s->SysFaultReg.Word.DataL=0;
+    s->SysProtectReg.Word.DataH=0;
+    s->SysProtectReg.Word.DataL=0;
 
     s->SysDigitalInputReg.all=0x0000;
     s->SysDigitalOutPutReg.all=0x0000;
@@ -734,7 +737,7 @@ void SysAlarmtCheck(SystemReg *s)
          }
      }
      // 팩 과전압 Alarm,유지시간카운터배열값:3,유지시간;100msec
-     if(Hyst_On(s->SysPackVoltageF,51.8f))
+     if(s->SysPackParallelVoltageF>51.8f)
      {
          if(s->SysAlarmCont[3]< 100){++s->SysAlarmCont[3];}
          if(s->SysAlarmCont[3]>=100)
@@ -748,14 +751,14 @@ void SysAlarmtCheck(SystemReg *s)
          {
              s->SysAlarmCont[3]=0;
          }
-         if(Hyst_Off(s->SysPackVoltageF,50.2f))
+         if(Hyst_Off(s->SysPackParallelVoltageF,50.2f))
          {
              s->SysAlarmCont[3]=0;
              s->SysAlarmReg.bit.PackVolt_OV=0;
          }
      }
      // 팩 저전압 Alarm,유지시간카운터배열값:4,유지시간;100msec
-     if(Hyst_Off(s->SysPackVoltageF,46.5f))
+     if(Hyst_Off(s->SysPackParallelVoltageF,46.5f))
      {
          if(s->SysAlarmCont[4]< 100){++s->SysAlarmCont[4];}
          if(s->SysAlarmCont[4]>=100)
@@ -769,19 +772,19 @@ void SysAlarmtCheck(SystemReg *s)
          {
              s->SysAlarmCont[4]=0;
          }
-         if(Hyst_On(s->SysPackVoltageF,48.8f))
+         if(Hyst_On(s->SysPackParallelVoltageF,48.8f))
          {
              s->SysAlarmCont[4]=0;
              s->SysAlarmReg.bit.PackVolt_UN=0;
          }
      }
-     // 셀 저온 Alarm,유지시간카운터배열값:5,유지시간;100msec
+     // 셀 고온 Alarm,유지시간카운터배열값:5,유지시간;100msec
      if(Hyst_On(s->SysCellAgvTemperatureF,45.0f))
      {
          if(s->SysAlarmCont[5]< 100){++s->SysAlarmCont[5];}
          if(s->SysAlarmCont[5]>=100)
          {
-             s->SysAlarmReg.bit.CellTemp_OT=1;
+             s->SysAlarmReg.bit.CellTemp_OT=0;
          }
      }
      else
@@ -1022,7 +1025,7 @@ void SysFaultCheck(SystemReg *s)
          }
      }
      // 팩 과전압 Alarm,유지시간카운터배열값:3,유지시간;100msec
-     if(Hyst_On(s->SysPackVoltageF,52.5f))
+     if(Hyst_On(s->SysPackParallelVoltageF,52.5f))
      {
          if(s->SysFalutCont[3]< 100){++s->SysFalutCont[3];}
          if(s->SysFalutCont[3]>=100)
@@ -1036,14 +1039,14 @@ void SysFaultCheck(SystemReg *s)
          {
              s->SysFalutCont[3]=0;
          }
-         if(Hyst_Off(s->SysPackVoltageF,50.9f))
+         if(Hyst_Off(s->SysPackParallelVoltageF,50.9f))
          {
              s->SysFalutCont[3]=0;
              s->SysFaultReg.bit.PackVolt_OV=0;
          }
      }
      // 팩 저전압 Alarm,유지시간카운터배열값:4,유지시간;100msec
-     if(Hyst_Off(s->SysPackVoltageF,45.0f))
+     if(Hyst_Off(s->SysPackParallelVoltageF,45.0f))
      {
          if(s->SysFalutCont[4]< 100){++s->SysFalutCont[4];}
          if(s->SysFalutCont[4]>=100)
@@ -1057,14 +1060,15 @@ void SysFaultCheck(SystemReg *s)
          {
              s->SysFalutCont[4]=0;
          }
-         if(Hyst_On(s->SysPackVoltageF,47.3f))
+         if(Hyst_On(s->SysPackParallelVoltageF,47.3f))
          {
              s->SysFalutCont[4]=0;
              s->SysFaultReg.bit.PackVolt_UN=0;
          }
      }
      // 셀 고온 Alarm,유지시간카운터배열값:5,유지시간;100msec
-     if(Hyst_On(s->SysCellAgvTemperatureF,52.0f))
+    // if(Hyst_On(s->SysCellAgvTemperatureF,52.0f))
+     if(s->SysCellAgvTemperatureF>52.0f)
      {
          if(s->SysFalutCont[5]< 100){++s->SysFalutCont[5];}
          if(s->SysFalutCont[5]>=100)
@@ -1074,7 +1078,7 @@ void SysFaultCheck(SystemReg *s)
      }
      else
      {
-         if(s->SysAlarmReg.bit.CellTemp_OT==0)
+         if(s->SysFaultReg.bit.CellTemp_OT==0)
          {
              s->SysFalutCont[5]=0;
          }

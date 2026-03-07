@@ -951,13 +951,13 @@ interrupt void cpu_timer0_isr(void)
             SysRegs.SysSOCF=EV240AhSocRegs.SysPackSOCF;
         }
     }
+    if(SysRegs.SysStateReg.bit.INITOK==1)
+    {
+        SysAlarmtCheck(&SysRegs);
+    }
    /*
     * Battery Alarm & Fault & Protect Check
     */
-    SysAlarmtCheck(&SysRegs);
-   // SysRegs.SysAlarmReg.Word.DataH=0;
-   // SysRegs.SysAlarmReg.Word.DataL=0;
-   //CANARegs.ProtectState=0;
    if((SysRegs.SysAlarmReg.all > 0)&&(SysRegs.SysStateReg.bit.INITOK==1))
    {
        CANARegs.ProtectState=1;
@@ -974,7 +974,7 @@ interrupt void cpu_timer0_isr(void)
    //SysRegs.SysFaultReg.Word.DataH=0;
    //SysRegs.SysFaultReg.Word.DataL=0;
    SysFaultCheck(&SysRegs);
-   SysRegs.SysStateReg.bit.SysFault=0;
+ //  SysRegs.SysStateReg.bit.SysFault=0;
    if((SysRegs.SysFaultReg.all > 0)&&(SysRegs.SysStateReg.bit.INITOK==1))
    {
        CANARegs.ProtectState=2;
@@ -1175,6 +1175,7 @@ interrupt void cpu_timer0_isr(void)
                 CANARegs.SysStatus.bit.KillSWstatus        = SysRegs.SysDigitalInputReg.bit.killSW;
                 CANARegs.SysStatus.bit.ChargerEn           = CANARegs.ChargerResgsStauts.bit.Char_DOSTatue;
                 CANARegs.SysStatus.bit.PWMBMS_Hold         = SysRegs.SysStateReg.bit.PwrHoldRlyDOStatus;
+             //   CANARegs.SysStatus.bit.KillSWstatus=1;
                 if(SysRegs.CanComEable==1)
                 {
                     CANATX(0x612,8,CANARegs.SysState,CANARegs.SysStatus.all,SysRegs.SysStateReg.Word.DataL,SysRegs.SysStateReg.Word.DataH);
@@ -1183,7 +1184,8 @@ interrupt void cpu_timer0_isr(void)
        case 14:
                if(SysRegs.CanComEable==1)
                {
-                   CANATX(0x613,8,SysRegs.SysAlarmReg.Word.DataL,SysRegs.SysAlarmReg.Word.DataH,SysRegs.SysProtectReg.Word.DataL,SysRegs.SysProtectReg.Word.DataH);
+
+                   CANATX(0x613,8,SysRegs.SysAlarmReg.Word.DataL,SysRegs.SysFaultReg.Word.DataL,SysRegs.SysProtectReg.Word.DataL,SysRegs.SysProtectReg.Word.DataH);
                }
        break;
        case 17:
@@ -1234,8 +1236,8 @@ interrupt void cpu_timer0_isr(void)
        case 30:
                 CANARegs.SysPackAh = (int16)(EV240AhSocRegs.SysPackAhF*10.0);
                 CANARegs.SysTimeTickDataL   =  (Uint16)(NVRZoneARDRegs.SysTimeTick & 0xFFFFu);
-                CANARegs.SysTimeTickDataH =  (Uint16)((NVRZoneARDRegs.SysTimeTick  >> 16) & 0xFFFFu);
-                CANARegs.SysSoHCapacity   = NVRZoneARDRegs.LastSOC;
+                CANARegs.SysTimeTickDataH   =  (Uint16)((NVRZoneARDRegs.SysTimeTick  >> 16) & 0xFFFFu);
+                CANARegs.SysSoHCapacity     = NVRZoneARDRegs.LastSOC;
                 if(SysRegs.CanComEable==1)
                 {
                     CANATX(0x618,8,CANARegs.SysPackAh,CANARegs.SysTimeTickDataL, CANARegs.SysTimeTickDataH, CANARegs.SysSoHCapacity);
