@@ -374,6 +374,7 @@ typedef struct
       float32  SOCbufF;
       float32  SysSocInitF;
       float32  CellAgvVoltageF;
+      float32  SysSocBaseF;
       union SoCState_REG SoCStateRegs;
 } SocReg;
 #endif

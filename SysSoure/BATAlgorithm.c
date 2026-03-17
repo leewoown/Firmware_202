@@ -764,6 +764,8 @@ void CalEVE240AhRegsInit(SocReg *P)
     P->SysPackSOCF=5.0;
     P->AVGXF=0.0;
 
+    P->SysSocBaseF = 0.0F;
+
     P->SOCX2InF=0.0;
     P->SOCX1InF=0.0;
     P->SOCX3InF=0.0;
@@ -784,8 +786,6 @@ void CalEVE240AhRegsInit(SocReg *P)
     P->SOCX1OutFAZore=0.0;
     P->AZoreCalCout=0;
 
-
-
     P->SOCX4InFBZore=0.0;
     P->SOCX3InFBZore=0.0;
     P->SOCX2InFBZore=0.0;
@@ -795,7 +795,6 @@ void CalEVE240AhRegsInit(SocReg *P)
     P->SOCX2OutFBZore=0.0;
     P->SOCX1OutFBZore=0.0;
     P->BZoreCalCout=0.0;
-
 
     P->SOCX4InFCZore=0.0;
     P->SOCX3InFCZore=0.0;
@@ -816,7 +815,6 @@ void CalEVE240AhRegsInit(SocReg *P)
     P->SOCX2OutFDZore=0.0;
     P->SOCX1OutFDZore=0.0;
     P->DZoreCalCout=0;
-
 
     P->SOCX4InFEZore=0.0;
     P->SOCX3InFEZore=0.0;
@@ -899,82 +897,149 @@ void CalEVE240AhSocInit(SocReg *P)
 
 void CalEVE240AhSocHandle(SocReg *P)
 {
-    /* 1ms tick 누적 */
+    /* SOC 계산 주기 카운트 증가 */
     P->SysTime++;
-    /* (선택) 평균전압 갱신 */
-    P->AVGXF         =   P->CellAgvVoltageF;
-    /* 50ms 주기 확정 */
+
+    /* 현재 셀 평균 전압 저장 (OCV 기반 SOC 계산 시 사용) */
+    P->AVGXF = P->CellAgvVoltageF;
+
+    /*------------------------------------------------------------
+     SOC 계산 샘플링 주기 대기
+     C_SocSamPleCount 만큼 호출될 때까지 대기
+     → SOC 연산 주기 확보 목적
+    -------------------------------------------------------------*/
     if(P->SysTime < (Uint16)C_SocSamPleCount)
     {
-        P->state=SOC_STATE_CalWaitMode;
-        return;
-    }
-    P->SysTime=0u;
-    /* 5) INITOK 가드: 측정(전압/온도) 1회 이상 완료 전에는 SOC 연산/초기화 금지 */
-    if(P->SoCStateRegs.bit.INITOK == 0u)
-    {
-        /* INITOK 이전: 필요 시 마지막 SOC 유지(여기서는 아무것도 안 함) */
-        return;
-        P->state=SOC_STATE_IDLE;
+        P->state = SOC_STATE_CalWaitMode;   /* SOC 계산 대기 상태 */
+        return;                             /* 아직 계산 주기가 아님 */
     }
 
-    /* ---- CalMeth 결정(기존 로직 유지) ---- */
+    /* 계산 주기 도달 → 타이머 리셋 */
+    P->SysTime = 0u;
+
+
+    /*------------------------------------------------------------
+     SOC 초기화 완료 여부 확인
+     INITOK = 0 이면 SOC 계산 수행하지 않음
+     (초기화 완료 전이므로 계산 불가)
+    -------------------------------------------------------------*/
+    if(P->SoCStateRegs.bit.INITOK == 0u)
+    {
+        P->state = SOC_STATE_IDLE;  /* 대기 상태 */
+        return;
+    }
+
+
+    /*------------------------------------------------------------
+     SOC 계산 방식 전환 판단
+
+     CalMeth = 0 → OCV 기반 SOC 계산
+     CalMeth = 1 → CT(전류적산) 기반 SOC 계산
+
+     전류 누적량이 기준값 이상이면 CT 방식으로 전환
+    -------------------------------------------------------------*/
     if(P->SysSoCCTAbsF >= C_SocInitCTVaule)
     {
-        P->SoCStateRegs.bit.CalMeth = 1u;
-        P->CTCount = 0u;
+        P->SoCStateRegs.bit.CalMeth = 1u;   /* CT 방식 사용 */
+        P->CTCount = 0u;                    /* CT 카운터 초기화 */
     }
     else
     {
+        /* CT 누적량이 부족하면 시간 기준으로 CT 전환 판단 */
         P->CTCount++;
+
         if(P->CTCount > 6000u)
         {
-            P->CTCount = 6001u;
-            //P->SoCStateRegs.bit.CalMeth = 0u;
-            P->SoCStateRegs.bit.CalMeth = 1u;
+            P->CTCount = 6001u;             /* 카운터 상한 유지 */
+            P->SoCStateRegs.bit.CalMeth = 1u; /* 일정 시간 후 강제 CT 전환 */
         }
     }
 
-    /* 2) CalMeth 전환 엣지 검출 + Ah 누적 리셋 */
+
+    /*------------------------------------------------------------
+     SOC 계산 방식 변경 감지
+     (OCV → CT 전환 또는 CT → OCV 전환)
+
+     방식이 변경되면 CT 적산 관련 변수 초기화
+    -------------------------------------------------------------*/
     {
-        static Uint16 prevCalMeth_u16 = 0u; /* 함수 최초 진입 시 0으로 시작 */
+        static Uint16 prevCalMeth_u16 = 0u; /* 이전 계산 방식 저장 */
         Uint16 curCalMeth_u16 = (Uint16)P->SoCStateRegs.bit.CalMeth;
 
         if(curCalMeth_u16 != prevCalMeth_u16)
         {
-            /* CalMeth 전환 순간: 누적값 오염/점프 방지 */
-            P->SysPackAhNewF    = 0.0F;
-            P->SysPackAhF       = 0.0F;
-            P->SysPackAhOldF    = 0.0F;
-            P->SysPackSOCBufF1  = 0.0F;
-            P->SysPackSOCBufF2  = 0.0F;
-            P->state=SOC_STATE_InitRegs;
+            /* 전류 적산 관련 변수 초기화 */
+            P->SysPackAhNewF   = 0.0F;
+            P->SysPackAhF      = 0.0F;
+            P->SysPackAhOldF   = 0.0F;
+
+            /* SOC 누적 버퍼 초기화 */
+            P->SysPackSOCBufF1 = 0.0F;
+            P->SysPackSOCBufF2 = 0.0F;
+
+            /* 상태 변경 */
+            P->state = SOC_STATE_InitRegs;
         }
+
+        /* 현재 계산 방식 저장 */
         prevCalMeth_u16 = curCalMeth_u16;
     }
-    /* 1) 50ms마다 항상 계산(상태머신 제거/보정) */
+
+
+    /*------------------------------------------------------------
+     SOC 계산 방식 분기
+    -------------------------------------------------------------*/
     if(P->SoCStateRegs.bit.CalMeth == 0u)
     {
-        /* OCV 기반 초기화(평탄구간 등) */
+        /*--------------------------------------------------------
+         OCV 기반 SOC 계산
+         (셀 평균 전압 기반 초기 SOC 계산)
+        ---------------------------------------------------------*/
+
         P->AVGXF = P->CellAgvVoltageF;
 
-        /* 4) CalEVE240AhSocInit: 평균전압(및 온도 등) 기반으로 초기 SOC(SysSocInitF)를 산출하는 초기화 함수로 해석됨 */
+        /* 전압 기반 SOC 초기화 함수 */
         CalEVE240AhSocInit(P);
-        P->state=SOC_STATE_InitSos;
-        /* 초기화 SOC 반영 */
-        P->SysPackSOCF = P->SysSocInitF;
+
+        /* OCV 계산 결과를 CT 기준 SOC로도 사용 */
+        P->SysSocBaseF = P->SysSocInitF;
+
+        P->state = SOC_STATE_InitSos;
+
+        /* 현재 SOC 출력값 */
+        P->SysPackSOCF = P->SysSocBaseF;
     }
-    else /* CalMeth == 1 */
+    else
     {
-        /* CT(적류적산) 기반 SOC 업데이트 */
-        P->SysSOCdtF = (C_CTSampleTime * C_SocCumulativeTime); /* 0.05 * (1/3600) */
-        /* 전류(A) * 시간(h) = Ah
-           SysSoCCTF는 “부호 포함 전류”로 가정(충전 +, 방전 - 또는 반대) */
+        /*--------------------------------------------------------
+         CT(Coulomb Counting) 기반 SOC 계산
+         전류 적산 기반 SOC 계산
+        ---------------------------------------------------------*/
+
+        /* CT 적산 시간 계산 */
+        P->SysSOCdtF = (C_CTSampleTime * C_SocCumulativeTime);
+
+        /* 전류 → Ah 변환 */
         P->SysPackAhNewF = (P->SysSoCCTF * P->SysSOCdtF);
+
+        /* 누적 Ah 계산 */
         P->SysPackAhF    = (P->SysPackAhNewF + P->SysPackAhOldF);
+
+        /* 이전 값 업데이트 */
         P->SysPackAhOldF = P->SysPackAhF;
 
-        /* Ah 누적 클램프(용량 380Ah 기준) */
+
+        /*--------------------------------------------------------
+         Ah 범위 제한
+         배터리 팩 유효 용량 기준 제한
+
+         Pack : 15S2P
+         Cell : 240Ah
+         Pack : 480Ah
+         DoD 80% 적용 → 약 380Ah 사용
+
+         SOC 계산 안정성 확보 목적
+        ---------------------------------------------------------*/
         if(P->SysPackAhF <= -368.0F)
         {
             P->SysPackAhF = -368.0F;
@@ -984,85 +1049,41 @@ void CalEVE240AhSocHandle(SocReg *P)
             P->SysPackAhF = 368.0F;
         }
 
-        /* Ah -> SOC% 변환 */
-        P->SysPackSOCBufF1 = (P->SysPackAhF * C_EVE380AhNorm); /* (Ah)*(1/380) */
+
+        /*--------------------------------------------------------
+         Ah → SOC 변환
+         380Ah 기준 정규화
+        ---------------------------------------------------------*/
+        P->SysPackSOCBufF1 = (P->SysPackAhF * C_EVE380AhNorm);
+
+        /* % SOC 변환 */
         P->SysPackSOCBufF2 = (P->SysPackSOCBufF1 * 100.0F);
-        P->SysPackSOCF     = (P->SysSocInitF + P->SysPackSOCBufF2);
-        P->state=SOC_STATE_CalAhSos;
+
+
+        /*--------------------------------------------------------
+         최종 SOC 계산
+
+         CT 적산값을 OCV 초기 SOC 기준값에 더하여
+         최종 SOC 산출
+        ---------------------------------------------------------*/
+        P->SysPackSOCF = (P->SysSocBaseF + P->SysPackSOCBufF2);
+
+        P->state = SOC_STATE_CalAhSos;
     }
-    /* 3) SOC 0~100% 클램프 */
-    if(P->SysPackSOCF < 0)
+
+
+    /*------------------------------------------------------------
+     SOC 범위 제한
+    -------------------------------------------------------------*/
+    if(P->SysPackSOCF < 0.0F)
     {
-        P->SysPackSOCF = 0;
+        P->SysPackSOCF = 0.0F;
     }
-    else if(P->SysPackSOCF > 100)
+    else if(P->SysPackSOCF > 100.0F)
     {
-        P->SysPackSOCF = 100;
+        P->SysPackSOCF = 100.0F;
     }
-    /*
 
-    if(P->SysTime>=C_SocSamPleCount)
-     {
-         if(P->SysSoCCTAbsF < (Uint16)C_SocSamPleCount)
-         {
-             P->SoCStateRegs.bit.CalMeth=1;
-             P->CTCount=0;
-         }
-         else
-         {
-             P->CTCount++;
-             if(P->CTCount>6000)
-             {
-                 P->CTCount=6001;
-                 P->SoCStateRegs.bit.CalMeth=0;
-             }
-         }
-         switch (P->state)
-         {
-
-             case SOC_STATE_RUNNING:
-                  if(P->SoCStateRegs.bit.CalMeth==0)
-                  {
-                      // 60Ah
-                       P->AVGXF         =   P->CellAgvVoltageF;
-                       CalEVE240AhSocInit(P);
-                       P->SysPackSOCF = P->SysSocInitF;
-                       //P->SysPackSOCF = P->SOCbufF;
-                       //P->SysSocInitF = P->SOCbufF;
-                  }
-                  if(P->SoCStateRegs.bit.CalMeth==1)
-                  {
-
-                      P->SysSOCdtF = C_CTSampleTime*C_SocCumulativeTime; // CumulativeTime(1/3600) -> 누적시간
-                      P->SysPackAhNewF = P->SysSoCCTF * P->SysSOCdtF;
-                      P->SysPackAhF    = P->SysPackAhNewF + P->SysPackAhOldF;
-                      P->SysPackAhOldF = P->SysPackAhF;
-                      if(P->SysPackAhF <= -380.0)
-                      {
-                         P->SysPackAhF =-380.0;
-                      }
-                      if(P->SysPackAhF> 380.0)
-                      {
-                          P->SysPackAhF= 380.0;
-                      }
-                      P->SysPackSOCBufF1 = P->SysPackAhF *C_EVE380AhNorm;// 0.002631//1/380Ah;
-                      P->SysPackSOCBufF2 = P->SysPackSOCBufF1*100.0; //--> 단위 변환 %
-                      P->SysPackSOCF     = P->SysSocInitF+P->SysPackSOCBufF2;
-                  }
-                  P->state = SOC_STATE_Save;
-
-             break;
-             case SOC_STATE_Save:
-
-                 P->state = SOC_STATE_RUNNING;
-
-             break;
-             case SOC_STATE_CLEAR:
-
-             break;
-         }
-         P->SysTime=0;
-     }*/
 }
 
 #endif

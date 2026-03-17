@@ -20,7 +20,8 @@ extern void SysFaultCheck(SystemReg *s);
 extern void SysAlarmtCheck(SystemReg *s);
 extern void SysCalSocIintHandle(SystemReg *s);
 extern int float32ToInt(float32 Vaule, Uint32 Num);
-extern void TempTemps(SystemReg *s);
+extern void PWRBMSHoldHandle(SystemReg *P);
+extern void PWRRlyHandle(SystemReg *P);
 //extern SystemReg       SysRegs;
 
 #define A 1664525
@@ -28,11 +29,7 @@ extern void TempTemps(SystemReg *s);
 #define M 4294967296 // 2^32
 
 
-void TempTemps(SystemReg *s)
-{
 
-//    s->NumA=(float32)(s->MainIsr1/3000);
-}
 
 void CANATX(unsigned int ID, unsigned char Length, unsigned int Data0, unsigned int Data1,unsigned int Data2,unsigned int Data3)
 {
@@ -644,714 +641,942 @@ void SysCalCurrentHandle(SystemReg *s)
     }
 
 }
+/******************************************************************************
+ * Function : SysAlarmtCheck
+ * Description :
+ *  Battery System Warning 상태를 검사하는 함수
+ *
+ *  - 모든 Warning 조건은 100ms 유지 시 발생
+ *  - Alarm 발생 시 Warning Flag Set
+ *  - 상위 시스템으로 Warning Status 전송
+ *
+ *  기준 : Bsa_Wrn* 설정표 기준 적용
+ *
+ *  호출주기 : 1ms (cpu_timer0_isr)
+ *  유지시간 : 100 count = 100ms
+ *
+ ******************************************************************************/
+/******************************************************************************
+ * Function : SysAlarmtCheck
+ * Description :
+ *  Battery System Warning(Alarm) 상태 검사
+ *
+ *  - Alarm 조건은 100ms 유지 시 발생
+ *  - Alarm 발생 시 Warning Flag Set
+ *  - BPA_Protect_Status = 0x01 수준의 Warning 상태 전송 개념
+ *  - Rly Stat = P, N ON 상태에서 Warning flag 전송
+ *
+ *  호출주기 : 1ms
+ ******************************************************************************/
 void SysAlarmtCheck(SystemReg *s)
 {
+    const Uint16 AlarmDelayCnt = 100u;
 
-    if(s->SysStateReg.bit.SysDisCharMode==1)
+    /*----------------------------------------------------------------------
+     0. Pack Over Current Alarm
+     ----------------------------------------------------------------------
+     Discharge : ON = 300.0A, OFF = 270.0A
+     Charge    : ON =  30.0A, OFF =  28.5A
+    ----------------------------------------------------------------------*/
+    if(s->SysStateReg.bit.SysDisCharMode == 1u)
     {
-    // 과전류 Alarm,유지시간카운터배열값:0,유지시간;100msec
-        if(Hyst_On(s->SysPackCurrentAsbF,200.0f))
+        if(Hyst_On(s->SysPackCurrentAsbF, 300.0f))
         {
-             if(s->SysAlarmCont[0]< 100){++s->SysAlarmCont[0];}
-             if(s->SysAlarmCont[0]>=100)
-             {
-                 s->SysAlarmReg.bit.PackVCur_OC=1;
-             }
-         }
-         else
-         {
-             if(s->SysAlarmReg.bit.PackVCur_OC==0)
-             {
-                 s->SysAlarmCont[0]=0;
-             }
-             if(Hyst_Off(s->SysPackCurrentAsbF,190.0f))
-             {
-                 s->SysAlarmCont[0]=0;
-                 s->SysAlarmReg.bit.PackVCur_OC=0;
-             }
-         }
+            if(s->SysAlarmCont[0] < AlarmDelayCnt) { ++s->SysAlarmCont[0]; }
+            if(s->SysAlarmCont[0] >= AlarmDelayCnt)
+            {
+                s->SysAlarmReg.bit.PackVCur_OC = 1u;
+            }
+        }
+        else
+        {
+            if(s->SysAlarmReg.bit.PackVCur_OC == 0u)
+            {
+                s->SysAlarmCont[0] = 0u;
+            }
+            if(Hyst_Off(s->SysPackCurrentAsbF, 270.0f))
+            {
+                s->SysAlarmCont[0] = 0u;
+                s->SysAlarmReg.bit.PackVCur_OC = 0u;
+            }
+        }
     }
     else
     {
-        if(Hyst_On(s->SysPackCurrentAsbF,30.0f))
+        if(Hyst_On(s->SysPackCurrentAsbF, 30.0f))
         {
-             if(s->SysAlarmCont[0]< 100){++s->SysAlarmCont[0];}
-             if(s->SysAlarmCont[0]>=100)
-             {
-                 s->SysAlarmReg.bit.PackVCur_OC=1;
-             }
-         }
-         else
-         {
-             if(s->SysAlarmReg.bit.PackVCur_OC==0)
-             {
-                 s->SysAlarmCont[0]=0;
-             }
-             if(Hyst_Off(s->SysPackCurrentAsbF,28.0f))
-             {
-                 s->SysAlarmCont[0]=0;
-                 s->SysAlarmReg.bit.PackVCur_OC=0;
-             }
-         }
+            if(s->SysAlarmCont[0] < AlarmDelayCnt) { ++s->SysAlarmCont[0]; }
+            if(s->SysAlarmCont[0] >= AlarmDelayCnt)
+            {
+                s->SysAlarmReg.bit.PackVCur_OC = 1u;
+            }
+        }
+        else
+        {
+            if(s->SysAlarmReg.bit.PackVCur_OC == 0u)
+            {
+                s->SysAlarmCont[0] = 0u;
+            }
+            if(Hyst_Off(s->SysPackCurrentAsbF, 28.5f))
+            {
+                s->SysAlarmCont[0] = 0u;
+                s->SysAlarmReg.bit.PackVCur_OC = 0u;
+            }
+        }
     }
-     // 팩 과충전 Alarm,유지시간카운터배열값:1,유지시간;100msec
-     if(Hyst_On(s->SysSOCF,100.0f))
-     {
-         if(s->SysAlarmCont[1]< 100){++s->SysAlarmCont[1];}
-         if(s->SysAlarmCont[1]>=100)
-         {
-             s->SysAlarmReg.bit.PackVSOC_OV=1;
-         }
-     }
-     else
-     {
-         if(s->SysAlarmReg.bit.PackVSOC_OV==0)
-         {
-             s->SysAlarmCont[1]=0;
-         }
-         if(Hyst_Off(s->SysSOCF,97.0f))
-         {
-             s->SysAlarmCont[1]=0;
-             s->SysAlarmReg.bit.PackVSOC_OV=0;
-         }
-     }
-     // 팩 저충전,유지시간카운터배열값:2,유지시간;100msec
-     if(Hyst_Off(s->SysSOCF,30.0f))
-     {
-         if(s->SysAlarmCont[2]< 100){++s->SysAlarmCont[2];}
-         if(s->SysAlarmCont[2]>=100)
-         {
-             s->SysAlarmReg.bit.PackVSOC_UN=1;
-         }
-     }
-     else
-     {
-         if(s->SysAlarmReg.bit.PackVSOC_UN==0)
-         {
-             s->SysAlarmCont[2]=0;
-         }
-         if(Hyst_On(s->SysSOCF,30.9f))
-         {
-             s->SysAlarmCont[2]=0;
-             s->SysAlarmReg.bit.PackVSOC_UN=0;
-         }
-     }
-     // 팩 과전압 Alarm,유지시간카운터배열값:3,유지시간;100msec
-     if(s->SysPackParallelVoltageF>51.8f)
-     {
-         if(s->SysAlarmCont[3]< 100){++s->SysAlarmCont[3];}
-         if(s->SysAlarmCont[3]>=100)
-         {
-             s->SysAlarmReg.bit.PackVolt_OV=1;
-         }
-     }
-     else
-     {
-         if(s->SysAlarmReg.bit.PackVolt_OV==0)
-         {
-             s->SysAlarmCont[3]=0;
-         }
-         if(Hyst_Off(s->SysPackParallelVoltageF,50.2f))
-         {
-             s->SysAlarmCont[3]=0;
-             s->SysAlarmReg.bit.PackVolt_OV=0;
-         }
-     }
-     // 팩 저전압 Alarm,유지시간카운터배열값:4,유지시간;100msec
-     if(Hyst_Off(s->SysPackParallelVoltageF,46.5f))
-     {
-         if(s->SysAlarmCont[4]< 100){++s->SysAlarmCont[4];}
-         if(s->SysAlarmCont[4]>=100)
-         {
-             s->SysAlarmReg.bit.PackVolt_UN=1;
-         }
-     }
-     else
-     {
-         if(s->SysAlarmReg.bit.PackVolt_UN==0)
-         {
-             s->SysAlarmCont[4]=0;
-         }
-         if(Hyst_On(s->SysPackParallelVoltageF,48.8f))
-         {
-             s->SysAlarmCont[4]=0;
-             s->SysAlarmReg.bit.PackVolt_UN=0;
-         }
-     }
-     // 셀 고온 Alarm,유지시간카운터배열값:5,유지시간;100msec
-     if(Hyst_On(s->SysCellAgvTemperatureF,45.0f))
-     {
-         if(s->SysAlarmCont[5]< 100){++s->SysAlarmCont[5];}
-         if(s->SysAlarmCont[5]>=100)
-         {
-             s->SysAlarmReg.bit.CellTemp_OT=0;
-         }
-     }
-     else
-     {
-         if(s->SysAlarmReg.bit.CellTemp_OT==0)
-         {
-             s->SysAlarmCont[5]=0;
-         }
-         if(Hyst_Off(s->SysCellAgvTemperatureF,42.8f))
-         {
-             s->SysAlarmCont[5]=0;
-             s->SysAlarmReg.bit.CellTemp_OT=0;
-         }
-     }
-     // 팩 저온 Alarm,유지시간카운터배열값:6,유지시간;100msec
-     if(s->SysStateReg.bit.SysDisCharMode==1)
-     {
-         if(Hyst_Off(s->SysCellAgvTemperatureF,-10.0f))
-         {
-             if(s->SysAlarmCont[6]< 100){++s->SysAlarmCont[6];}
-             if(s->SysAlarmCont[6]>=100)
-             {
-                 s->SysAlarmReg.bit.CellTemp_UT=1;
-             }
-         }
-         else
-         {
-             if(s->SysAlarmReg.bit.CellTemp_UT==0)
-             {
-                 s->SysAlarmCont[6]=0;
-             }
-             if(Hyst_On(s->SysCellAgvTemperatureF,-5.0f))
-             {
-                 s->SysAlarmCont[6]=0;
-                 s->SysAlarmReg.bit.CellTemp_UT=0;
-             }
-         }
-     }
-     else if(s->SysStateReg.bit.SysDisCharMode==0)
-     {
 
-          if(Hyst_Off(s->SysCellAgvTemperatureF,0.0f))
-          {
-                 if(s->SysAlarmCont[6]< 100){++s->SysAlarmCont[6];}
-                 if(s->SysAlarmCont[6]>=100)
-                 {
-                     s->SysAlarmReg.bit.CellTemp_UT=1;
-                 }
-          }
-          else
-          {
-               if(s->SysAlarmReg.bit.CellTemp_UT==0)
-               {
-                     s->SysAlarmCont[6]=0;
-               }
-                 if(Hyst_On(s->SysCellAgvTemperatureF,1.0f))
-               {
-                     s->SysAlarmCont[6]=0;
-                     s->SysAlarmReg.bit.CellTemp_UT=0;
-               }
-           }
+    /*----------------------------------------------------------------------
+     1. Pack SOC High Alarm
+     ----------------------------------------------------------------------
+     ON = 100.0%, OFF = 97.0%
+    ----------------------------------------------------------------------*/
+    if(Hyst_On(s->SysSOCF, 100.0f))
+    {
+        if(s->SysAlarmCont[1] < AlarmDelayCnt) { ++s->SysAlarmCont[1]; }
+        if(s->SysAlarmCont[1] >= AlarmDelayCnt)
+        {
+            s->SysAlarmReg.bit.PackVSOC_OV = 1u;
+        }
+    }
+    else
+    {
+        if(s->SysAlarmReg.bit.PackVSOC_OV == 0u)
+        {
+            s->SysAlarmCont[1] = 0u;
+        }
+        if(Hyst_Off(s->SysSOCF, 97.0f))
+        {
+            s->SysAlarmCont[1] = 0u;
+            s->SysAlarmReg.bit.PackVSOC_OV = 0u;
+        }
+    }
 
-     }
-     // 셀 과전압 Alarm,유지시간카운터배열값:8,유지시간:00msec
-     if(Hyst_On(s->SysCellMaxVoltageF,3.45f))
-     {
-         if(s->SysAlarmCont[8]< 100){++s->SysAlarmCont[8];}
-         if(s->SysAlarmCont[8]>=100)
-         {
-             s->SysAlarmReg.bit.CellVolt_OV=1;
-         }
-     }
-     else
-     {
-         if(s->SysAlarmReg.bit.PackVolt_OV==0)
-         {
-             s->SysAlarmCont[8]=0;
-         }
-         if(Hyst_Off(s->SysCellMaxVoltageF,3.433f))
-         {
-             s->SysAlarmCont[8]=0;
-             s->SysAlarmReg.bit.CellVolt_OV=0;
-         }
-     }
-     // 셀 저전압 Alarm,유지시간카운터배열값:9,유지시간:100msec
-     if(Hyst_Off(s->SysCellMinVoltageF,3.100f))
-     {
-         if(s->SysAlarmCont[9]< 100){++s->SysAlarmCont[8];}
-         if(s->SysAlarmCont[9]>=100)
-         {
-             s->SysAlarmReg.bit.CellVolt_UN=1;
-         }
-     }
-     else
-     {
-         if(s->SysAlarmReg.bit.CellVolt_UN==0)
-         {
-             s->SysAlarmCont[9]=0;
-         }
-         if(Hyst_On(s->SysCellMinVoltageF,3.116f))
-         {
-             s->SysAlarmCont[9]=0;
-             s->SysAlarmReg.bit.CellVolt_UN=0;
-         }
-     }
-     // 셀 전압 편차 Alarm,유지시간카운터배열값:10,유지시간:100msec
-     if(Hyst_On(s->SysCellDivVoltageF,0.1f))
-     {
-         if(s->SysAlarmCont[10]< 100){++s->SysAlarmCont[10];}
-         if(s->SysAlarmCont[10]>=100)
-         {
-             s->SysAlarmReg.bit.CellVolt_BL=1;
-         }
-     }
-     else
-     {
-         if(s->SysAlarmReg.bit.CellVolt_BL==0)
-         {
-             s->SysAlarmCont[10]=0;
-         }
-         if(Hyst_Off(s->SysCellDivVoltageF,0.01f))
-         {
-             s->SysAlarmCont[10]=0;
-             s->SysAlarmReg.bit.CellVolt_BL=0;
-         }
-     }
-     // 셀 온도 편차 Alarm,유지시간카운터배열값:13,유지시간:100msec
-     if(Hyst_On(s->SysCellDivTemperatureF,10.0f))
-     {
-         if(s->SysAlarmCont[13]< 100){++s->SysAlarmCont[13];}
-         if(s->SysAlarmCont[13]>=100)
-         {
-             s->SysAlarmReg.bit.CellTemp_BL=1;
-         }
-     }
-     else
-     {
-         if(s->SysAlarmReg.bit.CellTemp_BL==0)
-         {
-             s->SysAlarmCont[13]=0;
-         }
-         if(Hyst_Off(s->SysCellDivTemperatureF,5.0f))
-         {
-             s->SysAlarmCont[13]=0;
-             s->SysAlarmReg.bit.CellTemp_BL=0;
-         }
-     }
+    /*----------------------------------------------------------------------
+     2. Pack SOC Low Alarm
+     ----------------------------------------------------------------------
+     ON = 30.0%, OFF = 30.9%
+    ----------------------------------------------------------------------*/
+    if(Hyst_Off(s->SysSOCF, 30.0f))
+    {
+        if(s->SysAlarmCont[2] < AlarmDelayCnt) { ++s->SysAlarmCont[2]; }
+        if(s->SysAlarmCont[2] >= AlarmDelayCnt)
+        {
+            s->SysAlarmReg.bit.PackVSOC_UN = 1u;
+        }
+    }
+    else
+    {
+        if(s->SysAlarmReg.bit.PackVSOC_UN == 0u)
+        {
+            s->SysAlarmCont[2] = 0u;
+        }
+        if(Hyst_On(s->SysSOCF, 30.9f))
+        {
+            s->SysAlarmCont[2] = 0u;
+            s->SysAlarmReg.bit.PackVSOC_UN = 0u;
+        }
+    }
+
+    /*----------------------------------------------------------------------
+     3. Pack Over Voltage Alarm
+     ----------------------------------------------------------------------
+     ON = 54.0V, OFF = 52.4V
+    ----------------------------------------------------------------------*/
+    if(Hyst_On(s->SysPackParallelVoltageF, 54.0f))
+    {
+        if(s->SysAlarmCont[3] < AlarmDelayCnt) { ++s->SysAlarmCont[3]; }
+        if(s->SysAlarmCont[3] >= AlarmDelayCnt)
+        {
+            s->SysAlarmReg.bit.PackVolt_OV = 1u;
+        }
+    }
+    else
+    {
+        if(s->SysAlarmReg.bit.PackVolt_OV == 0u)
+        {
+            s->SysAlarmCont[3] = 0u;
+        }
+        if(Hyst_Off(s->SysPackParallelVoltageF, 52.4f))
+        {
+            s->SysAlarmCont[3] = 0u;
+            s->SysAlarmReg.bit.PackVolt_OV = 0u;
+        }
+    }
+
+    /*----------------------------------------------------------------------
+     4. Pack Under Voltage Alarm
+     ----------------------------------------------------------------------
+     ON = 45.0V, OFF = 47.3V
+    ----------------------------------------------------------------------*/
+    if(Hyst_Off(s->SysPackParallelVoltageF, 45.0f))
+    {
+        if(s->SysAlarmCont[4] < AlarmDelayCnt) { ++s->SysAlarmCont[4]; }
+        if(s->SysAlarmCont[4] >= AlarmDelayCnt)
+        {
+            s->SysAlarmReg.bit.PackVolt_UN = 1u;
+        }
+    }
+    else
+    {
+        if(s->SysAlarmReg.bit.PackVolt_UN == 0u)
+        {
+            s->SysAlarmCont[4] = 0u;
+        }
+        if(Hyst_On(s->SysPackParallelVoltageF, 47.3f))
+        {
+            s->SysAlarmCont[4] = 0u;
+            s->SysAlarmReg.bit.PackVolt_UN = 0u;
+        }
+    }
+
+    /*----------------------------------------------------------------------
+     5. Cell Over Temperature Alarm
+     ----------------------------------------------------------------------
+     ON = 50.0degC, OFF = 47.5degC
+     기준 : 최대 셀 온도
+    ----------------------------------------------------------------------*/
+    if(Hyst_On(s->SysCellMaxTemperatureF, 50.0f))
+    {
+        if(s->SysAlarmCont[5] < AlarmDelayCnt) { ++s->SysAlarmCont[5]; }
+        if(s->SysAlarmCont[5] >= AlarmDelayCnt)
+        {
+            s->SysAlarmReg.bit.CellTemp_OT = 1u;
+        }
+    }
+    else
+    {
+        if(s->SysAlarmReg.bit.CellTemp_OT == 0u)
+        {
+            s->SysAlarmCont[5] = 0u;
+        }
+        if(Hyst_Off(s->SysCellMaxTemperatureF, 47.5f))
+        {
+            s->SysAlarmCont[5] = 0u;
+            s->SysAlarmReg.bit.CellTemp_OT = 0u;
+        }
+    }
+
+    /*----------------------------------------------------------------------
+     6. Cell Under Temperature Alarm
+     ----------------------------------------------------------------------
+     Discharge : ON = -10.0degC, OFF = 0.0degC
+     Charge    : ON =   0.0degC, OFF = 0.0degC
+     기준 : 최소 셀 온도
+    ----------------------------------------------------------------------*/
+    if(s->SysStateReg.bit.SysDisCharMode == 1u)
+    {
+        if(Hyst_Off(s->SysCellMinTemperatureF, -10.0f))
+        {
+            if(s->SysAlarmCont[6] < AlarmDelayCnt) { ++s->SysAlarmCont[6]; }
+            if(s->SysAlarmCont[6] >= AlarmDelayCnt)
+            {
+                s->SysAlarmReg.bit.CellTemp_UT = 1u;
+            }
+        }
+        else
+        {
+            if(s->SysAlarmReg.bit.CellTemp_UT == 0u)
+            {
+                s->SysAlarmCont[6] = 0u;
+            }
+            if(Hyst_On(s->SysCellMinTemperatureF, 0.0f))
+            {
+                s->SysAlarmCont[6] = 0u;
+                s->SysAlarmReg.bit.CellTemp_UT = 0u;
+            }
+        }
+    }
+    else
+    {
+        if(Hyst_Off(s->SysCellMinTemperatureF, 0.0f))
+        {
+            if(s->SysAlarmCont[6] < AlarmDelayCnt) { ++s->SysAlarmCont[6]; }
+            if(s->SysAlarmCont[6] >= AlarmDelayCnt)
+            {
+                s->SysAlarmReg.bit.CellTemp_UT = 1u;
+            }
+        }
+        else
+        {
+            if(s->SysAlarmReg.bit.CellTemp_UT == 0u)
+            {
+                s->SysAlarmCont[6] = 0u;
+            }
+            if(Hyst_On(s->SysCellMinTemperatureF, 0.0f))
+            {
+                s->SysAlarmCont[6] = 0u;
+                s->SysAlarmReg.bit.CellTemp_UT = 0u;
+            }
+        }
+    }
+
+    /*----------------------------------------------------------------------
+     8. Cell Over Voltage Alarm
+     ----------------------------------------------------------------------
+     ON = 3.600V, OFF = 3.582V
+    ----------------------------------------------------------------------*/
+    if(Hyst_On(s->SysCellMaxVoltageF, 3.600f))
+    {
+        if(s->SysAlarmCont[8] < AlarmDelayCnt) { ++s->SysAlarmCont[8]; }
+        if(s->SysAlarmCont[8] >= AlarmDelayCnt)
+        {
+            s->SysAlarmReg.bit.CellVolt_OV = 1u;
+        }
+    }
+    else
+    {
+        if(s->SysAlarmReg.bit.CellVolt_OV == 0u)
+        {
+            s->SysAlarmCont[8] = 0u;
+        }
+        if(Hyst_Off(s->SysCellMaxVoltageF, 3.582f))
+        {
+            s->SysAlarmCont[8] = 0u;
+            s->SysAlarmReg.bit.CellVolt_OV = 0u;
+        }
+    }
+
+    /*----------------------------------------------------------------------
+     9. Cell Under Voltage Alarm
+     ----------------------------------------------------------------------
+     ON = 3.000V, OFF = 3.015V
+    ----------------------------------------------------------------------*/
+    if(Hyst_Off(s->SysCellMinVoltageF, 3.000f))
+    {
+        if(s->SysAlarmCont[9] < AlarmDelayCnt) { ++s->SysAlarmCont[9]; }
+        if(s->SysAlarmCont[9] >= AlarmDelayCnt)
+        {
+            s->SysAlarmReg.bit.CellVolt_UN = 1u;
+        }
+    }
+    else
+    {
+        if(s->SysAlarmReg.bit.CellVolt_UN == 0u)
+        {
+            s->SysAlarmCont[9] = 0u;
+        }
+        if(Hyst_On(s->SysCellMinVoltageF, 3.015f))
+        {
+            s->SysAlarmCont[9] = 0u;
+            s->SysAlarmReg.bit.CellVolt_UN = 0u;
+        }
+    }
+
+    /*----------------------------------------------------------------------
+     10. Cell Voltage Imbalance Alarm
+     ----------------------------------------------------------------------
+     ON = 0.100V, OFF = 0.010V
+    ----------------------------------------------------------------------*/
+    if(Hyst_On(s->SysCellDivVoltageF, 0.100f))
+    {
+        if(s->SysAlarmCont[10] < AlarmDelayCnt) { ++s->SysAlarmCont[10]; }
+        if(s->SysAlarmCont[10] >= AlarmDelayCnt)
+        {
+            s->SysAlarmReg.bit.CellVolt_BL = 1u;
+        }
+    }
+    else
+    {
+        if(s->SysAlarmReg.bit.CellVolt_BL == 0u)
+        {
+            s->SysAlarmCont[10] = 0u;
+        }
+        if(Hyst_Off(s->SysCellDivVoltageF, 0.010f))
+        {
+            s->SysAlarmCont[10] = 0u;
+            s->SysAlarmReg.bit.CellVolt_BL = 0u;
+        }
+    }
+
+    /*----------------------------------------------------------------------
+     13. Cell Temperature Imbalance Alarm
+     ----------------------------------------------------------------------
+     ON = 10.0degC, OFF = 5.0degC
+    ----------------------------------------------------------------------*/
+    if(Hyst_On(s->SysCellDivTemperatureF, 10.0f))
+    {
+        if(s->SysAlarmCont[13] < AlarmDelayCnt) { ++s->SysAlarmCont[13]; }
+        if(s->SysAlarmCont[13] >= AlarmDelayCnt)
+        {
+            s->SysAlarmReg.bit.CellTemp_BL = 1u;
+        }
+    }
+    else
+    {
+        if(s->SysAlarmReg.bit.CellTemp_BL == 0u)
+        {
+            s->SysAlarmCont[13] = 0u;
+        }
+        if(Hyst_Off(s->SysCellDivTemperatureF, 5.0f))
+        {
+            s->SysAlarmCont[13] = 0u;
+            s->SysAlarmReg.bit.CellTemp_BL = 0u;
+        }
+    }
 }
+
+/******************************************************************************
+ * Function : SysFaultCheck
+ * Description :
+ *  Battery System Fault 상태 검사
+ *
+ *  - Fault 조건은 100ms 유지 시 발생
+ *  - Fault 발생 시 Fault Flag Set
+ *  - BPA_Protect_Status = 0x02 수준의 Fault 상태 전송 개념
+ *  - Rly Stat = P, N ON 상태에서 Fault flag 전송
+ *
+ *  호출주기 : 1ms
+ ******************************************************************************/
 void SysFaultCheck(SystemReg *s)
 {
-    if(s->SysStateReg.bit.SysDisCharMode==1)
+    const Uint16 FaultDelayCnt = 100u;
+
+    /*----------------------------------------------------------------------
+     0. Pack Over Current Fault
+     ----------------------------------------------------------------------
+     Discharge : ON = 400.0A, OFF = 360.0A
+     Charge    : ON =  36.0A, OFF =  34.2A
+    ----------------------------------------------------------------------*/
+    if(s->SysStateReg.bit.SysDisCharMode == 1u)
     {
-    // 과전류 Alarm,유지시간카운터배열값:0,유지시간;100msec
-        if(Hyst_On(s->SysPackCurrentAsbF,300.0f))
+        if(Hyst_On(s->SysPackCurrentAsbF, 400.0f))
         {
-             if(s->SysFalutCont[0]< 100){++s->SysFalutCont[0];}
-             if(s->SysFalutCont[0]>=100)
-             {
-                 s->SysFaultReg.bit.PackVCur_OC=1;
-             }
-         }
-         else
-         {
-             if(s->SysAlarmReg.bit.PackVCur_OC==0)
-             {
-                 s->SysFalutCont[0]=0;
-             }
-             if(Hyst_Off(s->SysPackCurrentAsbF,270.0f))
-             {
-                 s->SysFalutCont[0]=0;
-                 s->SysFaultReg.bit.PackVCur_OC=0;
-             }
-         }
+            if(s->SysFalutCont[0] < FaultDelayCnt) { ++s->SysFalutCont[0]; }
+            if(s->SysFalutCont[0] >= FaultDelayCnt)
+            {
+                s->SysFaultReg.bit.PackVCur_OC = 1u;
+            }
+        }
+        else
+        {
+            if(s->SysFaultReg.bit.PackVCur_OC == 0u)
+            {
+                s->SysFalutCont[0] = 0u;
+            }
+            if(Hyst_Off(s->SysPackCurrentAsbF, 360.0f))
+            {
+                s->SysFalutCont[0] = 0u;
+                s->SysFaultReg.bit.PackVCur_OC = 0u;
+            }
+        }
     }
     else
     {
-        if(Hyst_On(s->SysPackCurrentAsbF,60.0f))
+        if(Hyst_On(s->SysPackCurrentAsbF, 36.0f))
         {
-             if(s->SysFalutCont[0]< 100){++s->SysFalutCont[0];}
-             if(s->SysFalutCont[0]>=100)
-             {
-                 s->SysFaultReg.bit.PackVCur_OC=1;
-             }
-         }
-         else
-         {
-             if(s->SysAlarmReg.bit.PackVCur_OC==0)
-             {
-                 s->SysFalutCont[0]=0;
-             }
-             if(Hyst_Off(s->SysPackCurrentAsbF,28.0f))
-             {
-                 s->SysFalutCont[0]=0;
-                 s->SysFaultReg.bit.PackVCur_OC=0;
-             }
-         }
+            if(s->SysFalutCont[0] < FaultDelayCnt) { ++s->SysFalutCont[0]; }
+            if(s->SysFalutCont[0] >= FaultDelayCnt)
+            {
+                s->SysFaultReg.bit.PackVCur_OC = 1u;
+            }
+        }
+        else
+        {
+            if(s->SysFaultReg.bit.PackVCur_OC == 0u)
+            {
+                s->SysFalutCont[0] = 0u;
+            }
+            if(Hyst_Off(s->SysPackCurrentAsbF, 34.2f))
+            {
+                s->SysFalutCont[0] = 0u;
+                s->SysFaultReg.bit.PackVCur_OC = 0u;
+            }
+        }
     }
-     // 팩 과충전 Alarm,유지시간카운터배열값:1,유지시간;100msec
-     if(Hyst_On(s->SysSOCF,102.0f))
-     {
-         if(s->SysFalutCont[1]< 100){++s->SysFalutCont[1];}
-         if(s->SysFalutCont[1]>=100)
-         {
-             s->SysFaultReg.bit.PackVSOC_OV=1;
-         }
-     }
-     else
-     {
-         if(s->SysAlarmReg.bit.PackVSOC_OV==0)
-         {
-             s->SysFalutCont[1]=0;
-         }
-         if(Hyst_Off(s->SysSOCF,98.9f))
-         {
-             s->SysFalutCont[1]=0;
-             s->SysFaultReg.bit.PackVSOC_OV=0;
-         }
-     }
-     // 팩 저충전,유지시간카운터배열값:2,유지시간;100msec
-     if(Hyst_Off(s->SysSOCF,15.0f))
-     {
-         if(s->SysFalutCont[2]< 100){++s->SysFalutCont[2];}
-         if(s->SysFalutCont[2]>=100)
-         {
-             s->SysFaultReg.bit.PackVSOC_UN=1;
-         }
-     }
-     else
-     {
-         if(s->SysAlarmReg.bit.PackVSOC_UN==0)
-         {
-             s->SysFalutCont[2]=0;
-         }
-         if(Hyst_On(s->SysSOCF,15.8f))
-         {
-             s->SysFalutCont[2]=0;
-             s->SysFaultReg.bit.PackVSOC_UN=0;
-         }
-     }
-     // 팩 과전압 Alarm,유지시간카운터배열값:3,유지시간;100msec
-     if(Hyst_On(s->SysPackParallelVoltageF,52.5f))
-     {
-         if(s->SysFalutCont[3]< 100){++s->SysFalutCont[3];}
-         if(s->SysFalutCont[3]>=100)
-         {
-             s->SysFaultReg.bit.PackVolt_OV=1;
-         }
-     }
-     else
-     {
-         if(s->SysAlarmReg.bit.PackVolt_OV==0)
-         {
-             s->SysFalutCont[3]=0;
-         }
-         if(Hyst_Off(s->SysPackParallelVoltageF,50.9f))
-         {
-             s->SysFalutCont[3]=0;
-             s->SysFaultReg.bit.PackVolt_OV=0;
-         }
-     }
-     // 팩 저전압 Alarm,유지시간카운터배열값:4,유지시간;100msec
-     if(Hyst_Off(s->SysPackParallelVoltageF,45.0f))
-     {
-         if(s->SysFalutCont[4]< 100){++s->SysFalutCont[4];}
-         if(s->SysFalutCont[4]>=100)
-         {
-             s->SysFaultReg.bit.PackVolt_UN=1;
-         }
-     }
-     else
-     {
-         if(s->SysAlarmReg.bit.PackVolt_UN==0)
-         {
-             s->SysFalutCont[4]=0;
-         }
-         if(Hyst_On(s->SysPackParallelVoltageF,47.3f))
-         {
-             s->SysFalutCont[4]=0;
-             s->SysFaultReg.bit.PackVolt_UN=0;
-         }
-     }
-     // 셀 고온 Alarm,유지시간카운터배열값:5,유지시간;100msec
-    // if(Hyst_On(s->SysCellAgvTemperatureF,52.0f))
-     if(s->SysCellAgvTemperatureF>52.0f)
-     {
-         if(s->SysFalutCont[5]< 100){++s->SysFalutCont[5];}
-         if(s->SysFalutCont[5]>=100)
-         {
-             s->SysFaultReg.bit.CellTemp_OT=1;
-         }
-     }
-     else
-     {
-         if(s->SysFaultReg.bit.CellTemp_OT==0)
-         {
-             s->SysFalutCont[5]=0;
-         }
-         if(Hyst_Off(s->SysCellAgvTemperatureF,49.4f))
-         {
-             s->SysFalutCont[5]=0;
-             s->SysFaultReg.bit.CellTemp_OT=0;
-         }
-     }
 
-     // 셀 저온 Alarm,유지시간카운터배열값:6,유지시간;100msec
-     if(s->SysStateReg.bit.SysDisCharMode==1)
-     {
-         if(Hyst_Off(s->SysCellAgvTemperatureF,-15.0f))
-         {
-             if(s->SysFalutCont[6]< 100){++s->SysFalutCont[6];}
-             if(s->SysFalutCont[6]>=100)
-             {
-                 s->SysFaultReg.bit.CellTemp_UT=1;
-             }
-         }
-         else
-         {
-             if(s->SysAlarmReg.bit.CellTemp_UT==0)
-             {
-                 s->SysFalutCont[6]=0;
-             }
-             if(Hyst_On(s->SysCellAgvTemperatureF,0.0f))
-             {
-                 s->SysFalutCont[6]=0;
-                 s->SysFaultReg.bit.CellTemp_UT=0;
-             }
-         }
-     }
-     else if(s->SysStateReg.bit.SysDisCharMode==0)
-     {
-          if(Hyst_Off(s->SysCellAgvTemperatureF,-10.0f))
-          {
-                 if(s->SysFalutCont[6]< 100){++s->SysFalutCont[6];}
-                 if(s->SysFalutCont[6]>=100)
-                 {
-                     s->SysFaultReg.bit.CellTemp_UT=1;
-                 }
-          }
-          else
-          {
-               if(s->SysAlarmReg.bit.CellTemp_UT==0)
-               {
-                     s->SysFalutCont[6]=0;
-               }
-                 if(Hyst_On(s->SysCellAgvTemperatureF,0.0f))
-               {
-                     s->SysFalutCont[6]=0;
-                     s->SysFaultReg.bit.CellTemp_UT=0;
-               }
-           }
+    /*----------------------------------------------------------------------
+     1. Pack SOC High Fault
+     ----------------------------------------------------------------------
+     ON = 102.0%, OFF = 98.94%
+    ----------------------------------------------------------------------*/
+    if(Hyst_On(s->SysSOCF, 102.0f))
+    {
+        if(s->SysFalutCont[1] < FaultDelayCnt) { ++s->SysFalutCont[1]; }
+        if(s->SysFalutCont[1] >= FaultDelayCnt)
+        {
+            s->SysFaultReg.bit.PackVSOC_OV = 1u;
+        }
+    }
+    else
+    {
+        if(s->SysFaultReg.bit.PackVSOC_OV == 0u)
+        {
+            s->SysFalutCont[1] = 0u;
+        }
+        if(Hyst_Off(s->SysSOCF, 98.94f))
+        {
+            s->SysFalutCont[1] = 0u;
+            s->SysFaultReg.bit.PackVSOC_OV = 0u;
+        }
+    }
 
-     }
-     // 셀 과전압 Alarm,유지시간카운터배열값:8,유지시간:00msec
-     if(Hyst_On(s->SysCellMaxVoltageF,3.500f))
-     {
-         if(s->SysFalutCont[8]< 100){++s->SysFalutCont[8];}
-         if(s->SysFalutCont[8]>=100)
-         {
-             s->SysFaultReg.bit.CellVolt_OV=1;
-         }
-     }
-     else
-     {
-         if(s->SysAlarmReg.bit.CellVolt_OV==0)
-         {
-             s->SysFalutCont[8]=0;
-         }
-         if(Hyst_Off(s->SysCellMaxVoltageF,3.483f))
-         {
-             s->SysFalutCont[8]=0;
-             s->SysFaultReg.bit.CellVolt_OV=0;
-         }
-     }
-     // 셀 저전압 Alarm,유지시간카운터배열값:9,유지시간:100msec
-     if(Hyst_Off(s->SysCellMinVoltageF,3.000f))
-     {
-         if(s->SysFalutCont[9]< 100){++s->SysFalutCont[9];}
-         if(s->SysFalutCont[9]>=100)
-         {
-             s->SysFaultReg.bit.CellVolt_UN=1;
-         }
-     }
-     else
-     {
-         if(s->SysAlarmReg.bit.CellVolt_UN==0)
-         {
-             s->SysFalutCont[9]=0;
-         }
-         if(Hyst_On(s->SysCellMinVoltageF,3.015f))
-         {
-             s->SysFalutCont[9]=0;
-             s->SysFaultReg.bit.CellVolt_UN=0;
-         }
-     }
-     // 셀 전압 편차 Alarm,유지시간카운터배열값:10,유지시간:100msec
-     if(Hyst_On(s->SysCellDivVoltageF,0.15f))
-     {
-         if(s->SysFalutCont[10]< 100){++s->SysFalutCont[10];}
-         if(s->SysFalutCont[10]>=100)
-         {
-             s->SysFaultReg.bit.CellVolt_BL=1;
-         }
-     }
-     else
-     {
-         if(s->SysAlarmReg.bit.CellVolt_BL==0)
-         {
-             s->SysFalutCont[10]=0;
-         }
-         if(Hyst_Off(s->SysCellDivVoltageF,0.01f))
-         {
-             s->SysFalutCont[10]=0;
-             s->SysFaultReg.bit.CellVolt_BL=0;
-         }
-     }
-     // 셀 온도 편차 Alarm,유지시간카운터배열값:13,유지시간:100msec
-     if(Hyst_On(s->SysCellDivTemperatureF,15.0f))
-     {
-         if(s->SysFalutCont[13]< 100){++s->SysFalutCont[13];}
-         if(s->SysFalutCont[13]>=100)
-         {
-             s->SysFaultReg.bit.CellTemp_BL=1;
-         }
-     }
-     else
-     {
-         if(s->SysAlarmReg.bit.CellTemp_BL==0)
-         {
-             s->SysFalutCont[13]=0;
-         }
-         if(Hyst_Off(s->SysCellDivTemperatureF,5.0f))
-         {
-             s->SysFalutCont[13]=0;
-             s->SysFaultReg.bit.CellTemp_BL=0;
-         }
-     }
+    /*----------------------------------------------------------------------
+     2. Pack SOC Low Fault
+     ----------------------------------------------------------------------
+     ON = 15.0%, OFF = 15.75%
+    ----------------------------------------------------------------------*/
+    if(Hyst_Off(s->SysSOCF, 15.0f))
+    {
+        if(s->SysFalutCont[2] < FaultDelayCnt) { ++s->SysFalutCont[2]; }
+        if(s->SysFalutCont[2] >= FaultDelayCnt)
+        {
+            s->SysFaultReg.bit.PackVSOC_UN = 1u;
+        }
+    }
+    else
+    {
+        if(s->SysFaultReg.bit.PackVSOC_UN == 0u)
+        {
+            s->SysFalutCont[2] = 0u;
+        }
+        if(Hyst_On(s->SysSOCF, 15.75f))
+        {
+            s->SysFalutCont[2] = 0u;
+            s->SysFaultReg.bit.PackVSOC_UN = 0u;
+        }
+    }
+
+    /*----------------------------------------------------------------------
+     3. Pack Over Voltage Fault
+     ----------------------------------------------------------------------
+     ON = 54.5V, OFF = 52.8V
+    ----------------------------------------------------------------------*/
+    if(Hyst_On(s->SysPackParallelVoltageF, 54.5f))
+    {
+        if(s->SysFalutCont[3] < FaultDelayCnt) { ++s->SysFalutCont[3]; }
+        if(s->SysFalutCont[3] >= FaultDelayCnt)
+        {
+            s->SysFaultReg.bit.PackVolt_OV = 1u;
+        }
+    }
+    else
+    {
+        if(s->SysFaultReg.bit.PackVolt_OV == 0u)
+        {
+            s->SysFalutCont[3] = 0u;
+        }
+        if(Hyst_Off(s->SysPackParallelVoltageF, 52.8f))
+        {
+            s->SysFalutCont[3] = 0u;
+            s->SysFaultReg.bit.PackVolt_OV = 0u;
+        }
+    }
+
+    /*----------------------------------------------------------------------
+     4. Pack Under Voltage Fault
+     ----------------------------------------------------------------------
+     ON = 44.3V, OFF = 46.5V
+    ----------------------------------------------------------------------*/
+    if(Hyst_Off(s->SysPackParallelVoltageF, 44.3f))
+    {
+        if(s->SysFalutCont[4] < FaultDelayCnt) { ++s->SysFalutCont[4]; }
+        if(s->SysFalutCont[4] >= FaultDelayCnt)
+        {
+            s->SysFaultReg.bit.PackVolt_UN = 1u;
+        }
+    }
+    else
+    {
+        if(s->SysFaultReg.bit.PackVolt_UN == 0u)
+        {
+            s->SysFalutCont[4] = 0u;
+        }
+        if(Hyst_On(s->SysPackParallelVoltageF, 46.5f))
+        {
+            s->SysFalutCont[4] = 0u;
+            s->SysFaultReg.bit.PackVolt_UN = 0u;
+        }
+    }
+
+    /*----------------------------------------------------------------------
+     5. Cell Over Temperature Fault
+     ----------------------------------------------------------------------
+     ON = 52.0degC, OFF = 49.4degC
+     기준 : 최대 셀 온도
+    ----------------------------------------------------------------------*/
+    if(Hyst_On(s->SysCellMaxTemperatureF, 52.0f))
+    {
+        if(s->SysFalutCont[5] < FaultDelayCnt) { ++s->SysFalutCont[5]; }
+        if(s->SysFalutCont[5] >= FaultDelayCnt)
+        {
+            s->SysFaultReg.bit.CellTemp_OT = 1u;
+        }
+    }
+    else
+    {
+        if(s->SysFaultReg.bit.CellTemp_OT == 0u)
+        {
+            s->SysFalutCont[5] = 0u;
+        }
+        if(Hyst_Off(s->SysCellMaxTemperatureF, 49.4f))
+        {
+            s->SysFalutCont[5] = 0u;
+            s->SysFaultReg.bit.CellTemp_OT = 0u;
+        }
+    }
+
+    /*----------------------------------------------------------------------
+     6. Cell Under Temperature Fault
+     ----------------------------------------------------------------------
+     Discharge : ON = -15.0degC, OFF = 0.0degC
+     Charge    : ON = -10.0degC, OFF = 0.0degC
+     기준 : 최소 셀 온도
+    ----------------------------------------------------------------------*/
+    if(s->SysStateReg.bit.SysDisCharMode == 1u)
+    {
+        if(Hyst_Off(s->SysCellMinTemperatureF, -15.0f))
+        {
+            if(s->SysFalutCont[6] < FaultDelayCnt) { ++s->SysFalutCont[6]; }
+            if(s->SysFalutCont[6] >= FaultDelayCnt)
+            {
+                s->SysFaultReg.bit.CellTemp_UT = 1u;
+            }
+        }
+        else
+        {
+            if(s->SysFaultReg.bit.CellTemp_UT == 0u)
+            {
+                s->SysFalutCont[6] = 0u;
+            }
+            if(Hyst_On(s->SysCellMinTemperatureF, 0.0f))
+            {
+                s->SysFalutCont[6] = 0u;
+                s->SysFaultReg.bit.CellTemp_UT = 0u;
+            }
+        }
+    }
+    else
+    {
+        if(Hyst_Off(s->SysCellMinTemperatureF, -10.0f))
+        {
+            if(s->SysFalutCont[6] < FaultDelayCnt) { ++s->SysFalutCont[6]; }
+            if(s->SysFalutCont[6] >= FaultDelayCnt)
+            {
+                s->SysFaultReg.bit.CellTemp_UT = 1u;
+            }
+        }
+        else
+        {
+            if(s->SysFaultReg.bit.CellTemp_UT == 0u)
+            {
+                s->SysFalutCont[6] = 0u;
+            }
+            if(Hyst_On(s->SysCellMinTemperatureF, 0.0f))
+            {
+                s->SysFalutCont[6] = 0u;
+                s->SysFaultReg.bit.CellTemp_UT = 0u;
+            }
+        }
+    }
+
+    /*----------------------------------------------------------------------
+     8. Cell Over Voltage Fault
+     ----------------------------------------------------------------------
+     ON = 3.630V, OFF = 3.612V
+    ----------------------------------------------------------------------*/
+    if(Hyst_On(s->SysCellMaxVoltageF, 3.630f))
+    {
+        if(s->SysFalutCont[8] < FaultDelayCnt) { ++s->SysFalutCont[8]; }
+        if(s->SysFalutCont[8] >= FaultDelayCnt)
+        {
+            s->SysFaultReg.bit.CellVolt_OV = 1u;
+        }
+    }
+    else
+    {
+        if(s->SysFaultReg.bit.CellVolt_OV == 0u)
+        {
+            s->SysFalutCont[8] = 0u;
+        }
+        if(Hyst_Off(s->SysCellMaxVoltageF, 3.612f))
+        {
+            s->SysFalutCont[8] = 0u;
+            s->SysFaultReg.bit.CellVolt_OV = 0u;
+        }
+    }
+
+    /*----------------------------------------------------------------------
+     9. Cell Under Voltage Fault
+     ----------------------------------------------------------------------
+     ON = 2.950V, OFF = 2.965V
+    ----------------------------------------------------------------------*/
+    if(Hyst_Off(s->SysCellMinVoltageF, 2.950f))
+    {
+        if(s->SysFalutCont[9] < FaultDelayCnt) { ++s->SysFalutCont[9]; }
+        if(s->SysFalutCont[9] >= FaultDelayCnt)
+        {
+            s->SysFaultReg.bit.CellVolt_UN = 1u;
+        }
+    }
+    else
+    {
+        if(s->SysFaultReg.bit.CellVolt_UN == 0u)
+        {
+            s->SysFalutCont[9] = 0u;
+        }
+        if(Hyst_On(s->SysCellMinVoltageF, 2.965f))
+        {
+            s->SysFalutCont[9] = 0u;
+            s->SysFaultReg.bit.CellVolt_UN = 0u;
+        }
+    }
+
+    /*----------------------------------------------------------------------
+     10. Cell Voltage Imbalance Fault
+     ----------------------------------------------------------------------
+     ON = 0.150V, OFF = 0.015V
+    ----------------------------------------------------------------------*/
+    if(Hyst_On(s->SysCellDivVoltageF, 0.150f))
+    {
+        if(s->SysFalutCont[10] < FaultDelayCnt) { ++s->SysFalutCont[10]; }
+        if(s->SysFalutCont[10] >= FaultDelayCnt)
+        {
+            s->SysFaultReg.bit.CellVolt_BL = 1u;
+        }
+    }
+    else
+    {
+        if(s->SysFaultReg.bit.CellVolt_BL == 0u)
+        {
+            s->SysFalutCont[10] = 0u;
+        }
+        if(Hyst_Off(s->SysCellDivVoltageF, 0.015f))
+        {
+            s->SysFalutCont[10] = 0u;
+            s->SysFaultReg.bit.CellVolt_BL = 0u;
+        }
+    }
+
+    /*----------------------------------------------------------------------
+     13. Cell Temperature Imbalance Fault
+     ----------------------------------------------------------------------
+     ON = 10.0degC, OFF = 5.0degC
+    ----------------------------------------------------------------------*/
+    if(Hyst_On(s->SysCellDivTemperatureF, 10.0f))
+    {
+        if(s->SysFalutCont[13] < FaultDelayCnt) { ++s->SysFalutCont[13]; }
+        if(s->SysFalutCont[13] >= FaultDelayCnt)
+        {
+            s->SysFaultReg.bit.CellTemp_BL = 1u;
+        }
+    }
+    else
+    {
+        if(s->SysFaultReg.bit.CellTemp_BL == 0u)
+        {
+            s->SysFalutCont[13] = 0u;
+        }
+        if(Hyst_Off(s->SysCellDivTemperatureF, 5.0f))
+        {
+            s->SysFalutCont[13] = 0u;
+            s->SysFaultReg.bit.CellTemp_BL = 0u;
+        }
+    }
+
+    /* UnBalPWR Fault : 평가 이후 적용 요청 -> 미적용 */
 }
+
+/******************************************************************************
+ * Function : SysProtectCheck
+ * Description :
+ *  Battery System Protect 상태 검사
+ *
+ *  - Protect 조건은 즉시 발생
+ *  - Protect 발생 시 Shut Down
+ *  - BPA_Protect_Status = 0x02
+ *  - Rly stat = OPEN
+ *  - Protection flag 전송
+ *
+ *  호출주기 : 1ms
+ ******************************************************************************/
 void SysProtectCheck(SystemReg *s)
 {
-
-    /*
-     * 과전류
-     */
-    if(s->SysStateReg.bit.SysDisCharMode==1)
+    /*----------------------------------------------------------------------
+     1. Pack Over Current Protect
+     ----------------------------------------------------------------------
+     Discharge : ON = 500.0A
+     Charge    : ON =  40.0A
+    ----------------------------------------------------------------------*/
+    if(s->SysStateReg.bit.SysDisCharMode == 1u)
     {
-        if(s->SysPackCurrentAsbF>=330.0f)
+        if(s->SysPackCurrentAsbF >= 500.0f)
         {
-           s->SysProtectReg.bit.PackVCur_OC=1;
+            s->SysProtectReg.bit.PackVCur_OC = 1u;
         }
     }
     else
     {
-        if(s->SysPackCurrentAsbF>=110.0f)
+        if(s->SysPackCurrentAsbF >= 40.0f)
         {
-            s->SysProtectReg.bit.PackVCur_OC=1;
+            s->SysProtectReg.bit.PackVCur_OC = 1u;
         }
-    }
-    // SOC 과충전
-    if(s->SysSOCF>=105.0f)
-    {
-        s->SysProtectReg.bit.PackVSOC_OV=1;
-    }
-    // SOC 과방전
-    if(s->SysSOCF<= C_PackSOC_UNPrtct)
-    {
-        s->SysProtectReg.bit.PackVSOC_UN=1;
-    }
-    //PACK 과전압
-    if(s->SysPackParallelVoltageF>=C_PackVolt_OVPrtct)
-    {
-       s->SysProtectReg.bit.PackVolt_OV=1;
-    }
-    //PACK 저전압
-    if(s->SysPackParallelVoltageF<=C_PackVolt_UNPrtct)
-    {
-        s->SysProtectReg.bit.PackVolt_UN=1;
-    }
-    //셀 과전압
-    if(s->SysCellMaxVoltageF>=C_CellVolt_OVPrtct)
-    {
-        s->SysProtectReg.bit.CellVolt_OV=1;
-    }
-    //셀 저전압
-    if(s->SysCellMinVoltageF<=C_CellVolt_UNPrtct)
-    {
-        s->SysProtectReg.bit.CellVolt_UN=1;
-    }
-    //셀 전압 불균형
-    if(s->SysCellDivVoltageF>=C_CellVolt_UBPrtct)
-    {
-        s->SysProtectReg.bit.CellVolt_BL=1;
-    }
-    //셀 과온 보호
-    if(s->SysMaxTemperatureF>=C_CellTempsDISCH_OTPrtct)
-    {
-        s->SysProtectReg.bit.CellTemp_OT=1;
-    }
-    //셀 저온 보호
-    if(s->SysStateReg.bit.SysDisCharMode==1)
-    {
-
-        if(s->SysCellMinTemperatureF<=C_CellTempsDISCH_UTPrtct)
-        {
-            s->SysProtectReg.bit.CellTemp_UT=1;
-        }
-
-    }else if(s->SysStateReg.bit.SysDisCharMode==0)
-    {
-        if(s->SysCellMinTemperatureF>=C_CellTempsCHARG_OTPrtct)
-        {
-            s->SysProtectReg.bit.CellTemp_UT=1;
-        }
-    }
-    if(s->SysCellDivTemperatureF>=C_CellTemps_UBPrtct)
-    {
-        s->SysProtectReg.bit.CellTemp_BL=1;
     }
 
-    if(s->SysDISCHAPWRContintyDivF>=C_PackPWRDISCH_UBPrtct)
+    /*----------------------------------------------------------------------
+     2. Pack SOC High Protect
+     ----------------------------------------------------------------------
+     ON = 105.0%
+    ----------------------------------------------------------------------*/
+    if(s->SysSOCF >= 105.0f)
     {
-       // s->SysProtectReg.bit.PackCharUnPWR_BL=1;
+        s->SysProtectReg.bit.PackVSOC_OV = 1u;
     }
-    if(s->SysCHARGPWRContintyDivF>=C_PackPWRCHARG_UBPrtct)
+
+    /*----------------------------------------------------------------------
+     3. Pack SOC Low Protect
+     ----------------------------------------------------------------------
+     ON = 0.0%
+    ----------------------------------------------------------------------*/
+    if(s->SysSOCF <= 0.0f)
     {
-       // s->SysProtectReg.bit.PackDischarUnPWR_BL=1;
+        s->SysProtectReg.bit.PackVSOC_UN = 1u;
     }
-    //Relay 에러 체크
-    if((s->SysMachine==INIT)||(s->SysMachine==STANDBY))
+
+    /*----------------------------------------------------------------------
+     4. Pack Over Voltage Protect
+     ----------------------------------------------------------------------
+     ON = 54.8V
+    ----------------------------------------------------------------------*/
+    if(s->SysPackParallelVoltageF >= 54.8f)
     {
-        if((s->SysDigitalInputReg.bit.NAUX==1)||(s->SysDigitalInputReg.bit.PAUX==1))
+        s->SysProtectReg.bit.PackVolt_OV = 1u;
+    }
+
+    /*----------------------------------------------------------------------
+     5. Pack Under Voltage Protect
+     ----------------------------------------------------------------------
+     ON = 34.5V
+    ----------------------------------------------------------------------*/
+    if(s->SysPackParallelVoltageF <= 34.5f)
+    {
+        s->SysProtectReg.bit.PackVolt_UN = 1u;
+    }
+
+    /*----------------------------------------------------------------------
+     6. Cell Over Voltage Protect
+     ----------------------------------------------------------------------
+     ON = 3.65V
+    ----------------------------------------------------------------------*/
+    if(s->SysCellMaxVoltageF >= 3.65f)
+    {
+        s->SysProtectReg.bit.CellVolt_OV = 1u;
+    }
+
+    /*----------------------------------------------------------------------
+     7. Cell Under Voltage Protect
+     ----------------------------------------------------------------------
+     ON = 2.30V
+    ----------------------------------------------------------------------*/
+    if(s->SysCellMinVoltageF <= 2.30f)
+    {
+        s->SysProtectReg.bit.CellVolt_UN = 1u;
+    }
+
+    /*----------------------------------------------------------------------
+     8. Cell Voltage Imbalance Protect
+     ----------------------------------------------------------------------
+     ON = 0.300V
+    ----------------------------------------------------------------------*/
+    if(s->SysCellDivVoltageF >= 0.300f)
+    {
+        s->SysProtectReg.bit.CellVolt_BL = 1u;
+    }
+
+    /*----------------------------------------------------------------------
+     9. Cell Over Temperature Protect
+     ----------------------------------------------------------------------
+     ON = 55.0degC
+     기준 : 최대 셀 온도
+    ----------------------------------------------------------------------*/
+    if(s->SysCellMaxTemperatureF >= 55.0f)
+    {
+        s->SysProtectReg.bit.CellTemp_OT = 1u;
+    }
+
+    /*----------------------------------------------------------------------
+     10. Cell Under Temperature Protect
+     ----------------------------------------------------------------------
+     Discharge : ON = -15.0degC
+     Charge    : ON = -20.0degC
+     기준 : 최소 셀 온도
+    ----------------------------------------------------------------------*/
+    if(s->SysStateReg.bit.SysDisCharMode == 1u)
+    {
+        if(s->SysCellMinTemperatureF <= -15.0f)
         {
-            s->SysProtectReg.bit.PackRly_Err=1;
+            s->SysProtectReg.bit.CellTemp_UT = 1u;
         }
     }
-     // ISOSPI 통신 상태 체크
-    if(s->SlaveISOSPIErrReg.Word.DataL>0)
+    else
     {
-        s->SysProtectReg.bit.PackIOSPI_Err=1;
+        if(s->SysCellMinTemperatureF <= -20.0f)
+        {
+            s->SysProtectReg.bit.CellTemp_UT = 1u;
+        }
     }
-    //  CAN 통신 상태 체크
+
+    /*----------------------------------------------------------------------
+     11. Cell Temperature Imbalance Protect
+     ----------------------------------------------------------------------
+     ON = 15.0degC
+    ----------------------------------------------------------------------*/
+    if(s->SysCellDivTemperatureF >= 15.0f)
+    {
+        s->SysProtectReg.bit.CellTemp_BL = 1u;
+    }
+
+    /*----------------------------------------------------------------------
+     12. Relay Error Protect
+     ----------------------------------------------------------------------
+     INIT/STANDBY 상태에서 AUX 입력 ON -> 릴레이 이상
+    ----------------------------------------------------------------------*/
+    if((s->SysMachine == INIT) || (s->SysMachine == STANDBY))
+    {
+        if((s->SysDigitalInputReg.bit.NAUX == 1u) ||
+           (s->SysDigitalInputReg.bit.PAUX == 1u))
+        {
+            s->SysProtectReg.bit.PackRly_Err = 1u;
+        }
+    }
+
+    /*----------------------------------------------------------------------
+     13. ISOSPI Error Protect
+     ----------------------------------------------------------------------
+     ON = 에러 카운트 210 이상
+    ----------------------------------------------------------------------*/
+    if(s->SlaveISOSPIErrReg.Word.DataL >= 210u)
+    {
+        s->SysProtectReg.bit.PackIOSPI_Err = 1u;
+    }
+
+    /*----------------------------------------------------------------------
+     14. CT CAN Error Protect
+     ----------------------------------------------------------------------
+     ON = 1000ms 이상 통신 끊김
+    ----------------------------------------------------------------------*/
     s->CTCANErrCheck++;
-    if(s->CTCANErrCheck>=50)
+    if(s->CTCANErrCheck >= 1000u)
     {
-       s->SysProtectReg.bit.PackCTCAN_Err=1;
+        s->SysProtectReg.bit.PackCTCAN_Err = 1u;
     }
-    if(s->SysStateReg.bit.SysDisCharMode==1)
-    {
-        s->VCUCANErrCheck++;
-        if(s->VCUCANErrCheck>=500)
-        {
-           s->SysProtectReg.bit.PackVCUCAN_Err=1;
-        }
-    }
-    else
+
+    /*----------------------------------------------------------------------
+     15. Charger CAN Error Protect
+     ----------------------------------------------------------------------
+     Charge Mode 에서 1000ms 이상 통신 끊김
+     VCU CAN Protect 는 미적용
+    ----------------------------------------------------------------------*/
+    if(s->SysStateReg.bit.SysDisCharMode == 0u)
     {
         s->CHACANErrCheck++;
-        if(s->CHACANErrCheck>=500)
+        if(s->CHACANErrCheck >= 1000u)
         {
-            s->SysProtectReg.bit.PackCharCAN_Err=1;
+            s->SysProtectReg.bit.PackCharCAN_Err = 1u;
         }
     }
-    // 절연저항
-    if(s->SysPackIsoRegsF<C_PackISORegsister_URPrtct)
-    {
-       s->SysProtectReg.bit.PackISOReg_Err=1;
-    }
 
+    /* ISOReg Protect : 미적용 */
+    /* UnBalPWR Protect : 평가 이후 적용 요청 -> 미적용 */
 }
 int float32ToInt(float32 Vaule, Uint32 Num)
 {
@@ -1577,7 +1802,42 @@ void ProtectRelayTimerHandle(TimerReg *timer)
     break;
   }
 }
-void PWRHoldHandle(SystemReg *P)
+void PWRRlyHandle(SystemReg *P)
+{
+    /* 1. CHA CAN RX valid: Charger command has priority */
+    if (P->SysStateReg.bit.CHAComStatus == 1u)
+    {
+        if (P->SysStateReg.bit.ChargerWakeUpIn == 1u)
+        {
+            P->SysStateReg.bit.WakeUpOut = 1u;
+        }
+        else
+        {
+            P->SysStateReg.bit.WakeUpOut = 0u;
+        }
+    }
+    /* 2. CHA CAN RX invalid: use VCU / Kill SW logic */
+    else if (P->SysStateReg.bit.CHAComStatus == 0u)
+    {
+        /* Kill SW active -> Relay ON */
+        if (P->SysDigitalInputReg.bit.killSW == 1u)
+        {
+            P->SysStateReg.bit.WakeUpOut = 1u;
+        }
+        /* VCU CAN RX valid and VCU Shutdown = 0 -> Relay ON */
+        else if ((P->SysStateReg.bit.VCUComStatus == 1u) && (P->SysStateReg.bit.VCUWakeUpIn == 0u))
+        {
+            P->SysStateReg.bit.WakeUpOut = 1u;
+        }
+        /* Otherwise -> Relay OFF */
+        else if ((P->SysStateReg.bit.VCUComStatus == 1u) && (P->SysStateReg.bit.VCUWakeUpIn == 1u))
+        {
+            P->SysStateReg.bit.WakeUpOut = 0u;
+        }
+    }
+}
+
+void PWRBMSHoldHandle(SystemReg *P)
 {
     static Uint16 pwrHoldStateU16 = 0u; /* 내부 HOLD 상태 (0/1) */
 
@@ -1588,7 +1848,7 @@ void PWRHoldHandle(SystemReg *P)
     else
     {
         /* 2) killSW = 0 */
-        if (P->SysStateReg.bit.VCUWakeUp == 0)
+        if (P->SysStateReg.bit.VCUWakeUpIn == 0)
         {
             /* 운전 종료 상태 → HOLD 유지 */
             pwrHoldStateU16 = 1u;
@@ -1608,7 +1868,7 @@ void PWRHoldHandle(SystemReg *P)
 
     }
     P->SysDigitalOutPutReg.bit.PWRHOLD     = pwrHoldStateU16;
-    P->SysStateReg.bit.PwrHoldRlyDOStatus  = pwrHoldStateU16;
+    P->SysStateReg.bit.PwrHoldStatus       = pwrHoldStateU16;
 
 }
 

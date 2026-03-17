@@ -53,8 +53,10 @@ void RlySeqHandle(PrtectRelayReg *P)
              //   P->State.bit.RlyFaulttSate=1;
             //    P->RlyMachine=PrtctRly_RLYProtect;
              }
-        //     P->State.bit.WakeuPOnEND=0;
-             P->RlyMachine=PrtctRly_Ready;
+             else
+             {
+                 P->RlyMachine=PrtctRly_Ready;
+             }
         break;
         case PrtctRly_Ready ://2
              if((P->State.bit.WakeUpEN==1)&&(P->State.bit.WakeuPOnEND==0))
@@ -84,11 +86,9 @@ void RlySeqHandle(PrtectRelayReg *P)
                 }
                 if((P->State.bit.NRlyDO==1)&&(P->State.bit.PreRlyDO==1)&&(P->State.bit.PRlyDO==1))
                 {
-
                     P->State.bit.PreRlyDO=0;
                     delay_ms(100);
                     delay_ms(100);
-
                 }
                 if((P->State.bit.NRlyDO==1)&&(P->State.bit.PreRlyDO==0)&&(P->State.bit.PRlyDO==1))
                 {
