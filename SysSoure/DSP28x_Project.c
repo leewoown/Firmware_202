@@ -489,40 +489,49 @@ void MDCalVoltandTemsHandle(SystemReg *P)
 }
 void SysCalSocIintHandle(SystemReg *s)
 {
-    static float32 CellVagF=0.0F;
+    float32 CellVagF;
 
-    const float32 V_Soc00F  = 2.9000F;
-    const float32 V_Soc20F  = 3.2790F;
-    const float32 V_Soc40F  = 3.3040F;
-    const float32 V_Soc80F  = 3.3410F;
-    const float32 V_Soc100F = 3.4510F;
-    CellVagF=s->SysCellAgvVoltageF;
+    /* EVE LF230 SOC-OCV (DoD 80%) zone boundaries */
+    const float32 V_DispSoc0F   = 3.160f;   /* Disp   0%    = Phys 10% (Empty)       */
+    const float32 V_FlatStartF  = 3.295f;   /* Disp  25%    = Phys 30% (Flat starts) */
+    const float32 V_FlatEndF    = 3.340f;   /* Disp  93.75% = Phys 85% (Flat ends)   */
+    const float32 V_DispSoc100F = 3.360f;   /* Disp 100%    = Phys 90% (Full)        */
 
-    if (CellVagF < V_Soc00F)  { CellVagF = V_Soc00F;  }
-    if (CellVagF > V_Soc100F) { CellVagF = V_Soc100F; }
-
-    if (CellVagF < V_Soc20F)
+    if(s == (SystemReg *)0)
     {
-        /* 가 구간 (0~20%) → 전압 기반 */
+        return;
+    }
+
+    CellVagF = s->SysCellAgvVoltageF;
+
+    /* Limit cell voltage inside table range */
+    if(CellVagF < V_DispSoc0F)
+    {
+        CellVagF = V_DispSoc0F;
+    }
+    else if(CellVagF > V_DispSoc100F)
+    {
+        CellVagF = V_DispSoc100F;
+    }
+
+    /* Choose SOC init rule by zone */
+    if(CellVagF < V_FlatStartF)
+    {
+        /* Sharp zone low (Phys 10~30%) - use OCV table */
         s->SysSocInitRule = SOC_ZONE_cellVolt;
     }
-    else if (CellVagF < V_Soc40F)
+    else if(CellVagF <= V_FlatEndF)
     {
-        /* 나 구간 (20~40%) → NVR */
-        s->SysSocInitRule = SOC_ZONE_NVR;
-    }
-    else if (CellVagF < V_Soc80F)
-    {
-        /* 다 구간 (40~80%) → NVR */
+        /* Flat zone (Phys 30~85%) - use NVR */
         s->SysSocInitRule = SOC_ZONE_NVR;
     }
     else
     {
-        /* 라 구간 (80~100%) → 전압 기반 */
+        /* Sharp zone high (Phys 85~90%) - use OCV table */
         s->SysSocInitRule = SOC_ZONE_cellVolt;
     }
-
 }
+
 
 void SysCalVoltageHandle(SystemReg *s)
 {

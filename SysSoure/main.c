@@ -123,7 +123,7 @@ void SalveTempsHandler(SlaveReg *s);
 void TempTemps(SystemReg *s);
 
 /*
- *  ÀÎÅÍ·´Æ® ÇÔ¼ö ¼±¾ð
+ *  ï¿½ï¿½ï¿½Í·ï¿½Æ® ï¿½Ô¼ï¿½ ï¿½ï¿½ï¿½ï¿½
  */
 interrupt void cpu_timer0_isr(void);
 interrupt void ISR_CANRXINTA(void);
@@ -192,7 +192,7 @@ void main(void)
     EALLOW;  // This is needed to write to EALLOW protected registers
 
     /*
-     *  ÀÎÅÍ·´Æ® ÇÔ¼ö ¼±¾ð
+     *  ï¿½ï¿½ï¿½Í·ï¿½Æ® ï¿½Ô¼ï¿½ ï¿½ï¿½ï¿½ï¿½
      */
     PieVectTable.TINT0 = &cpu_timer0_isr;
     PieVectTable.ECAN0INTA  = &ISR_CANRXINTA;
@@ -365,7 +365,7 @@ void main(void)
                              memcpy(&SysRegs.SysCelltemperatureF[22],    &Slave3Regs.CellTemperatureF[0],sizeof(float32)*8);
                              SysCalTemperatureHandle(&SysRegs);
                              /*
-                              * soc init ÃÊ±âÈ­ÇÏ´Â ¿¬»ê
+                              * soc init ï¿½Ê±ï¿½È­ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½ï¿½
                               */
                              EV240AhSocRegs.state=SOC_STATE_InitSos;
                              SysCalSocIintHandle(&SysRegs);
@@ -377,15 +377,15 @@ void main(void)
                              }
                              else if(SysRegs.SysSocInitRule == SOC_ZONE_NVR)
                              {
-
                                  NVRAM_AZoneReadHandler(&NVRZoneARDRegs);
-                                 EV240AhSocRegs.SysSocInitF = NVRZoneARDRegs.LastSOC;
+                                 EV240AhSocRegs.SysSocInitF = (float32)(NVRZoneARDRegs.LastSOC/10.0f);
                              }
 
                          }
                      }
                      NVRAllRegs.SEQ=NVRAM_AZoneSave;
                      SysRegs.SysMachine=READY;
+                     
                      SysRegs.SysStateReg.bit.INITOK=1;
                      if(SysRegs.SysStateReg.bit.AdminMode==1)  { SysRegs.SysMachine=MANUALMode;}
             break;
@@ -420,7 +420,6 @@ void main(void)
                      PrtectRelayRegs.State.bit.WakeUpEN         = SysRegs.SysStateReg.bit.WakeUpOut;
                      SysRegs.SysDigitalOutPutReg.bit.PWRHOLD    = SysRegs.SysStateReg.bit.PwrHoldState;
                      CANARegs.ChargerStateRegs.bit.BSACHAEnable = SysRegs.SysStateReg.bit.BSACHAEnable;
-
                      if(SysRegs.SysStateReg.bit.SysDisCharMode==1)
                      {
                         CANARegs.DiviceState=3;
@@ -460,7 +459,7 @@ void main(void)
         }
         if(SysRegs.CellVoltsampling>=CellVoltSampleTime)
         {
-            //Balance À§ÇÑ Àü·ù Á¶°Ç
+            //Balance ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
             if((SysRegs.SysPackCurrentAsbF <= 2.0f) && (SysRegs.SysCellMinVoltageF > 2.8f))
             {
                 if(SysRegs.BalanceModeCount < 101u)
@@ -471,6 +470,7 @@ void main(void)
                 {
                     SysRegs.BalanceModeCount=101;
                     SysRegs.SysStateReg.bit.SysBalaMode=1;
+
                 }
             }
             else
@@ -482,7 +482,7 @@ void main(void)
             }
            // SysRegs.SysStateReg.bit.SysBalaMode=0;
            // SysRegs.SysStateReg.bit.SysBalanceEn=0;
-            //Balance ½Ã°£ Á¶Á¤
+            //Balance ï¿½Ã°ï¿½ ï¿½ï¿½ï¿½ï¿½
             if(SysRegs.SysStateReg.bit.SysBalaMode==1)
             {
                 SysRegs.BalanceTimeCount++;
@@ -497,7 +497,7 @@ void main(void)
                 SysRegs.BalanceTimeCount =0;
                 SysRegs.SysStateReg.bit.SysBalanceEn=0;
             }
-            // ¼¿ Àü¾Ð Balance
+            // ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Balance
             if(SysRegs.SysStateReg.bit.SysBalanceEn==1)
             {
                 if(SysRegs.SysStateReg.bit.AdminMode==0)
@@ -510,7 +510,7 @@ void main(void)
                 }
                 else
                 {
-                    //SysRegs.HMICANErrCheck++; CPU ÀÎÅÍ·´Æ® 1msec
+                    //SysRegs.HMICANErrCheck++; CPU ï¿½ï¿½ï¿½Í·ï¿½Æ® 1msec
                     if(SysRegs.HMICANErrCheck < 3001)
                     {
                         if(SysRegs.SysStateReg.bit.AdminMode == 1u)
@@ -952,7 +952,7 @@ interrupt void cpu_timer0_isr(void)
   // SysRegs.SysStateReg.bit.PwrHoldRlyDOStatus = (SysRegs.SysCellDivVoltageF > 0.009f) ? 1u : 0u;
    /*
     * DigitalInput detection
-    * ¸±·¹ÀÌ º¯°æÀ¸·Î »èÁ¦
+    * ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     */
    SysDigitalInput(&SysRegs);
 
@@ -1516,16 +1516,16 @@ interrupt void cpu_timer0_isr(void)
        break;
        case 100:
                /*--------------------------------------------------------------
-                * PwrHoldCount Ä«¿îÅÍ Ã³¸® (1ÃÊ ÁÖ±â ±âÁØ)
+                * PwrHoldCount Ä«ï¿½ï¿½ï¿½ï¿½ Ã³ï¿½ï¿½ (1ï¿½ï¿½ ï¿½Ö±ï¿½ ï¿½ï¿½ï¿½ï¿½)
                 *
-                * Á¶°Ç:
-                * - PWRRly(WakeUpOut) = 0 ÀÏ ¶§¸¸ Ä«¿îÆ® Áõ°¡
-                *   ¡æ ¸ÞÀÎ ¸±·¹ÀÌ OFF »óÅÂ¿¡¼­ Hold À¯Áö ½Ã°£ ÃøÁ¤
+                * ï¿½ï¿½ï¿½ï¿½:
+                * - PWRRly(WakeUpOut) = 0 ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Ä«ï¿½ï¿½Æ® ï¿½ï¿½ï¿½ï¿½
+                *   ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ OFF ï¿½ï¿½ï¿½Â¿ï¿½ï¿½ï¿½ Hold ï¿½ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½ ï¿½ï¿½ï¿½ï¿½
                 *
-                * - PWRRly(WakeUpOut) = 1 ÀÌ¸é Ä«¿îÅÍ ÃÊ±âÈ­
-                *   ¡æ ¸±·¹ÀÌ ON »óÅÂ¿¡¼­´Â Hold Å¸ÀÌ¸Ó ÀÇ¹Ì ¾øÀ½
+                * - PWRRly(WakeUpOut) = 1 ï¿½Ì¸ï¿½ Ä«ï¿½ï¿½ï¿½ï¿½ ï¿½Ê±ï¿½È­
+                *   ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ON ï¿½ï¿½ï¿½Â¿ï¿½ï¿½ï¿½ï¿½ï¿½ Hold Å¸ï¿½Ì¸ï¿½ ï¿½Ç¹ï¿½ ï¿½ï¿½ï¿½ï¿½
                 *
-                * - ÃÖ´ë 14400ÃÊ (4½Ã°£)±îÁö Ä«¿îÆ®
+                * - ï¿½Ö´ï¿½ 14400ï¿½ï¿½ (4ï¿½Ã°ï¿½)ï¿½ï¿½ï¿½ï¿½ Ä«ï¿½ï¿½Æ®
                 *--------------------------------------------------------------*/
                if(SysRegs.SysStateReg.bit.WakeUpOut == 0u)
                {

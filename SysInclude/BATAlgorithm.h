@@ -1,9 +1,9 @@
 /* ==============================================================================
-System Name:  Çö´ëÀÚµ¿Â÷ ¼ö¼Ò Áö°ÔÂ÷ 80V
+System Name:  ï¿½ï¿½ï¿½ï¿½ï¿½Úµï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ 80V
 
 File Name:		PARAMETER.H
 
-Description:	Çö´ë
+Description:	ï¿½ï¿½ï¿½ï¿½
           	    Orientation Control for a Three Phase AC Induction Motor. 
 
 Originator:		Digital control systems Group - Texas Instruments
@@ -206,44 +206,65 @@ typedef struct
 #endif
 
 #if EVE24060Ah
+// TODO: Implement Hermite interpolation for SOC calculation
 
-#define CLAMP(x, lo, hi) ((x) < (lo) ? (lo) : ((x) > (hi) ? (hi) : (x))
+//#define CLAMP(x, lo, hi) ((x) < (lo) ? (lo) : ((x) > (hi) ? (hi) : (x))
+//#define CLAMP(x, lo, hi) ((x) < (lo) ? (lo) : ((x) > (hi) ? (hi) : (x)))
 
-#define V_MIN     2.899f
-#define V_Soc00   2.900f
-#define V_Soc20   3.279f
-#define V_Soc40   3.304f
-#define V_Soc60   3.320f
-#define V_Soc80   3.341f
-#define V_Soc100  3.451f
-#define V_MAX     3.441f
-// ±¸°£º° SOC = a*V + b (25¡ÆC Charge)
-#define A1  52.770f
-#define B1 (-153.033f)   // [2.9000, 3.2790]
-#define A2  800.000f
-#define B2 (-2603.200f)  // [3.2790, 3.3040]
-#define A3  1250.000f
-#define B3 (-4090.000f)  // [3.3040, 3.3200]
-#define A4  952.381f
-#define B4 (-3103.905f)  // [3.3200, 3.3410]
-#define A5  181.818f
-#define B5 (-527.454f)   // [3.3410, 3.4510]
+// #define V_MIN     2.899f
+// #define V_Soc00   2.900f
+// #define V_Soc20   3.279f
+// #define V_Soc40   3.304f
+// #define V_Soc60   3.320f
+// #define V_Soc80   3.341f
+// #define V_Soc100  3.451f
+// #define V_MAX     3.441f
 
 
+// // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ SOC = a*V + b (25ï¿½ï¿½C Charge)
+// #define A1  52.770f
+// #define B1 (-153.033f)   // [2.9000, 3.2790]
+// #define A2  800.000f
+// #define B2 (-2603.200f)  // [3.2790, 3.3040]
+// #define A3  1250.000f
+// #define B3 (-4090.000f)  // [3.3040, 3.3200]
+// #define A4  952.381f
+// #define B4 (-3103.905f)  // [3.3200, 3.3410]
+// #define A5  181.818f
+// #define B5 (-527.454f)   // [3.3410, 3.4510]
 
 
+// // Hermite 3ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½3: 40~60%)
+// // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½: (V0,S0)=(3.2960,40), (V1,S1)=(3.3059,60)
+// // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ dS/dV: m0=ï¿½ï¿½ï¿½ï¿½2 ï¿½ï¿½ï¿½ï¿½, m1=ï¿½ï¿½ï¿½ï¿½4 ï¿½ï¿½ï¿½ï¿½
+// #define H_V0  3.2960f
+// #define H_S0  40.0f
+// #define H_V1  3.3059f
+// #define H_S1  60.0f
+// #define H_M0  392.156863f
+// #define H_M1  766.283525f
 
+/* ==== EVE LF230 SOC-OCV table ====
+ * Display SOC = (Physical SOC - 10) / 80 * 100   (DoD 80%)
+ * Flat zone (small change):  Disp SOC 25% ~ 93.75%   -> use NVR
+ * Sharp zone (big change):   Disp SOC 0% ~ 25% and 93.75% ~ 100%   -> use OCV
+ */
+typedef struct
+{
+    float32 ocv;       /* Cell OCV (V) */
+    float32 dispSoc;   /* Display SOC (%) */
+} OCVPoint;
 
+#define OCV_TABLE_SIZE      17
 
-// Hermite 3Â÷ (±¸°£3: 40~60%)
-// °íÁ¤Á¡: (V0,S0)=(3.2960,40), (V1,S1)=(3.3059,60)
-// °æ°è±â¿ï±â dS/dV: m0=±¸°£2 ±â¿ï±â, m1=±¸°£4 ±â¿ï±â
-#define H_V0  3.2960f
-#define H_S0  40.0f
-#define H_V1  3.3059f
-#define H_S1  60.0f
-#define H_M0  392.156863f
-#define H_M1  766.283525f
+/* OCV points */
+#define V_DispSoc0F         3.160f   /* Disp 0%      = Phys 10% = Empty */
+#define V_FlatStartF        3.295f   /* Disp 25%     = Phys 30% = Flat starts */
+#define V_FlatEndF          3.340f   /* Disp 93.75%  = Phys 85% = Flat ends */
+#define V_DispSoc100F       3.360f   /* Disp 100%    = Phys 90% = Full */
+
+extern const OCVPoint EVE_LF230_OCV_TABLE[OCV_TABLE_SIZE];
+
 
 typedef enum
 {
@@ -254,6 +275,7 @@ typedef enum
   SOC_STATE_CalWaitMode,
   SOC_STATE_NvrSlave,
   SOC_STATE_NvrRead,
+
 } SoCState;
 struct SoCSate_BIT
 {       // bits   description

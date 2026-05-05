@@ -222,7 +222,7 @@ typedef enum
 } SysState;
 typedef enum
 {
-    SOC_ZONE_NVR,    /* °¡: 0~20% */
+    SOC_ZONE_NVR,             /* °¡: 0~20% */
     SOC_ZONE_cellVolt,        /* ³ª: 20~40% */
 
 } SocInitZone;

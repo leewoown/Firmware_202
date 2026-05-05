@@ -122,7 +122,7 @@ void CalFarasis52AhSocInit(SocReg *P)
      P->SOCX1OutF     =   C_Farasis52Ah_SOCX1 * P->SOCX1InF;
      P->SOCbufF       =   P->SOCX2OutF + P->SOCX1OutF + C_Farasis52Ah_SOCX0;
      /*
-      *  º¸°ü¹ý °è»ê½Ä ÇÊ¿äÇÔ
+      *  å ì™ì˜™å ì™ì˜™å ì™ì˜™ å ì™ì˜™å ì™ì˜™ å ì‹­ìš¸ì˜™å ì™ì˜™
       */
      if((P->SOCbufF >= 0.0)&&(P->SOCbufF < 20.0))
      {
@@ -194,7 +194,7 @@ void CalFarasis52AhSocHandle(SocReg *P)
                      P->SOCbufF       =   P->SOCX2OutF + P->SOCX1OutF + C_Farasis52Ah_SOCX0;
                      P->SOCbufF       =   P->SOCbufF+3.0;
                      /*
-                      *  º¸°ü¹ý °è»ê½Ä ÇÊ¿äÇÔ
+                      *  å ì™ì˜™å ì™ì˜™å ì™ì˜™ å ì™ì˜™å ì™ì˜™ å ì‹­ìš¸ì˜™å ì™ì˜™
                       */
                      if((P->SOCbufF >= 0.0)&&(P->SOCbufF < 20.0))
                      {
@@ -239,7 +239,7 @@ void CalFarasis52AhSocHandle(SocReg *P)
                      /*
                       *
                       */
-                     P->SysSOCdtF = C_CTSampleTime*C_SocCumulativeTime; // CumulativeTime(1/3600) -> ´©Àû½Ã°£
+                     P->SysSOCdtF = C_CTSampleTime*C_SocCumulativeTime; // CumulativeTime(1/3600) -> å ì™ì˜™å ì™ì˜™å ì‹œê³¤ì˜™
                      P->SysPackAhNewF = P->SysSoCCTF * P->SysSOCdtF;
                      P->SysPackAhF    = P->SysPackAhNewF + P->SysPackAhOldF;
                      P->SysPackAhOldF = P->SysPackAhF;
@@ -252,10 +252,10 @@ void CalFarasis52AhSocHandle(SocReg *P)
                          P->SysPackAhF= 250.0;
                      }
                      /*
-                     * SOC º¯È¯
+                     * SOC å ì™ì˜™í™˜
                      */
-                     P->SysPackSOCBufF1 = P->SysPackAhF *C_FarasisP52AhNorm;//0.0125 ;// 1/80 --> 0.0125--> ÀÏ¹ÝÈ­
-                     P->SysPackSOCBufF2 = P->SysPackSOCBufF1*100.0; //--> ´ÜÀ§ º¯È¯ %
+                     P->SysPackSOCBufF1 = P->SysPackAhF *C_FarasisP52AhNorm;//0.0125 ;// 1/80 --> 0.0125--> å ì‹¹ë±„ì˜™í™”
+                     P->SysPackSOCBufF2 = P->SysPackSOCBufF1*100.0; //--> å ì™ì˜™å ì™ì˜™ å ì™ì˜™í™˜ %
                      P->SysPackSOCF     = P->SysSocInitF+P->SysPackSOCBufF2;
                  }
                  P->state = SOC_STATE_Save;
@@ -392,7 +392,7 @@ void CalFrey60AhSocInit(SocReg *P)
 
     // 60Ah
       P->AVGXF         =   P->CellAgvVoltageF;
-         //IS_ABOVE_AND_UNDER(P->AVGXF, LFP_VOLT_A_BOT, LFP_VOLT_A_TOP)  ((A) >  (MIN) && (A) <= (MAX))  // ÃÊ°ú ~ ÀÌÇÏ
+         //IS_ABOVE_AND_UNDER(P->AVGXF, LFP_VOLT_A_BOT, LFP_VOLT_A_TOP)  ((A) >  (MIN) && (A) <= (MAX))  // å ì‹­ê³¤ì˜™ ~ å ì™ì˜™å ì™ì˜™
       if(IS_ABOVE_AND_UNDER(P->AVGXF , LFP_VOLT_A_BOT, LFP_VOLT_A_TOP))
       {
           if(P->AVGXF<=3.03)
@@ -432,7 +432,7 @@ void CalFrey60AhSocInit(SocReg *P)
               P->AZoreCalCout=0;
           }
       }
-     // IS_ABOVE_AND_UNDER(P->AVGXF, LFP_VOLT_B_BOT, LFP_VOLT_B_TOP)  ((A) >  (MIN) && (A) <= (MAX))  // ÃÊ°ú ~ ÀÌÇÏ
+     // IS_ABOVE_AND_UNDER(P->AVGXF, LFP_VOLT_B_BOT, LFP_VOLT_B_TOP)  ((A) >  (MIN) && (A) <= (MAX))  // å ì‹­ê³¤ì˜™ ~ å ì™ì˜™å ì™ì˜™
       if(IS_ABOVE_AND_UNDER(P->AVGXF, LFP_VOLT_B_BOT, LFP_VOLT_B_TOP))
       {
           //#define C_Frey60Ah_SOCX2B    2566.7
@@ -553,7 +553,7 @@ void CalFrey60AhSocHandle(SocReg *P)
                   {
                       // 60Ah
                       P->AVGXF         =   P->CellAgvVoltageF;
-                          //IS_ABOVE_AND_UNDER(P->AVGXF, LFP_VOLT_A_BOT, LFP_VOLT_A_TOP)  ((A) >  (MIN) && (A) <= (MAX))  // ÃÊ°ú ~ ÀÌÇÏ
+                          //IS_ABOVE_AND_UNDER(P->AVGXF, LFP_VOLT_A_BOT, LFP_VOLT_A_TOP)  ((A) >  (MIN) && (A) <= (MAX))  // å ì‹­ê³¤ì˜™ ~ å ì™ì˜™å ì™ì˜™
                        if(IS_ABOVE_AND_UNDER(P->AVGXF , LFP_VOLT_A_BOT, LFP_VOLT_A_TOP))
                        {
                            if(P->AVGXF<=3.03)
@@ -593,7 +593,7 @@ void CalFrey60AhSocHandle(SocReg *P)
                                P->AZoreCalCout=0;
                            }
                        }
-                      // IS_ABOVE_AND_UNDER(P->AVGXF, LFP_VOLT_B_BOT, LFP_VOLT_B_TOP)  ((A) >  (MIN) && (A) <= (MAX))  // ÃÊ°ú ~ ÀÌÇÏ
+                      // IS_ABOVE_AND_UNDER(P->AVGXF, LFP_VOLT_B_BOT, LFP_VOLT_B_TOP)  ((A) >  (MIN) && (A) <= (MAX))  // å ì‹­ê³¤ì˜™ ~ å ì™ì˜™å ì™ì˜™
                        if(IS_ABOVE_AND_UNDER(P->AVGXF, LFP_VOLT_B_BOT, LFP_VOLT_B_TOP))
                        {
                            //#define C_Frey60Ah_SOCX2B    2566.7
@@ -710,7 +710,7 @@ void CalFrey60AhSocHandle(SocReg *P)
                       /*
                        *
                        */
-                      P->SysSOCdtF = C_CTSampleTime*C_SocCumulativeTime; // CumulativeTime(1/3600) -> ´©Àû½Ã°£
+                      P->SysSOCdtF = C_CTSampleTime*C_SocCumulativeTime; // CumulativeTime(1/3600) -> å ì™ì˜™å ì™ì˜™å ì‹œê³¤ì˜™
                       P->SysPackAhNewF = P->SysSoCCTF * P->SysSOCdtF;
                       P->SysPackAhF    = P->SysPackAhNewF + P->SysPackAhOldF;
                       P->SysPackAhOldF = P->SysPackAhF;
@@ -723,10 +723,10 @@ void CalFrey60AhSocHandle(SocReg *P)
                           P->SysPackAhF= 380.0;
                       }
                       /*
-                      * SOC º¯È¯
+                      * SOC å ì™ì˜™í™˜
                       */
-                      P->SysPackSOCBufF1 = P->SysPackAhF *C_EVE380AhNorm;// 1/48(0.0208)
-                      P->SysPackSOCBufF2 = P->SysPackSOCBufF1*100.0; //--> ´ÜÀ§ º¯È¯ %
+                      P->SysPackSOCBufF1 = P->SysPackAhF *C_EVE368AhNorm;// TODO: Change this number when we use Frey60Ah cell.
+                      P->SysPackSOCBufF2 = P->SysPackSOCBufF1*100.0; //--> å ì™ì˜™å ì™ì˜™ å ì™ì˜™í™˜ %
                       P->SysPackSOCF     = P->SysSocInitF+P->SysPackSOCBufF2;
                   }
                   P->state = SOC_STATE_Save;
@@ -746,12 +746,36 @@ void CalFrey60AhSocHandle(SocReg *P)
 }
 
 #endif
-#define C_EVE380AhNorm        0.00271//1/360Ah;
+#define C_EVE368AhNorm        0.0027174f// 1/368Ah (Pack 460Ah * DoD 80%)
 extern void CalEVE240AhRegsInit(SocReg *P);
 extern void CalEVE240AhSocInit(SocReg *P);
 extern void CalEVE240AhSocHandle(SocReg *P);
 //void hermite_soc_40_60(SocReg *P);
+
 #if EVE24060Ah
+
+const OCVPoint EVE_LF230_OCV_TABLE[OCV_TABLE_SIZE] =
+{
+    /*  OCV(V),   Disp SOC(%) */
+    {  3.160f,    0.00f  },   /* Phys 10% = Empty       */
+    {  3.210f,    6.25f  },   /* Phys 15%               */
+    {  3.250f,   12.50f  },   /* Phys 20%               */
+    {  3.280f,   18.75f  },   /* Phys 25%               */
+    {  3.295f,   25.00f  },   /* Phys 30% = Flat starts */
+    {  3.305f,   31.25f  },   /* Phys 35%               */
+    {  3.310f,   37.50f  },   /* Phys 40%               */
+    {  3.315f,   43.75f  },   /* Phys 45%               */
+    {  3.318f,   50.00f  },   /* Phys 50%               */
+    {  3.320f,   56.25f  },   /* Phys 55%               */
+    {  3.322f,   62.50f  },   /* Phys 60%               */
+    {  3.325f,   68.75f  },   /* Phys 65%               */
+    {  3.328f,   75.00f  },   /* Phys 70%               */
+    {  3.330f,   81.25f  },   /* Phys 75%               */
+    {  3.333f,   87.50f  },   /* Phys 80%               */
+    {  3.340f,   93.75f  },   /* Phys 85% = Flat ends   */
+    {  3.360f,  100.00f  }    /* Phys 90% = Full        */
+};
+
 void CalEVE240AhRegsInit(SocReg *P)
 {
     P->SysSOCdtF=0.0;
@@ -838,87 +862,109 @@ void CalEVE240AhRegsInit(SocReg *P)
     P->state=SOC_STATE_IDLE;
 
 }
-void hermite_soc_40_60(SocReg *P)
-{
-    // Hermite basis with position & slope matching at both ends
-    const float32 x0 = H_V0;
-    const float32 x1 = H_V1;
-    const float32 y0 = H_S0;
-    const float32 y1 = H_S1;
-    const float32 m0 = H_M0;
-    const float32 m1 = H_M1;
+// TODO: Implement Hermite interpolation for SOC calculation
 
-    // Àü¾ÐÀ» ±¸°£À¸·Î Å¬·¥ÇÁ
-    P->AVGXF = CLAMP(P->CellAgvVoltageF , x0, x1);
+// void hermite_soc_40_60(SocReg *P)
+// {
+//     // Hermite basis with position & slope matching at both ends
+//     const float32 x0 = H_V0;
+//     const float32 x1 = H_V1;
+//     const float32 y0 = H_S0;
+//     const float32 y1 = H_S1;
+//     const float32 m0 = H_M0;
+//     const float32 m1 = H_M1;
 
-    const float32 dx = x1 - x0;             // ~0.0099 V
-    const float32 t  = (P->AVGXF  - x0)/ dx; // 0..1
-    const float32 t2= t*t; //bufB = bufA  * bufA ;
-    const float32 t3= t2*t;//bufC = bufB  * bufA ;
+//     // å ì™ì˜™å ì™ì˜™å ì™ì˜™ å ì™ì˜™å ì™ì˜™å ì™ì˜™å ì™ì˜™ í´å ì™ì˜™å ì™ì˜™
+//     P->AVGXF = CLAMP(P->CellAgvVoltageF , x0, x1);
+
+//     const float32 dx = x1 - x0;             // ~0.0099 V
+//     const float32 t  = (P->AVGXF  - x0)/ dx; // 0..1
+//     const float32 t2= t*t; //bufB = bufA  * bufA ;
+//     const float32 t3= t2*t;//bufC = bufB  * bufA ;
 
 
-    const float32 h00 = 2.f*t3 - 3.f*t2 + 1.f;    // 2t^3 - 3t^2 + 1
-    const float32 h10 =  t3 - 2.f*t2 + t;         // t^3 - 2t^2 + t
-    const float32 h01 = -2.f*t3 + 3.f*t2;         // -2t^3 + 3t^2
-    const float32 h11 = t3 -     t2;              // t^3 - t^2
+//     const float32 h00 = 2.f*t3 - 3.f*t2 + 1.f;    // 2t^3 - 3t^2 + 1
+//     const float32 h10 =  t3 - 2.f*t2 + t;         // t^3 - 2t^2 + t
+//     const float32 h01 = -2.f*t3 + 3.f*t2;         // -2t^3 + 3t^2
+//     const float32 h11 = t3 -     t2;              // t^3 - t^2
 
-    P->SOCX1OutFCZore = h00*y0 + h10*dx*m0 + h01*y1 + h11*dx*m1;
-}
+//     P->SOCX1OutFCZore = h00*y0 + h10*dx*m0 + h01*y1 + h11*dx*m1;
+// }
+
 void CalEVE240AhSocInit(SocReg *P)
 {
-    P->AVGXF=P->CellAgvVoltageF; //CLAMP(P->CellAgvVoltageF, V_MIN, V_MAX);
-    if (P->AVGXF < V_Soc00) { P->AVGXF  = V_Soc00;}
-    if (P->AVGXF > V_Soc100){ P->AVGXF  =V_Soc100;}
+    Uint16  i;
+    float32 v0;
+    float32 v1;
+    float32 s0;
+    float32 s1;
+    float32 ocv;
 
-    if (P->AVGXF < V_Soc20)  // [2.9000, 3.2790]
+    if(P == (SocReg *)0)
     {
-        P->SOCX1OutFAZore = A1 * P->AVGXF + B1;
-        P->SysSocInitF= P->SOCX1OutFAZore;
+        return;
     }
-    else if (P->AVGXF < V_Soc40)   // [3.2790, 3.3040]
+
+    ocv = P->CellAgvVoltageF;
+
+    /* Limit OCV inside table range */
+    if(ocv <= EVE_LF230_OCV_TABLE[0].ocv)
     {
-        P->SOCX1OutFBZore = A2 * P->AVGXF + B2;
-        P->SysSocInitF= P->SOCX1OutFBZore;
+        P->AVGXF       = EVE_LF230_OCV_TABLE[0].ocv;
+        P->SysSocInitF = EVE_LF230_OCV_TABLE[0].dispSoc;
+        return;
     }
-    else if (P->AVGXF <= V_Soc60) // [3.3040, 3.3200]  <-- Hermite 3Â÷
+    if(ocv >= EVE_LF230_OCV_TABLE[OCV_TABLE_SIZE - 1u].ocv)
     {
-        hermite_soc_40_60(P);
-        P->SysSocInitF= P->SOCX1OutFCZore;
+        P->AVGXF       = EVE_LF230_OCV_TABLE[OCV_TABLE_SIZE - 1u].ocv;
+        P->SysSocInitF = EVE_LF230_OCV_TABLE[OCV_TABLE_SIZE - 1u].dispSoc;
+        return;
     }
-    else if (P->AVGXF < V_Soc80) // [3.3200, 3.3410)
+
+    P->AVGXF = ocv;
+
+    /* Find SOC by linear method between two table points */
+    for(i = 0u; i < (OCV_TABLE_SIZE - 1u); i++)
     {
-        P->SOCX1OutFDZore= A4 * P->AVGXF + B4;
-        P->SysSocInitF= P->SOCX1OutFDZore;
+        if(ocv < EVE_LF230_OCV_TABLE[i + 1u].ocv)
+        {
+            v0 = EVE_LF230_OCV_TABLE[i].ocv;
+            v1 = EVE_LF230_OCV_TABLE[i + 1u].ocv;
+            s0 = EVE_LF230_OCV_TABLE[i].dispSoc;
+            s1 = EVE_LF230_OCV_TABLE[i + 1u].dispSoc;
+
+            P->SysSocInitF = s0 + ((s1 - s0) * (ocv - v0)) / (v1 - v0);
+            return;
+        }
     }
-    else  // [3.3410, 3.4510]
-    {
-        P->SOCX1OutFEZore= A5 * P->AVGXF + B5;
-        P->SysSocInitF= P->SOCX1OutFEZore;
-    }
+
+    /* Safety - this line should not run */
+    P->SysSocInitF = EVE_LF230_OCV_TABLE[OCV_TABLE_SIZE - 1u].dispSoc;
 }
+
 
 void CalEVE240AhSocHandle(SocReg *P)
 {
-    /* 1ms tick ´©Àû */
+    /* 1ms tick å ì™ì˜™å ì™ì˜™ */
     P->SysTime++;
-    /* (¼±ÅÃ) Æò±ÕÀü¾Ð °»½Å */
+    /* (å ì™ì˜™å ì™ì˜™) å ì™ì˜™å ì™ì˜™å ì™ì˜™å ï¿½ å ì™ì˜™å ì™ì˜™ */
     P->AVGXF         =   P->CellAgvVoltageF;
-    /* 50ms ÁÖ±â È®Á¤ */
+    /* 50ms å ìŒê¹ì˜™ í™•å ì™ì˜™ */
     if(P->SysTime < (Uint16)C_SocSamPleCount)
     {
         P->state=SOC_STATE_CalWaitMode;
         return;
     }
     P->SysTime=0u;
-    /* 5) INITOK °¡µå: ÃøÁ¤(Àü¾Ð/¿Âµµ) 1È¸ ÀÌ»ó ¿Ï·á Àü¿¡´Â SOC ¿¬»ê/ÃÊ±âÈ­ ±ÝÁö */
+    /* 5) INITOK å ì™ì˜™å ì™ì˜™: å ì™ì˜™å ì™ì˜™(å ì™ì˜™å ì™ì˜™/å ìŠ¹ë“¸ì˜™) 1íšŒ å ì‹±ì‚¼ì˜™ å ì‹¹ë¤„ì˜™ å ì™ì˜™å ì™ì˜™å ì™ì˜™ SOC å ì™ì˜™å ì™ì˜™/å ì‹­ê¹ì˜™í™” å ì™ì˜™å ì™ì˜™ */
     if(P->SoCStateRegs.bit.INITOK == 0u)
     {
-        /* INITOK ÀÌÀü: ÇÊ¿ä ½Ã ¸¶Áö¸· SOC À¯Áö(¿©±â¼­´Â ¾Æ¹«°Íµµ ¾È ÇÔ) */
+        /* INITOK å ì™ì˜™å ì™ì˜™: å ì‹­ìš¸ì˜™ å ì™ì˜™ å ì™ì˜™å ì™ì˜™å ì™ì˜™ SOC å ì™ì˜™å ì™ì˜™(å ì™ì˜™å ì©ì„œå ì™ì˜™ å ì‹£ë±„ì˜™å ì‹¶ë“¸ì˜™ å ì™ì˜™ å ì™ì˜™) */
         return;
    //    P->state=SOC_STATE_IDLE;
     }
 
-    /* ---- CalMeth °áÁ¤(±âÁ¸ ·ÎÁ÷ À¯Áö) ---- */
+    /* ---- CalMeth å ì™ì˜™å ì™ì˜™(å ì™ì˜™å ì™ì˜™ å ì™ì˜™å ì™ì˜™ å ì™ì˜™å ì™ì˜™) ---- */
     if(P->SysSoCCTAbsF >= C_SocInitCTVaule)
     {
         P->SoCStateRegs.bit.CalMeth = 1u;
@@ -935,14 +981,14 @@ void CalEVE240AhSocHandle(SocReg *P)
         }
     }
 
-    /* 2) CalMeth ÀüÈ¯ ¿§Áö °ËÃâ + Ah ´©Àû ¸®¼Â */
+    /* 2) CalMeth å ì™ì˜™í™˜ å ì™ì˜™å ì™ì˜™ å ì™ì˜™å ì™ì˜™ + Ah å ì™ì˜™å ì™ì˜™ å ì™ì˜™å ì™ì˜™ */
     {
-        static Uint16 prevCalMeth_u16 = 0u; /* ÇÔ¼ö ÃÖÃÊ ÁøÀÔ ½Ã 0À¸·Î ½ÃÀÛ */
+        static Uint16 prevCalMeth_u16 = 0u; /* å ìŒ‰ì‡½ì˜™ å ì™ì˜™å ì™ì˜™ å ì™ì˜™å ì™ì˜™ å ì™ì˜™ 0å ì™ì˜™å ì™ì˜™ å ì™ì˜™å ì™ì˜™ */
         Uint16 curCalMeth_u16 = (Uint16)P->SoCStateRegs.bit.CalMeth;
 
         if(curCalMeth_u16 != prevCalMeth_u16)
         {
-            /* CalMeth ÀüÈ¯ ¼ø°£: ´©Àû°ª ¿À¿°/Á¡ÇÁ ¹æÁö */
+            /* CalMeth å ì™ì˜™í™˜ å ì™ì˜™å ì™ì˜™: å ì™ì˜™å ì™ì˜™å ì™ì˜™ å ì™ì˜™å ì™ì˜™/å ì™ì˜™å ì™ì˜™ å ì™ì˜™å ì™ì˜™ */
             P->SysPackAhNewF    = 0.0F;
             P->SysPackAhF       = 0.0F;
             P->SysPackAhOldF    = 0.0F;
@@ -952,29 +998,28 @@ void CalEVE240AhSocHandle(SocReg *P)
         }
         prevCalMeth_u16 = curCalMeth_u16;
     }
-    /* 1) 50ms¸¶´Ù Ç×»ó °è»ê(»óÅÂ¸Ó½Å Á¦°Å/º¸Á¤) */
+    /* 1) 50mså ì™ì˜™å ì™ì˜™ å ìŒ“ì‚¼ì˜™ å ì™ì˜™å ï¿½(å ì™ì˜™å ìŠ¹ë¨¸ì™ì˜™ å ì™ì˜™å ì™ì˜™/å ì™ì˜™å ì™ì˜™) */
     if(P->SoCStateRegs.bit.CalMeth == 0u)
     {
-        /* OCV ±â¹Ý ÃÊ±âÈ­(ÆòÅº±¸°£ µî) */
+        /* OCV å ì™ì˜™å ï¿½ å ì‹­ê¹ì˜™í™”(å ì™ì˜™íƒ„å ì™ì˜™å ì™ì˜™ å ì™ì˜™) */
         P->AVGXF = P->CellAgvVoltageF;
 
-        /* 4) CalEVE240AhSocInit: Æò±ÕÀü¾Ð(¹× ¿Âµµ µî) ±â¹ÝÀ¸·Î ÃÊ±â SOC(SysSocInitF)¸¦ »êÃâÇÏ´Â ÃÊ±âÈ­ ÇÔ¼ö·Î ÇØ¼®µÊ */
+        /* 4) CalEVE240AhSocInit: å ì™ì˜™å ì™ì˜™å ì™ì˜™å ï¿½(å ì™ì˜™ å ìŠ¹ë“¸ì˜™ å ì™ì˜™) å ì™ì˜™å ì™ì˜™å ì™ì˜™å ï¿½ å ì‹­ê¹ì˜™ SOC(SysSocInitF)å ì™ì˜™ å ì™ì˜™å ì™ì˜™å ì‹¹ëŒì˜™ å ì‹­ê¹ì˜™í™” å ìŒ‰ì‡½ì˜™å ì™ì˜™ å ìŒ”ì‡½ì˜™å ì™ì˜™ */
         CalEVE240AhSocInit(P);
         P->state=SOC_STATE_InitSos;
-        /* ÃÊ±âÈ­ SOC ¹Ý¿µ */
+        /* å ì‹­ê¹ì˜™í™” SOC å ìŒ¥ìš¸ì˜™ */
         P->SysPackSOCF = P->SysSocInitF;
     }
     else /* CalMeth == 1 */
     {
-        /* CT(Àû·ùÀû»ê) ±â¹Ý SOC ¾÷µ¥ÀÌÆ® */
+        /* CT(å ì™ì˜™å ì™ì˜™å ì™ì˜™å ì™ì˜™) å ì™ì˜™å ï¿½ SOC å ì™ì˜™å ì™ì˜™å ì™ì˜™íŠ¸ */
         P->SysSOCdtF = (C_CTSampleTime * C_SocCumulativeTime); /* 0.05 * (1/3600) */
-        /* Àü·ù(A) * ½Ã°£(h) = Ah
-           SysSoCCTF´Â ¡°ºÎÈ£ Æ÷ÇÔ Àü·ù¡±·Î °¡Á¤(ÃæÀü +, ¹æÀü - ¶Ç´Â ¹Ý´ë) */
+        /* å ì™ì˜™å ì™ì˜™(A) * å ì‹œê³¤ì˜™(h) = Ah
+           SysSoCCTFå ì™ì˜™ å ì™ì˜™å ì™ì˜™í˜¸ å ì™ì˜™å ì™ì˜™ å ì™ì˜™å ì™ì˜™å ì™ì˜™å ì™ì˜™ å ì™ì˜™å ì™ì˜™(å ì™ì˜™å ì™ì˜™ +, å ì™ì˜™å ì™ì˜™ - å ì‹¤ëŒì˜™ å ìŒ¥ëŒì˜™) */
         P->SysPackAhNewF = (P->SysSoCCTF * P->SysSOCdtF);
         P->SysPackAhF    = (P->SysPackAhNewF + P->SysPackAhOldF);
         P->SysPackAhOldF = P->SysPackAhF;
-
-        /* Ah ´©Àû Å¬·¥ÇÁ(¿ë·® 380Ah ±âÁØ) */
+        /* Ah ï¿½ëŠ»ï¿½ìŸ» ï¿½ê²¢ï¿½ì˜©ï¿½ë´½ (Pack 460Ah * DoD 80% = 368Ah æ¹²ê³—ï¿½) */
         if(P->SysPackAhF <= -368.0F)
         {
             P->SysPackAhF = -368.0F;
@@ -983,14 +1028,13 @@ void CalEVE240AhSocHandle(SocReg *P)
         {
             P->SysPackAhF = 368.0F;
         }
-
-        /* Ah -> SOC% º¯È¯ */
-        P->SysPackSOCBufF1 = (P->SysPackAhF * C_EVE380AhNorm); /* (Ah)*(1/380) */
+        /* Ah -> SOC% å ì™ì˜™í™˜ */
+        P->SysPackSOCBufF1 = (P->SysPackAhF * C_EVE368AhNorm); /* (Ah)*(1/368) */
         P->SysPackSOCBufF2 = (P->SysPackSOCBufF1 * 100.0F);
         P->SysPackSOCF     = (P->SysSocInitF + P->SysPackSOCBufF2);
         P->state=SOC_STATE_CalAhSos;
     }
-    /* 3) SOC 0~100% Å¬·¥ÇÁ */
+    /* 3) SOC 0~100% í´å ì™ì˜™å ì™ì˜™ */
     if(P->SysPackSOCF < 0)
     {
         P->SysPackSOCF = 0;
@@ -1033,7 +1077,7 @@ void CalEVE240AhSocHandle(SocReg *P)
                   if(P->SoCStateRegs.bit.CalMeth==1)
                   {
 
-                      P->SysSOCdtF = C_CTSampleTime*C_SocCumulativeTime; // CumulativeTime(1/3600) -> ´©Àû½Ã°£
+                      P->SysSOCdtF = C_CTSampleTime*C_SocCumulativeTime; // CumulativeTime(1/3600) -> å ì™ì˜™å ì™ì˜™å ì‹œê³¤ì˜™
                       P->SysPackAhNewF = P->SysSoCCTF * P->SysSOCdtF;
                       P->SysPackAhF    = P->SysPackAhNewF + P->SysPackAhOldF;
                       P->SysPackAhOldF = P->SysPackAhF;
@@ -1045,8 +1089,8 @@ void CalEVE240AhSocHandle(SocReg *P)
                       {
                           P->SysPackAhF= 380.0;
                       }
-                      P->SysPackSOCBufF1 = P->SysPackAhF *C_EVE380AhNorm;// 0.002631//1/380Ah;
-                      P->SysPackSOCBufF2 = P->SysPackSOCBufF1*100.0; //--> ´ÜÀ§ º¯È¯ %
+                      P->SysPackSOCBufF1 = P->SysPackAhF *C_EVE368AhNorm;// 0.002631//1/368Ah;
+                      P->SysPackSOCBufF2 = P->SysPackSOCBufF1*100.0; //--> í™˜ %
                       P->SysPackSOCF     = P->SysSocInitF+P->SysPackSOCBufF2;
                   }
                   P->state = SOC_STATE_Save;
