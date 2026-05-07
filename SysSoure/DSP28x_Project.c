@@ -981,7 +981,7 @@ void SysAlarmtCheck(SystemReg *s)
         {
             s->SysAlarmCont[10] = 0u;
         }
-        if(Hyst_Off(s->SysCellDivVoltageF, 0.010f))
+        if(Hyst_Off(s->SysCellDivVoltageF, 0.050f))
         {
             s->SysAlarmCont[10] = 0u;
             s->SysAlarmReg.bit.CellVolt_BL = 0u;
@@ -1339,7 +1339,7 @@ void SysFaultCheck(SystemReg *s)
         {
             s->SysFalutCont[10] = 0u;
         }
-        if(Hyst_Off(s->SysCellDivVoltageF, 0.015f))
+        if(Hyst_Off(s->SysCellDivVoltageF, 0.100f))
         {
             s->SysFalutCont[10] = 0u;
             s->SysFaultReg.bit.CellVolt_BL = 0u;

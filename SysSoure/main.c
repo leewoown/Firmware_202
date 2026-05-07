@@ -879,7 +879,7 @@ void main(void)
                case NVRAM_AZoneSave :
                      NVRAllRegs.DebugCount++;
                      NVRZoneAWRRegs.MetaVersion=Product_Version;
-                     NVRZoneAWRRegs.SysTimeTick = NVRAllRegs.SysTimeTick++;
+                     NVRZoneAWRRegs.SysTimeTick = NVRAllRegs.SysTimeTick;
                      NVRZoneAWRRegs.LastState   = SysRegs.SysStateReg.all;
                      NVRZoneAWRRegs.LastSOC     = (int16)(SysRegs.SysSOCF*10);
                      NVRAM_AZoneSaveHandler(&NVRZoneAWRRegs);
