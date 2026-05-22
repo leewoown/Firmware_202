@@ -1282,7 +1282,7 @@ interrupt void cpu_timer0_isr(void)
                 CANARegs.SysSoHCapacity     = NVRZoneARDRegs.LastSOC;
                 if(SysRegs.CanComEable==1)
                 {
-                    CANATX(0x618,8,CANARegs.SysPackAh,CANARegs.SysTimeTickDataL, CANARegs.SysTimeTickDataH, CANARegs.SysSoHCapacity);
+                    CANATX(0x618,8,CANARegs.SysPackAh,CANARegs.SysTimeTickDataL, CANARegs.SysTimeTickDataH, NVRZoneARDRegs.LastSOC);
                 }
        break;
        case 35:

@@ -1978,7 +1978,7 @@ void PWRRlyHoldHandle(SystemReg *p)
         p->SysStateReg.bit.WakeUpOut    = 1u;
         p->SysStateReg.bit.PwrHoldState = 1u;
         /* 충전 종료 조건 */
-        if((p->SysPackParallelVoltageF >= p->TargetPackVoltF+0.5F) || (p->SysSOCF >= 100.5F))
+        if((p->SysPackParallelVoltageF >= p->TargetPackVoltF+0.5F) || (p->SysSOCF >= 100F))
         {
             
             /* 전류 절대값 2A->15A 이하일 때 Hold 해제 판단 */
