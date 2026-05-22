@@ -496,7 +496,7 @@ void SysCalSocIintHandle(SystemReg *s)
     const float32 V_FlatStartF  = 3.295f;   /* Disp  25%    = Phys 30% (Flat starts) */
     const float32 V_FlatEndF    = 3.340f;   /* Disp  93.75% = Phys 85% (Flat ends)   */
     const float32 V_DispSoc100F = 3.360f;   /* Disp 100%    = Phys 90% (Full)        */
-
+    const float32 V_ZoneHystF   = 0.010f;   /* zone boundary hysteresis 10mV         */
     if(s == (SystemReg *)0)
     {
         return;
@@ -513,22 +513,42 @@ void SysCalSocIintHandle(SystemReg *s)
     {
         CellVagF = V_DispSoc100F;
     }
-
     /* Choose SOC init rule by zone */
-    if(CellVagF < V_FlatStartF)
+    if(s->SysStateReg.bit.INITOK == 0u)
     {
-        /* Sharp zone low (Phys 10~30%) - use OCV table */
-        s->SysSocInitRule = SOC_ZONE_cellVolt;
-    }
-    else if(CellVagF <= V_FlatEndF)
-    {
-        /* Flat zone (Phys 30~85%) - use NVR */
-        s->SysSocInitRule = SOC_ZONE_NVR;
+        /* boot : decide zone by simple compare (no hysteresis) */
+        if((CellVagF < V_FlatStartF) || (CellVagF > V_FlatEndF))
+        {
+            s->SysSocInitRule = SOC_ZONE_cellVolt;
+        }
+        else
+        {
+            s->SysSocInitRule = SOC_ZONE_NVR;
+        }
     }
     else
     {
-        /* Sharp zone high (Phys 85~90%) - use OCV table */
-        s->SysSocInitRule = SOC_ZONE_cellVolt;
+        /* run : hysteresis to stop edge bounce */
+        if(s->SysSocInitRule == SOC_ZONE_NVR)
+        {
+            /* now in Flat : leave to Sharp only after passing the margin */
+            if((CellVagF < (V_FlatStartF - V_ZoneHystF)) ||   /* < 3.285V */
+               (CellVagF > (V_FlatEndF   + V_ZoneHystF)))     /* > 3.350V */
+            {
+                s->SysSocInitRule = SOC_ZONE_cellVolt;
+            }
+            /* 3.285 ~ 3.350V : keep NVR */
+        }
+        else
+        {
+            /* now in Sharp : enter Flat only when inside flat range */
+            if((CellVagF >= V_FlatStartF) &&   /* >= 3.295V */
+               (CellVagF <= V_FlatEndF))       /* <= 3.340V */
+            {
+                s->SysSocInitRule = SOC_ZONE_NVR;
+            }
+            /* otherwise keep cellVolt */
+        }
     }
 }
 
@@ -965,7 +985,7 @@ void SysAlarmtCheck(SystemReg *s)
     /*----------------------------------------------------------------------
      10. Cell Voltage Imbalance Alarm
      ----------------------------------------------------------------------
-     ON = 0.100V, OFF = 0.010V
+     ON = 0.100V, OFF = 0.050V
     ----------------------------------------------------------------------*/
     if(Hyst_On(s->SysCellDivVoltageF, 0.100f))
     {
@@ -1323,7 +1343,7 @@ void SysFaultCheck(SystemReg *s)
     /*----------------------------------------------------------------------
      10. Cell Voltage Imbalance Fault
      ----------------------------------------------------------------------
-     ON = 0.150V, OFF = 0.015V
+     ON = 0.150V, OFF = 0.100V
     ----------------------------------------------------------------------*/
     if(Hyst_On(s->SysCellDivVoltageF, 0.150f))
     {
@@ -1954,13 +1974,17 @@ void PWRRlyHoldHandle(SystemReg *p)
      *--------------------------------------------------------------*/
     if((p->SysStateReg.bit.ChargerWakeUpIn == 1u) &&(p->SysStateReg.bit.CHAComStatus == 1u))
     {
+        /* 충전기 연결 중에는 충전 경로 확보를 위해 릴레이 ON 유지 */
+        p->SysStateReg.bit.WakeUpOut    = 1u;
+        p->SysStateReg.bit.PwrHoldState = 1u;
         /* 충전 종료 조건 */
-        if((p->SysPackParallelVoltageF >= p->TargetPackVoltF) || (p->SysSOCF >= 100.0F))
+        if((p->SysPackParallelVoltageF >= p->TargetPackVoltF+0.5F) || (p->SysSOCF >= 100.5F))
         {
-            p->SysStateReg.bit.BSACHAEnable = 0u;
-            /* 전류 절대값 2A 이하일 때 Hold 해제 판단 */
-            if(p->SysPackCurrentAsbF <= 2.0F)
+            
+            /* 전류 절대값 2A->15A 이하일 때 Hold 해제 판단 */
+            if(p->SysPackCurrentAsbF <= 13.0F)
             {
+                p->SysStateReg.bit.BSACHAEnable = 0u;
                 if(p->SysCellDivVoltageF <= 0.05F)
                 {
                     p->SysStateReg.bit.PwrHoldState = 0u;
@@ -1977,6 +2001,11 @@ void PWRRlyHoldHandle(SystemReg *p)
                     }
                 }
             }
+        }
+        else if((p->SysPackParallelVoltageF <= (p->TargetPackVoltF - 1.5F)) && (p->SysSOCF < 98.0F))
+        {
+            /* 정상 충전 중 : 충전 활성 */
+            p->SysStateReg.bit.BSACHAEnable = 1u;
         }
         return;
     }

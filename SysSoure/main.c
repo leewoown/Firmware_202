@@ -331,7 +331,9 @@ void main(void)
                              memcpy(&SysRegs.SysCellVoltageF[7],        &Slave1Regs.CellVoltageF[0],sizeof(float32)*8);
                              memcpy(&SysRegs.SysCellVoltageF[15],       &Slave2Regs.CellVoltageF[0],sizeof(float32)*7);
                              memcpy(&SysRegs.SysCellVoltageF[22],       &Slave3Regs.CellVoltageF[0],sizeof(float32)*8);
+                             delay_ms(10);
                              SysCalVoltageHandle(&SysRegs);
+
                              for(SysRegs.InitValuleCnt=0;SysRegs.InitValuleCnt<48;SysRegs.InitValuleCnt++)
                              {
 
@@ -340,24 +342,25 @@ void main(void)
                                  Slave0Regs.BATICDO.bit.GPIO1=1;
                                  SlaveBMSDigiteldoutOHandler(&Slave0Regs);
                                  SalveTempsHandler(&Slave0Regs);
-
+                                 delay_ms(10);
                                  Slave1Regs.ID=BMS_ID_1;
                                  Slave1Regs.SlaveCh=C_Slave_ACh;
                                  Slave1Regs.BATICDO.bit.GPIO1=1;
                                  SlaveBMSDigiteldoutOHandler(&Slave1Regs);
                                  SalveTempsHandler(&Slave1Regs);
-
+                                 delay_ms(10);
                                  Slave2Regs.ID=BMS_ID_2;
                                  Slave2Regs.SlaveCh=C_Slave_ACh;
                                  Slave2Regs.BATICDO.bit.GPIO1=1;
                                  SlaveBMSDigiteldoutOHandler(&Slave2Regs);
                                  SalveTempsHandler(&Slave2Regs);
-
+                                 delay_ms(10);
                                  Slave3Regs.ID=BMS_ID_3;
                                  Slave3Regs.SlaveCh=C_Slave_ACh;
                                  Slave3Regs.BATICDO.bit.GPIO1=1;
                                  SlaveBMSDigiteldoutOHandler(&Slave3Regs);
                                  SalveTempsHandler(&Slave3Regs);
+                                 delay_ms(10);
                              }
                              memcpy(&SysRegs.SysCelltemperatureF[0],     &Slave0Regs.CellTemperatureF[0],sizeof(float32)*7);
                              memcpy(&SysRegs.SysCelltemperatureF[7],     &Slave1Regs.CellTemperatureF[0],sizeof(float32)*8);
@@ -965,6 +968,7 @@ interrupt void cpu_timer0_isr(void)
 
     if(SysRegs.SysStateReg.bit.INITOK==1)
     {
+      
         SysAlarmtCheck(&SysRegs);
         SysFaultCheck(&SysRegs);
        // SysProtectCheck(&SysRegs)
@@ -1442,7 +1446,7 @@ interrupt void cpu_timer0_isr(void)
        break;
        case 10:
 
-               CANARegs.CharCONSTVolt=540;
+               CANARegs.CharCONSTVolt=498;
                CANARegs.CahrConstantCurrt =300;
                CANARegs.CharCONSTSOC=1000;
                CANARegs.SysPackPT  = (unsigned int)(SysRegs.SysPackParallelVoltageF*10);//545;//(unsigned int)(SysRegs.SysPackParallelVoltageF*10);

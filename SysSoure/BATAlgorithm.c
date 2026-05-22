@@ -941,85 +941,82 @@ void CalEVE240AhSocInit(SocReg *P)
     /* Safety - this line should not run */
     P->SysSocInitF = EVE_LF230_OCV_TABLE[OCV_TABLE_SIZE - 1u].dispSoc;
 }
-
-
 void CalEVE240AhSocHandle(SocReg *P)
 {
-    /* 1ms tick 占쏙옙占쏙옙 */
+    /* 1ms tick 누적 */
     P->SysTime++;
-    /* (占쏙옙占쏙옙) 占쏙옙占쏙옙占쏙옙占� 占쏙옙占쏙옙 */
-    P->AVGXF         =   P->CellAgvVoltageF;
-    /* 50ms 占쌍깍옙 확占쏙옙 */
+    /* 평균 셀 전압 갱신 */
+    P->AVGXF = P->CellAgvVoltageF;
+
+    /* 50ms 주기 게이팅 : 50회 미만이면 대기 상태로 종료 */
     if(P->SysTime < (Uint16)C_SocSamPleCount)
     {
-        P->state=SOC_STATE_CalWaitMode;
+        P->state = SOC_STATE_CalWaitMode;
         return;
     }
-    P->SysTime=0u;
-    /* 5) INITOK 占쏙옙占쏙옙: 占쏙옙占쏙옙(占쏙옙占쏙옙/占승듸옙) 1회 占싱삼옙 占싹뤄옙 占쏙옙占쏙옙占쏙옙 SOC 占쏙옙占쏙옙/占십깍옙화 占쏙옙占쏙옙 */
+    P->SysTime = 0u;
+
+    /* INITOK 확인 : 셀 정보(전압/온도) 1회 이상 수집 전에는 SOC 산출 안 함 */
     if(P->SoCStateRegs.bit.INITOK == 0u)
     {
-        /* INITOK 占쏙옙占쏙옙: 占십울옙 占쏙옙 占쏙옙占쏙옙占쏙옙 SOC 占쏙옙占쏙옙(占쏙옙占썩서占쏙옙 占싣뱄옙占싶듸옙 占쏙옙 占쏙옙) */
         return;
-   //    P->state=SOC_STATE_IDLE;
     }
 
-    /* ---- CalMeth 占쏙옙占쏙옙(占쏙옙占쏙옙 占쏙옙占쏙옙 占쏙옙占쏙옙) ---- */
-    if(P->SysSoCCTAbsF >= C_SocInitCTVaule)
+    /* ---- CalMeth 결정 (전류 크기 기준) ---- */
+    if(P->SysSoCCTAbsF >= C_SocInitCTVaule)    /* |전류| >= 2.5A : 충방전 */
     {
-        P->SoCStateRegs.bit.CalMeth = 1u;
-        P->CTCount = 0u;
+        P->SoCStateRegs.bit.CalMeth = 1u;      /* 전류적산 모드 */
+        P->CTCount = 0u;                        /* 휴지 카운터 초기화 */
     }
-    else
+    else                                        /* |전류| < 2.5A : 휴지 */
     {
-        P->CTCount++;
-        if(P->CTCount > 6000u)
+        P->CTCount++;                           /* 휴지 시간 누적 (50ms 단위) */
+        if(P->CTCount > 6000u)                  /* 6000 x 50ms = 300초 = 5분 */
         {
-            P->CTCount = 6001u;
-            //P->SoCStateRegs.bit.CalMeth = 0u;
-            P->SoCStateRegs.bit.CalMeth = 1u;
+            P->CTCount = 6001u;                 /* 카운터 포화 (오버플로 방지) */
+            P->SoCStateRegs.bit.CalMeth = 0u;   /* 휴지 5분 이상 -> OCV 재초기화 */
+          //P->SoCStateRegs.bit.CalMeth = 1u;   /* (구) 적산 유지 - 비활성 */
         }
     }
 
-    /* 2) CalMeth 占쏙옙환 占쏙옙占쏙옙 占쏙옙占쏙옙 + Ah 占쏙옙占쏙옙 占쏙옙占쏙옙 */
+    /* CalMeth 전환 감지 시 Ah 누적 변수 리셋 (새 기준점 확보) */
     {
-        static Uint16 prevCalMeth_u16 = 0u; /* 占쌉쇽옙 占쏙옙占쏙옙 占쏙옙占쏙옙 占쏙옙 0占쏙옙占쏙옙 占쏙옙占쏙옙 */
+        static Uint16 prevCalMeth_u16 = 0u;     /* 함수 진입 간 상태 보존 */
         Uint16 curCalMeth_u16 = (Uint16)P->SoCStateRegs.bit.CalMeth;
-
         if(curCalMeth_u16 != prevCalMeth_u16)
         {
-            /* CalMeth 占쏙옙환 占쏙옙占쏙옙: 占쏙옙占쏙옙占쏙옙 占쏙옙占쏙옙/占쏙옙占쏙옙 占쏙옙占쏙옙 */
+            /* 모드 전환 순간 Ah/SOC 버퍼 초기화 */
             P->SysPackAhNewF    = 0.0F;
             P->SysPackAhF       = 0.0F;
             P->SysPackAhOldF    = 0.0F;
             P->SysPackSOCBufF1  = 0.0F;
             P->SysPackSOCBufF2  = 0.0F;
-            P->state=SOC_STATE_InitRegs;
+            P->state = SOC_STATE_InitRegs;
         }
         prevCalMeth_u16 = curCalMeth_u16;
     }
-    /* 1) 50ms占쏙옙占쏙옙 占쌓삼옙 占쏙옙占�(占쏙옙占승머쏙옙 占쏙옙占쏙옙/占쏙옙占쏙옙) */
-    if(P->SoCStateRegs.bit.CalMeth == 0u)
-    {
-        /* OCV 占쏙옙占� 占십깍옙화(占쏙옙탄占쏙옙占쏙옙 占쏙옙) */
-        P->AVGXF = P->CellAgvVoltageF;
 
-        /* 4) CalEVE240AhSocInit: 占쏙옙占쏙옙占쏙옙占�(占쏙옙 占승듸옙 占쏙옙) 占쏙옙占쏙옙占쏙옙占� 占십깍옙 SOC(SysSocInitF)占쏙옙 占쏙옙占쏙옙占싹댐옙 占십깍옙화 占쌉쇽옙占쏙옙 占쌔쇽옙占쏙옙 */
+    /* ---- SOC 산출 ---- */
+    if(P->SoCStateRegs.bit.CalMeth == 0u)       /* OCV 재초기화 모드 (휴지) */
+    {
+        //P->AVGXF = P->CellAgvVoltageF;         /* 중복 - 함수 시작에서 이미 설정 */
+
+        /* OCV 룩업 테이블로 초기 SOC 산출 */
         CalEVE240AhSocInit(P);
-        P->state=SOC_STATE_InitSos;
-        /* 占십깍옙화 SOC 占쌥울옙 */
+        P->state = SOC_STATE_InitSos;
+        /* 산출된 OCV SOC를 팩 SOC에 반영 */
         P->SysPackSOCF = P->SysSocInitF;
     }
-    else /* CalMeth == 1 */
+    else                                         /* CalMeth == 1 : 전류적산 모드 */
     {
-        /* CT(占쏙옙占쏙옙占쏙옙占쏙옙) 占쏙옙占� SOC 占쏙옙占쏙옙占쏙옙트 */
-        P->SysSOCdtF = (C_CTSampleTime * C_SocCumulativeTime); /* 0.05 * (1/3600) */
-        /* 占쏙옙占쏙옙(A) * 占시곤옙(h) = Ah
-           SysSoCCTF占쏙옙 占쏙옙占쏙옙호 占쏙옙占쏙옙 占쏙옙占쏙옙占쏙옙占쏙옙 占쏙옙占쏙옙(占쏙옙占쏙옙 +, 占쏙옙占쏙옙 - 占실댐옙 占쌥댐옙) */
+        /* 적산 시간 : 0.05s x (1/3600) [시간 h 단위] */
+        P->SysSOCdtF = (C_CTSampleTime * C_SocCumulativeTime);
+        /* 전류[A] x 시간[h] = 전하량[Ah] (부호로 충/방전 구분) */
         P->SysPackAhNewF = (P->SysSoCCTF * P->SysSOCdtF);
-        P->SysPackAhF    = (P->SysPackAhNewF + P->SysPackAhOldF);
+        P->SysPackAhF    = (P->SysPackAhNewF + P->SysPackAhOldF);   /* 누적 */
         P->SysPackAhOldF = P->SysPackAhF;
-        /* Ah �늻�쟻 �겢�옩�봽 (Pack 460Ah * DoD 80% = 368Ah 湲곗�) */
+
+        /* Ah 누적 클램프 (Pack 460Ah x DoD 80% = 368Ah 기준) */
         if(P->SysPackAhF <= -368.0F)
         {
             P->SysPackAhF = -368.0F;
@@ -1028,13 +1025,16 @@ void CalEVE240AhSocHandle(SocReg *P)
         {
             P->SysPackAhF = 368.0F;
         }
-        /* Ah -> SOC% 占쏙옙환 */
-        P->SysPackSOCBufF1 = (P->SysPackAhF * C_EVE368AhNorm); /* (Ah)*(1/368) */
-        P->SysPackSOCBufF2 = (P->SysPackSOCBufF1 * 100.0F);
+
+        /* Ah -> SOC[%] 변환 : (Ah / 368) x 100 */
+        P->SysPackSOCBufF1 = (P->SysPackAhF * C_EVE368AhNorm);  /* (Ah)*(1/368) */
+        P->SysPackSOCBufF2 = (P->SysPackSOCBufF1 * 100.0F);     /* % 환산 */
+        /* 최종 SOC = 초기 SOC(OCV 기준점) + 적산 변화량 */
         P->SysPackSOCF     = (P->SysSocInitF + P->SysPackSOCBufF2);
-        P->state=SOC_STATE_CalAhSos;
+        P->state = SOC_STATE_CalAhSos;
     }
-    /* 3) SOC 0~100% 클占쏙옙占쏙옙 */
+
+    /* SOC 0~100% 클램프 */
     if(P->SysPackSOCF < 0)
     {
         P->SysPackSOCF = 0;
@@ -1043,70 +1043,7 @@ void CalEVE240AhSocHandle(SocReg *P)
     {
         P->SysPackSOCF = 100;
     }
-    /*
-
-    if(P->SysTime>=C_SocSamPleCount)
-     {
-         if(P->SysSoCCTAbsF < (Uint16)C_SocSamPleCount)
-         {
-             P->SoCStateRegs.bit.CalMeth=1;
-             P->CTCount=0;
-         }
-         else
-         {
-             P->CTCount++;
-             if(P->CTCount>6000)
-             {
-                 P->CTCount=6001;
-                 P->SoCStateRegs.bit.CalMeth=0;
-             }
-         }
-         switch (P->state)
-         {
-
-             case SOC_STATE_RUNNING:
-                  if(P->SoCStateRegs.bit.CalMeth==0)
-                  {
-                      // 60Ah
-                       P->AVGXF         =   P->CellAgvVoltageF;
-                       CalEVE240AhSocInit(P);
-                       P->SysPackSOCF = P->SysSocInitF;
-                       //P->SysPackSOCF = P->SOCbufF;
-                       //P->SysSocInitF = P->SOCbufF;
-                  }
-                  if(P->SoCStateRegs.bit.CalMeth==1)
-                  {
-
-                      P->SysSOCdtF = C_CTSampleTime*C_SocCumulativeTime; // CumulativeTime(1/3600) -> 占쏙옙占쏙옙占시곤옙
-                      P->SysPackAhNewF = P->SysSoCCTF * P->SysSOCdtF;
-                      P->SysPackAhF    = P->SysPackAhNewF + P->SysPackAhOldF;
-                      P->SysPackAhOldF = P->SysPackAhF;
-                      if(P->SysPackAhF <= -380.0)
-                      {
-                         P->SysPackAhF =-380.0;
-                      }
-                      if(P->SysPackAhF> 380.0)
-                      {
-                          P->SysPackAhF= 380.0;
-                      }
-                      P->SysPackSOCBufF1 = P->SysPackAhF *C_EVE368AhNorm;// 0.002631//1/368Ah;
-                      P->SysPackSOCBufF2 = P->SysPackSOCBufF1*100.0; //--> 환 %
-                      P->SysPackSOCF     = P->SysSocInitF+P->SysPackSOCBufF2;
-                  }
-                  P->state = SOC_STATE_Save;
-
-             break;
-             case SOC_STATE_Save:
-
-                 P->state = SOC_STATE_RUNNING;
-
-             break;
-             case SOC_STATE_CLEAR:
-
-             break;
-         }
-         P->SysTime=0;
-     }*/
 }
+
 
 #endif
