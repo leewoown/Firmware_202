@@ -2,6 +2,7 @@
 #include "parameter.h"
 #include "SysVariable.h"
 #include "DSP28x_Project.h"
+#include "BATAlgorithm.h"
 #include "stdio.h"
 #include "math.h"
 #include <string.h>
@@ -18,7 +19,7 @@ extern void SysCalTemperatureHandle(SystemReg *s);
 extern void MDCalVoltandTemsHandle(SystemReg *P);
 extern void SysFaultCheck(SystemReg *s);
 extern void SysAlarmtCheck(SystemReg *s);
-extern void SysCalSocIintHandle(SystemReg *s);
+extern void SysCalSocZoneHandle(SystemReg *s);
 extern int float32ToInt(float32 Vaule, Uint32 Num);
 extern void TempTemps(SystemReg *s);
 extern void PWRRlyHoldHandle(SystemReg *p);
@@ -487,16 +488,13 @@ void MDCalVoltandTemsHandle(SystemReg *P)
   }
 
 }
-void SysCalSocIintHandle(SystemReg *s)
+void SysCalSocZoneHandle(SystemReg *s)
 {
     float32 CellVagF;
 
-    /* EVE LF230 SOC-OCV (DoD 80%) zone boundaries */
-    const float32 V_DispSoc0F   = 3.160f;   /* Disp   0%    = Phys 10% (Empty)       */
-    const float32 V_FlatStartF  = 3.295f;   /* Disp  25%    = Phys 30% (Flat starts) */
-    const float32 V_FlatEndF    = 3.340f;   /* Disp  93.75% = Phys 85% (Flat ends)   */
-    const float32 V_DispSoc100F = 3.360f;   /* Disp 100%    = Phys 90% (Full)        */
-    const float32 V_ZoneHystF   = 0.010f;   /* zone boundary hysteresis 10mV         */
+    /* zone 경계는 BATAlgorithm.h 매크로를 단일 출처로 사용 */
+    /*   V_DispSoc0F=3.160 / V_FlatStartF=3.295 / V_FlatEndF=3.340 / V_DispSoc100F=3.360 */
+    const float32 V_ZoneHystF   = 0.010f;   /* zone boundary hysteresis 10mV */
     if(s == (SystemReg *)0)
     {
         return;
@@ -1978,7 +1976,7 @@ void PWRRlyHoldHandle(SystemReg *p)
         p->SysStateReg.bit.WakeUpOut    = 1u;
         p->SysStateReg.bit.PwrHoldState = 1u;
         /* 충전 종료 조건 */
-        if((p->SysPackParallelVoltageF >= p->TargetPackVoltF+0.5F) || (p->SysSOCF >= 100F))
+        if((p->SysPackParallelVoltageF >= p->TargetPackVoltF+0.2F) || (p->SysSOCF >= 100.0F))
         {
             
             /* 전류 절대값 2A->15A 이하일 때 Hold 해제 판단 */

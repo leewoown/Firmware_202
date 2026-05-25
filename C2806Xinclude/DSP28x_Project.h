@@ -52,13 +52,13 @@
 #include "F2806x_Examples.h"   	// F2806x Examples Include File
 #include "parameter.h"
 
-//EDLAY ∏≈≈©∑Œ º±æ --------------------------------------------------------------------//
+//EDLAY Îß§ÌÅ¨Î°ú ÏÑ†Ïñ∏ --------------------------------------------------------------------//
 
-// TI SDK 1.10¿« º“Ω∫ DSP2803x_usDelay.asmø°º≠ ¡¶∞¯«œ¥¬ DELAY_US «‘ºˆ∏¶ ªÁøÎ
+// TI SDK 1.10Ïùò ÏÜåÏä§ DSP2803x_usDelay.asmÏóêÏÑú Ï†úÍ≥µÌïòÎäî DELAY_US Ìï®ÏàòÎ•º ÏÇ¨Ïö©
 
-// TI SDK 1.10¿« º“Ω∫ DSP2803x_usDelay.asmø°º≠ ¡¶∞¯«œ¥¬ DELAY_US «‘ºˆ∏¶ ªÁøÎ
+// TI SDK 1.10Ïùò ÏÜåÏä§ DSP2803x_usDelay.asmÏóêÏÑú Ï†úÍ≥µÌïòÎäî DELAY_US Ìï®ÏàòÎ•º ÏÇ¨Ïö©
 #define delay_us(us)        DELAY_US(us)
-// TI SDK 1.10¿« º“Ω∫ DSP2803x_usDelay.asmø°º≠ ¡¶∞¯«œ¥¬ DELAY_US «‘ºˆ∏¶ ªÁøÎ
+// TI SDK 1.10Ïùò ÏÜåÏä§ DSP2803x_usDelay.asmÏóêÏÑú Ï†úÍ≥µÌïòÎäî DELAY_US Ìï®ÏàòÎ•º ÏÇ¨Ïö©
 #define delay_ms(ms)        DELAY_US(ms*1000)
 //#define  SPI_Read()          SPI_READ()
 /*-------------------------------------------------------------------------------
@@ -80,22 +80,22 @@ Next, definitions used in main file.
 #define         ToggleBit(val, bit)             (val ^= BIT_MASK(bit))
 #define         bit_is_set(val, bit)            (val & BIT_MASK(bit))
 #define         bit_is_clear(val, bit)          (~val & BIT_MASK(bit))
-#define         Hyst_On(Value, SetValue)   ((Value) > (SetValue))   // ƒ—¡¸ ¡∂∞«
-#define         Hyst_Off(Value, RstValue)  ((Value) < (RstValue))   // ≤®¡¸ ¡∂∞«
-#define         IS_OVER_AND_UNDER(A, MIN, MAX)   ((A) >= (MIN) && (A) <= (MAX))  // ¿ÃªÛ ~ ¿Ã«œ
-#define         IS_ABOVE_AND_UNDER(A, MIN, MAX)  ((A) >  (MIN) && (A) <= (MAX))  // √ ∞˙ ~ ¿Ã«œ
-#define         IS_OVER_AND_BELOW(A, MIN, MAX)   ((A) >= (MIN) && (A) <  (MAX))  // ¿ÃªÛ ~ πÃ∏∏
-#define         IS_ABOVE_AND_BELOW(A, MIN, MAX)  ((A) >  (MIN) && (A) <  (MAX))  // √ ∞˙ ~ πÃ∏∏
+#define         Hyst_On(Value, SetValue)   ((Value) > (SetValue))   // ÏºúÏßê Ï°∞Í±¥
+#define         Hyst_Off(Value, RstValue)  ((Value) < (RstValue))   // Í∫ºÏßê Ï°∞Í±¥
+#define         IS_OVER_AND_UNDER(A, MIN, MAX)   ((A) >= (MIN) && (A) <= (MAX))  // Ïù¥ÏÉÅ ~ Ïù¥Ìïò
+#define         IS_ABOVE_AND_UNDER(A, MIN, MAX)  ((A) >  (MIN) && (A) <= (MAX))  // Ï¥àÍ≥º ~ Ïù¥Ìïò
+#define         IS_OVER_AND_BELOW(A, MIN, MAX)   ((A) >= (MIN) && (A) <  (MAX))  // Ïù¥ÏÉÅ ~ ÎØ∏Îßå
+#define         IS_ABOVE_AND_BELOW(A, MIN, MAX)  ((A) >  (MIN) && (A) <  (MAX))  // Ï¥àÍ≥º ~ ÎØ∏Îßå
 
 
-/* buf[pos..pos+3]∑Œ∫Œ≈Õ Uint32 (LE) */
+/* buf[pos..pos+3]Î°úÎ∂ÄÌÑ∞ Uint32 (LE) */
 #define GET_U32_LE(buf, pos) \
     ( (Uint32)( ((Uint32)((buf)[(pos)])       ) | \
                 ((Uint32)((buf)[(pos) + 1U]) << 8)  | \
                 ((Uint32)((buf)[(pos) + 2U]) << 16) | \
                 ((Uint32)((buf)[(pos) + 3U]) << 24) ) )
 
-/* int16 (LE): ¡∂«’¿∫ Uint16∑Œ «œ∞Ì ∏∂¡ˆ∏∑ø° signed ƒ≥Ω∫∆√ */
+/* int16 (LE): Ï°∞Ìï©ÏùÄ Uint16Î°ú ÌïòÍ≥† ÎßàÏßÄÎßâÏóê signed Ï∫êÏä§ÌåÖ */
 #define GET_I16_LE(buf, pos) \
     ( (int16)GET_U16_LE((buf), (pos)) )
 
@@ -222,8 +222,8 @@ typedef enum
 } SysState;
 typedef enum
 {
-    SOC_ZONE_NVR,             /* ∞°: 0~20% */
-    SOC_ZONE_cellVolt,        /* ≥™: 20~40% */
+    SOC_ZONE_NVR,             /* ÌèâÌÉÑÎåÄ ÌëúÏãú 31.2~93.75% (Ìé∏Ï∞®<10mV ‚Üí NVR) */
+    SOC_ZONE_cellVolt,        /* Ïñë ÎÅù ÌëúÏãú 0~31.2% & 93.75~100% (Ìé∏Ï∞®‚â•10mV ‚Üí ÏÖÄÏ†ÑÏïï) */
 
 } SocInitZone;
 struct SystemState_BIT
@@ -251,12 +251,11 @@ struct SystemState_BIT
     unsigned int     PwrHoldState           :1; // 24
     unsigned int     killSW                 :1; // 25
     unsigned int     BSACHAEnable           :1; // 26
-    unsigned int     Status27               :1; // 27
+    unsigned int     SysSocZone             :1; // 27
     unsigned int     AdminMode              :1; // 28
     unsigned int     AdminBalan             :1; // 29
     unsigned int     AdminNvrRD             :1; // 30
     unsigned int     AdminNvrInit           :1; // 31
-
 };
 union SystemState_REG
 {

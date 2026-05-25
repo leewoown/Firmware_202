@@ -778,6 +778,7 @@ const OCVPoint EVE_LF230_OCV_TABLE[OCV_TABLE_SIZE] =
 
 void CalEVE240AhRegsInit(SocReg *P)
 {
+    P->state=SOC_STATE_INIT;
     P->SysSOCdtF=0.0;
     P->SysSoCCTF=0.0;
     P->SysPackAhNewF=0.0;
@@ -818,7 +819,7 @@ void CalEVE240AhRegsInit(SocReg *P)
     P->SOCX3OutFBZore=0.0;
     P->SOCX2OutFBZore=0.0;
     P->SOCX1OutFBZore=0.0;
-    P->BZoreCalCout=0.0;
+    P->BZoreCalCout=0u;
 
 
     P->SOCX4InFCZore=0.0;
@@ -859,7 +860,7 @@ void CalEVE240AhRegsInit(SocReg *P)
     P->CTCount=0;
     P->SysTime=0;
     P->SysSoCCTAbsF=0;
-    P->state=SOC_STATE_IDLE;
+
 
 }
 // TODO: Implement Hermite interpolation for SOC calculation
@@ -951,7 +952,7 @@ void CalEVE240AhSocHandle(SocReg *P)
     /* 50ms 주기 게이팅 : 50회 미만이면 대기 상태로 종료 */
     if(P->SysTime < (Uint16)C_SocSamPleCount)
     {
-        P->state = SOC_STATE_CalWaitMode;
+        P->state = SOC_STATE_RUN;
         return;
     }
     P->SysTime = 0u;
@@ -991,7 +992,7 @@ void CalEVE240AhSocHandle(SocReg *P)
             P->SysPackAhOldF    = 0.0F;
             P->SysPackSOCBufF1  = 0.0F;
             P->SysPackSOCBufF2  = 0.0F;
-            P->state = SOC_STATE_InitRegs;
+            P->state = SOC_STATE_INIT;
         }
         prevCalMeth_u16 = curCalMeth_u16;
     }
@@ -1003,7 +1004,7 @@ void CalEVE240AhSocHandle(SocReg *P)
 
         /* OCV 룩업 테이블로 초기 SOC 산출 */
         CalEVE240AhSocInit(P);
-        P->state = SOC_STATE_InitSos;
+        P->state = SOC_STATE_SOSINIT;
         /* 산출된 OCV SOC를 팩 SOC에 반영 */
         P->SysPackSOCF = P->SysSocInitF;
     }
@@ -1031,7 +1032,7 @@ void CalEVE240AhSocHandle(SocReg *P)
         P->SysPackSOCBufF2 = (P->SysPackSOCBufF1 * 100.0F);     /* % 환산 */
         /* 최종 SOC = 초기 SOC(OCV 기준점) + 적산 변화량 */
         P->SysPackSOCF     = (P->SysSocInitF + P->SysPackSOCBufF2);
-        P->state = SOC_STATE_CalAhSos;
+        P->state = SOC_STATE_RUN;
     }
 
     /* SOC 0~100% 클램프 */

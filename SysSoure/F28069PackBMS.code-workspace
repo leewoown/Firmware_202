@@ -1,0 +1,26 @@
+{
+	"folders": [
+		{
+			"path": ".."
+		},
+		{
+			"path": "F:/2026_Project/02 긴트농기계"
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"*.c": "c",
+			"*.h": "c",
+			"*.asm": "asm",
+			"*.cmd": "plaintext",
+			"*.lib": "plaintext",
+			"*.gel": "javascript",
+			"*.ccxml": "xml",
+			"*.ccsproject": "xml",
+			"*.cproject": "xml",
+			"*.project": "xml"
+		},
+		"C_Cpp.autoAddFileAssociations": true,
+		"terminal.integrated.defaultProfile.windows": "Command Prompt"
+	}
+}

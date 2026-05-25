@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(git -C \"d:\\\\202 15S2P_PackBMSR02\\\\F28069PackBMS\" status --short)",
+      "PowerShell(git -C \"d:\\\\202 15S2P_PackBMSR02\\\\F28069PackBMS\" diff --stat)"
+    ]
+  }
+}

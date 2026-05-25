@@ -268,14 +268,10 @@ extern const OCVPoint EVE_LF230_OCV_TABLE[OCV_TABLE_SIZE];
 
 typedef enum
 {
-  SOC_STATE_IDLE,
-  SOC_STATE_InitRegs,
-  SOC_STATE_InitSos,
-  SOC_STATE_CalAhSos,
-  SOC_STATE_CalWaitMode,
-  SOC_STATE_NvrSlave,
-  SOC_STATE_NvrRead,
-
+  SOC_STATE_INIT,      /* 0: boot register init */
+  SOC_STATE_ZONE,      /* 1: deciding zone (OCV/NVR) */
+  SOC_STATE_SOSINIT,   /* 2: setting first SOC (OCV calc or NVR read) */
+  SOC_STATE_RUN,       /* 3: normal run (integrate / wait) */
 } SoCState;
 struct SoCSate_BIT
 {       // bits   description
