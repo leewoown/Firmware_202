@@ -30,6 +30,11 @@ extern void PWRHoldHandle(SystemReg *P);
 #define C 1013904223
 #define M 4294967296 // 2^32
 
+//TODO : [튜닝] 시험 결과 따라 CHARGE_END_SOC / CHARGE_END_CURRENT 값 조정
+/* Charge stop thresholds : tune these by test result */
+#define CHARGE_END_SOC      100.0F   /* stop when SOC reaches this (%) */
+#define CHARGE_END_CURRENT  9.6F     /* and current falls to this (A) = 0.04C of 240Ah */
+
 
 void TempTemps(SystemReg *s)
 {
@@ -1967,20 +1972,32 @@ void PWRRlyHoldHandle(SystemReg *p)
     }
 
     /*--------------------------------------------------------------
-     * 1. Charger 우선 제어
-     * 조건 : Charger EN = 1 && CHA 통신 정상
+     * 0. 시스템 오류 : VCU와 충전기가 동시에 연결되면 충전 금지
+     *    (charger 블록 진입 전에 BSACHAEnable을 0으로 확정)
      *--------------------------------------------------------------*/
-    if((p->SysStateReg.bit.ChargerWakeUpIn == 1u) &&(p->SysStateReg.bit.CHAComStatus == 1u))
+    //TODO : [검증] 시스템오류(VCU=1&CHA=1) 시 BSACHAEnable=0 충전차단 동작 확인
+    if((p->SysStateReg.bit.VCUComStatus == 1u) && (p->SysStateReg.bit.CHAComStatus == 1u))
+    {
+        p->SysStateReg.bit.BSACHAEnable = 0u;
+    }
+
+    /*--------------------------------------------------------------
+     * 1. Charger 우선 제어
+     * 조건 : Charger EN = 1 && CHA 통신 정상 && VCU 미연결
+     *--------------------------------------------------------------*/
+    if((p->SysStateReg.bit.ChargerWakeUpIn == 1u) && (p->SysStateReg.bit.CHAComStatus == 1u)
+       && (p->SysStateReg.bit.VCUComStatus == 0u))
     {
         /* 충전기 연결 중에는 충전 경로 확보를 위해 릴레이 ON 유지 */
         p->SysStateReg.bit.WakeUpOut    = 1u;
         p->SysStateReg.bit.PwrHoldState = 1u;
-        /* 충전 종료 조건 */
-        if((p->SysPackParallelVoltageF >= p->TargetPackVoltF+0.2F) || (p->SysSOCF >= 100.0F))
+        //TODO : [검증] SOC 100% + 전류 9.6A(또는 충전기 2A) 종단으로 충전 마무리 확인
+        /* 충전 종료 강제 조건 : SOC && 충전전류 임계 (매크로로 튜닝) */
+        if(p->SysSOCF >= CHARGE_END_SOC)
         {
             
-            /* 전류 절대값 2A->15A 이하일 때 Hold 해제 판단 */
-            if(p->SysPackCurrentAsbF <= 13.0F)
+            /* 전류가 종료 임계 이하로 떨어지면 Hold 해제 */
+            if(p->SysPackCurrentAsbF <= CHARGE_END_CURRENT)
             {
                 p->SysStateReg.bit.BSACHAEnable = 0u;
                 if(p->SysCellDivVoltageF <= 0.05F)

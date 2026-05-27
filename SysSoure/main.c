@@ -463,7 +463,7 @@ void main(void)
         }
         if(SysRegs.CellVoltsampling>=CellVoltSampleTime)
         {
-            // TODO: Balance 진입 조건 (원문 표현 확인 필요)
+            // TODO: Balance 진입 조건
             if((SysRegs.SysPackCurrentAsbF <= 2.0f) && (SysRegs.SysCellMinVoltageF > 2.8f))
             {
                 if(SysRegs.BalanceModeCount < 101u)
@@ -535,7 +535,7 @@ void main(void)
                         SysRegs.BalanceRefVoltageF = SysRegs.SysCellMinVoltageF;
                     }
                 }
-                // TODO: Balance 핸들러 함수 호출 (원문 표현 확인 필요)
+                // TODO: Balance 핸들러 함수 호출
                 Slave0Regs.ID=BMS_ID_0;
                 Slave0Regs.SlaveCh=C_Slave_ACh;
                 Slave0Regs.SysCellMinVoltage = SysRegs.BalanceRefVoltageF;
@@ -879,14 +879,14 @@ void main(void)
        memcpy(&CANARegs.SysCelltemperature[22],   &Slave3Regs.CellTemperature[0],sizeof(int16)*8);
 
       // NVRAM_StateTest();
-       //TODO : NVRAM에 주기적으로 쓰는 루틴 (원문 표현 확인 필요)
+       //TODO : NVRAM에 주기적으로 쓰는 루틴
        if((g_SysTimeTick>100)&&(SysRegs.SysStateReg.bit.INITOK==1))
        {
            NVRAllRegs.SysTimeTick++;
            switch(NVRAllRegs.SEQ)
            {
                case NVRAM_AZoneSave :
-                    // TODO: NVRAM에 쓰는 루틴 (원문 표현 확인 필요)
+                    // TODO: NVRAM에 쓰는 루틴
                      NVRAllRegs.DebugCount++;
                      NVRZoneAWRRegs.MetaVersion=Product_Version;
                      NVRZoneAWRRegs.SysTimeTick = NVRAllRegs.SysTimeTick;
@@ -897,7 +897,7 @@ void main(void)
                      EV240AhSocRegs.state =SOC_STATE_SOSINIT;
                break;
                case NVRAM_BZoneSave :
-                    //TODO: NVRAM에서 읽는 루틴 (원문 표현 확인 필요)
+                    //TODO: NVRAM에서 읽는 루틴
                     NVRAM_AZoneReadHandler(&NVRZoneARDRegs);
                     //TODO: NVRAM Read 디버깅
                     if(NVRAllRegs.DebugCount>200)
@@ -939,10 +939,10 @@ void main(void)
 interrupt void cpu_timer0_isr(void)
 {
    //LEDSysState_T;
-   //TODO : 1msec마다 실행되는 인터럽트 루틴 (원문 표현 확인 필요)
+   //TODO : 1msec마다 실행되는 인터럽트 루틴
    SysRegs.MainIsr1++;
    g_SysTimeTick++;
-   //TODO : 타이머 카운트 증가 루틴 (원문 표현 확인 필요)
+   //TODO : 타이머 카운트 증가 루틴
    SysRegs.SysRegTimer5msecCount++;
    SysRegs.SysRegTimer10msecCount++;
    SysRegs.SysRegTimer50msecCount++;
@@ -973,7 +973,7 @@ interrupt void cpu_timer0_isr(void)
    * current sensing detection
   */
   //  SysRegs.SysStateReg.bit.VCUWakeUpIn =CANARegs.PMSCMDRegs.bit.RlyOFF;// 1=off, 0=On
-    //TODO: 전류 센싱 루틴 (원문 표현 확인 필요)
+    //TODO: 전류 센싱 루틴
     SysCalCurrentHandle(&SysRegs);
     //TODO: 경고, 장애, 차단 
     if(SysRegs.SysStateReg.bit.INITOK==1)
@@ -1010,7 +1010,7 @@ interrupt void cpu_timer0_isr(void)
       CANARegs.ProtectState=3;
       SysRegs.SysStateReg.bit.SysPrtct=1;
    }
-   //TODO: SoC 계산 루틴 (원문 표현 확인 필요)
+   //TODO: SoC 계산 루틴
    if(SysRegs.SysStateReg.bit.INITOK==1)
    {
        EV240AhSocRegs.CellAgvVoltageF         = SysRegs.SysCellAgvVoltageF;
@@ -1045,7 +1045,7 @@ interrupt void cpu_timer0_isr(void)
        SysRegs.SysStateReg.bit.SysSocMode = EV240AhSocRegs.SoCStateRegs.bit.CalMeth;
       // SysRegs.SysStateReg.bit.SysSocZone =1;
    }
-   // TODO : VCU에서 CAN으로 데이터 수신 카운트 및 통신 상태 플래그 설정 루틴 (원문 표현 확인 필요)
+   // TODO : VCU에서 CAN으로 데이터 수신 카운트 및 통신 상태 플래그 설정 루틴
    CANARegs.VCURxCout++;
    CANARegs.CharRxCout++;
    if(CANARegs.VCURxCout>=3000)
@@ -1057,7 +1057,7 @@ interrupt void cpu_timer0_isr(void)
    {
        SysRegs.SysStateReg.bit.VCUComStatus=1;
    }
-   //TODO : 충전기에서 CAN으로 데이터 수신 카운트 및 통신 상태 플래그 설정 루틴 (원문 표현 확인 필요)
+   //TODO : 충전기에서 CAN으로 데이터 수신 카운트 및 통신 상태 플래그 설정 루틴
    if(CANARegs.CharRxCout>=4000)
    {
        SysRegs.SysStateReg.bit.CHAComStatus=0;
@@ -1095,7 +1095,7 @@ interrupt void cpu_timer0_isr(void)
                    memcpy(&SysRegs.SysCellVoltageF[7],        &Slave1Regs.CellVoltageF[0],sizeof(float32)*8);
                    memcpy(&SysRegs.SysCellVoltageF[15],       &Slave2Regs.CellVoltageF[0],sizeof(float32)*7);
                    memcpy(&SysRegs.SysCellVoltageF[22],       &Slave3Regs.CellVoltageF[0],sizeof(float32)*8);
-                  //TODO: 셀 전압 최소, 최대, 평균, 편차, 팩 전압 계산 루틴 (원문 표현 확인 필요)
+                  //TODO: 셀 전압 최소, 최대, 평균, 편차, 팩 전압 계산 루틴
                    SysCalVoltageHandle(&SysRegs);
                    SysRegs.SysStateReg.bit.CellVoltOk=0;
        break;
@@ -1105,7 +1105,7 @@ interrupt void cpu_timer0_isr(void)
                    memcpy(&SysRegs.SysCelltemperatureF[7],     &Slave1Regs.CellTemperatureF[0],sizeof(float32)*8);
                    memcpy(&SysRegs.SysCelltemperatureF[15],    &Slave2Regs.CellTemperatureF[0],sizeof(float32)*7);
                    memcpy(&SysRegs.SysCelltemperatureF[22],    &Slave3Regs.CellTemperatureF[0],sizeof(float32)*8);
-                   // TODO: 셀 온도 최소, 최대, 평균 계산 루틴 (원문 표현 확인 필요)
+                   // TODO: 셀 온도 최소, 최대, 평균 계산 루틴
                    SysCalTemperatureHandle(&SysRegs);
                    SysRegs.SysStateReg.bit.CellTempsOk=0;
        break;
@@ -1218,7 +1218,7 @@ interrupt void cpu_timer0_isr(void)
                }
        break;
        case 12:
-                //TODO: 시스템 상태, 경고, 장애, 차단 플래그 CAN 전송 루틴 (원문 표현 확인 필요)
+                //TODO: 시스템 상태, 경고, 장애, 차단 플래그 CAN 전송 루틴
                 CANARegs.SysState                          = ComBine(CANARegs.ProtectState,CANARegs.DiviceState);
                 SysRegs.SysStateReg.bit.SysSeqState        = SysRegs.SysMachine;
                 SysRegs.SysStateReg.bit.RlySeqState        = PrtectRelayRegs.RlyMachine;
@@ -1244,7 +1244,7 @@ interrupt void cpu_timer0_isr(void)
                 }
        break;
        case 14:
-                //TODO: 시스템 경고, 장애, 차단 플래그 CAN 전송 루틴 (원문 표현 확인 필요)
+                //TODO: 시스템 경고, 장애, 차단 플래그 CAN 전송 루틴
                if(SysRegs.CanComEable==1)
                {
 
@@ -1252,7 +1252,7 @@ interrupt void cpu_timer0_isr(void)
                }
        break;
        case 17:
-               // TODO: 충전 및 방전 전력 최대값과 연속값 CAN 통신 전송 (원문 표현 확인 필요)
+               // TODO: 충전 및 방전 전력 최대값과 연속값 CAN 통신 전송
 
                SysRegs.SysCHARGPWRPeakF        = 12.0;
                SysRegs.SysDISCHAPWRPeakF       = 36.0;
@@ -1268,7 +1268,7 @@ interrupt void cpu_timer0_isr(void)
                }
        break;
        case 20:
-               //TODO: 셀 전압 최대값, 최소값, 평균값, 편차값 CAN 통신 전송 (원문 표현 확인 필요)
+               //TODO: 셀 전압 최대값, 최소값, 평균값, 편차값 CAN 통신 전송
                CANARegs.CellVoltageMax          = (Uint16)(SysRegs.SysCellMaxVoltageF*1000);
                CANARegs.CellVoltageMin          = (Uint16)(SysRegs.SysCellMinVoltageF*1000);
                CANARegs.CellVoltageAgv          = (Uint16)(SysRegs.SysCellAgvVoltageF*1000);
@@ -1279,7 +1279,7 @@ interrupt void cpu_timer0_isr(void)
                }
        break;
        case 23:
-               //TODO: 셀 온도 최대값, 최소값, 평균값, 편차값 CAN 통신 전송 (원문 표현 확인 필요)
+               //TODO: 셀 온도 최대값, 최소값, 평균값, 편차값 CAN 통신 전송
                CANARegs.CellTemperaturelMAX    = (int16)(SysRegs.SysCellMaxTemperatureF*10);
                CANARegs.CellTemperaturelMIN    = (int16)(SysRegs.SysCellMinTemperatureF*10);
                CANARegs.CellTemperatureAVG     = (int16)(SysRegs.SysCellAgvTemperatureF*10);
@@ -1290,7 +1290,7 @@ interrupt void cpu_timer0_isr(void)
                }
        break;
        case 26:
-               //TODO: 셀 전압 최대값, 최소값, 평균값, 편차값 위치 값 CAN 통신 전송 (원문 표현 확인 필요) 
+               //TODO: 셀 전압 최대값, 최소값, 평균값, 편차값 위치 값 CAN 통신 전송 
                CANARegs.CellVoltageMaxNum      = SysRegs.SysVoltageMaxNum;
                CANARegs.CellVoltageMinNum      = SysRegs.SysVoltageMinNum;
                CANARegs.CellTemperatureMaxNum  = SysRegs.SysTemperatureMaxNum;
@@ -1301,7 +1301,7 @@ interrupt void cpu_timer0_isr(void)
                }
        break;
        case 30:
-                // TODO: 주요 연산 검증 위한 Ah연산값  SysTimeTick,NVRZoneARDRegs.LastSOC CAN 통신 전송 루틴 (원문 표현 확인 필요)
+                // TODO: 주요 연산 검증 위한 Ah연산값  SysTimeTick,NVRZoneARDRegs.LastSOC CAN 통신 전송 루틴
                 CANARegs.SysPackAh = (int16)(EV240AhSocRegs.SysPackAhF*10.0);
                 CANARegs.SysTimeTickDataL   =  (Uint16)(NVRZoneARDRegs.SysTimeTick & 0xFFFFu);
                 CANARegs.SysTimeTickDataH   =  (Uint16)((NVRZoneARDRegs.SysTimeTick  >> 16) & 0xFFFFu);
@@ -1326,7 +1326,7 @@ interrupt void cpu_timer0_isr(void)
                }
        break;
        case 40:
-               //TODO: CANARegs.CellNumCount 따른 셀 전압과 온도, 내부저항 값
+               //TODO: CellNumCount 따른 셀 전압과 온도, 내부저항 값
                if(SysRegs.CanComEable==1)
                {
                    CANATX(0x61A,8,CANARegs.CellNumCount,
@@ -1465,8 +1465,39 @@ interrupt void cpu_timer0_isr(void)
 
        break;
        case 10:
-               //todo : charge parameter send to VCU
-               CANARegs.CharCONSTVolt=504;
+               //TODO : 충전 설정값 충전기 CAN 전송
+               //TODO : [검증] 동적CV 게이트(CHA=1&VCU=0) 동작 / CC구간 팩전류 >=26A 유지(미달 시 24로 하향) / SOC90% 통과 시 0.2V ramp로 CV 진입
+               /* Run charge target only when charger connected (CHA=1) and VCU not (VCU=0).
+                  VCU=1 and CHA=1 together is a system fault. */
+               if((SysRegs.SysStateReg.bit.CHAComStatus == 1u) && (SysRegs.SysStateReg.bit.VCUComStatus == 0u))
+               {
+                   /* CC below 90% : keep target 1V above pack so the charger stays in CC.
+                      Above 90% : step target down 0.2V each cycle toward pack so it enters CV.
+                      Once current falls below 26A the charger is in CV, so hold the target. */
+                   if(SysRegs.SysSOCF < 90.0F)
+                   {
+                       CANARegs.CharCONSTVolt = (Uint16)((SysRegs.SysPackParallelVoltageF + 1.0F) * 10.0F);
+                   }
+                   else if(SysRegs.SysPackCurrentAsbF >= 26.0F)
+                   {
+                       if((float32)CANARegs.CharCONSTVolt > (SysRegs.SysPackParallelVoltageF * 10.0F))
+                       {
+                           CANARegs.CharCONSTVolt -= 2u;                          /* 0.2V step down */
+                       }
+                   }
+                   /* else (current < 26A) : in CV, keep the latched target */
+
+                   /* Cell guard : if the highest cell nears its limit, force CV right away */
+                   if(SysRegs.SysCellMaxVoltageF >= 3.55F)
+                   {
+                       CANARegs.CharCONSTVolt = (Uint16)(SysRegs.SysPackParallelVoltageF * 10.0F);
+                   }
+               }
+               else
+               {
+                   /* not charging, or system fault : safe default target */
+                   CANARegs.CharCONSTVolt = 504;
+               }
                CANARegs.CahrConstantCurrt =300;
                CANARegs.CharCONSTSOC=1000;
                CANARegs.SysPackPT  = (unsigned int)(SysRegs.SysPackParallelVoltageF*10);//545;//(unsigned int)(SysRegs.SysPackParallelVoltageF*10);
