@@ -241,7 +241,7 @@ void main(void)
         SysRegs.Maincount++;
         switch(SysRegs.SysMachine)
         {
-            // TODO: SysRegs.SysMachine의 INIT 루틴
+            // TODO: [완료] SysRegs.SysMachine의 INIT 루틴
             case INIT: //0
                  CANARegs.DiviceState=0;
                  SysTimerINIT(&SysRegs);
@@ -279,14 +279,14 @@ void main(void)
                 // SysRegs.SysStateReg.bit.BSACHAEnable=1;
                  if(SysRegs.SysStateReg.bit.AdminMode==1)  { SysRegs.SysMachine=MANUALMode;}
             break;
-            // TODO: SysRegs.SysMachine의 STANDBY 루틴
+            // TODO: [완료] SysRegs.SysMachine의 STANDBY 루틴
             case STANDBY://1
                      CANARegs.DiviceState=1;
                      SysRegs.CanComEable=1;
                      SysRegs.SysStateReg.bit.CANCOMEnable=1;
                      if(SysRegs.SysStateReg.bit.INITOK==0)
                      {  
-                         //TODO: 셀 전압 읽고, 셀 전압 상태 연산 
+                         //TODO: [완료] 셀 전압 읽고, 셀 전압 상태 연산
                          for(SysRegs.InitValuleCnt=0;SysRegs.InitValuleCnt<3;SysRegs.InitValuleCnt++)
                          {
                              Slave0Regs.ID=BMS_ID_0;
@@ -330,7 +330,7 @@ void main(void)
                          memcpy(&SysRegs.SysCellVoltageF[15],       &Slave2Regs.CellVoltageF[0],sizeof(float32)*7);
                          memcpy(&SysRegs.SysCellVoltageF[22],       &Slave3Regs.CellVoltageF[0],sizeof(float32)*8);
                         SysCalVoltageHandle(&SysRegs);
-                        //TODO: 셀 온도 읽고, 셀 온도 상태 연산 
+                        //TODO: [완료] 셀 온도 읽고, 셀 온도 상태 연산
                         for(SysRegs.InitValuleCnt=0;SysRegs.InitValuleCnt<48;SysRegs.InitValuleCnt++)
                         {
                             Slave0Regs.ID=BMS_ID_0;
@@ -390,7 +390,7 @@ void main(void)
                      if(SysRegs.SysStateReg.bit.AdminMode==1)  { SysRegs.SysMachine=MANUALMode;}
             break;
             case READY://2
-                  // TODO: SysRegs.SysMachine의 READY 루틴
+                  // TODO: [완료] SysRegs.SysMachine의 READY 루틴
                    PrtectRelayRegs.State.bit.WakeUpEN= 1;
                    SysRegs.SysStateReg.bit.SysDisCharMode     =! CANARegs.ChargerResgsStauts.bit.Char_DOSTatue;
                    if(SysRegs.SysStateReg.bit.SysDisCharMode==1)
@@ -411,14 +411,14 @@ void main(void)
                    if(SysRegs.SysStateReg.bit.AdminMode==1)  { SysRegs.SysMachine=MANUALMode;}
             break;
             case RUNING:
-                    // TODO: SysRegs.SysMachine의 RUNING 루틴
+                    // TODO: [완료] SysRegs.SysMachine의 RUNING 루틴
                      SysRegs.SysStateReg.bit.SysDisCharMode     =! CANARegs.ChargerResgsStauts.bit.Char_DOSTatue;
                      SysRegs.SysStateReg.bit.killSW             =  SysRegs.SysDigitalInputReg.bit.killSW;
                      SysRegs.SysStateReg.bit.ChargerWakeUpIn    =  CANARegs.ChargerResgsStauts.bit.Char_DOSTatue;
                      SysRegs.SysStateReg.bit.VCUWakeUpIn        =  CANARegs.PMSCMDRegs.bit.RlyOFF;
                      SysRegs.SysStateReg.bit.VCUComStatus       =  SysRegs.SysStateReg.bit.VCUComStatus;
                      SysRegs.SysStateReg.bit.CHAComStatus       =  SysRegs.SysStateReg.bit.CHAComStatus;
-                     // TODO: PWRRlyHoldHandle 루틴
+                     // TODO: [튜닝] PWRRlyHoldHandle 루틴
                      PWRRlyHoldHandle(&SysRegs);
                      PrtectRelayRegs.State.bit.WakeUpEN         = SysRegs.SysStateReg.bit.WakeUpOut;
                      SysRegs.SysDigitalOutPutReg.bit.PWRHOLD    = SysRegs.SysStateReg.bit.PwrHoldState;
@@ -439,11 +439,11 @@ void main(void)
 
             break;
             case PROTECTER://5
-            // TODO: SysRegs.SysMachine의 PROTECTER 루틴
+            // TODO: [완료] SysRegs.SysMachine의 PROTECTER 루틴
                     if(SysRegs.SysStateReg.bit.AdminMode==1) { SysRegs.SysMachine=MANUALMode;}
 
             case MANUALMode://6
-            // TODO: SysRegs.SysMachine의 MANUALMode 루틴
+            // TODO: [완료] SysRegs.SysMachine의 MANUALMode 루틴
            //     SysRegs.SysDigitalOutPutReg.bit.NRlyOUT    = CANARegs.HMICMDRegs.bit.N_Rly;
            //     SysRegs.SysDigitalOutPutReg.bit.PRlyOUT    = CANARegs.HMICMDRegs.bit.P_Rly;
            //     SysRegs.SysDigitalOutPutReg.bit.ProRlyOUT  = CANARegs.HMICMDRegs.bit.Pre_Rly;
@@ -463,7 +463,7 @@ void main(void)
         }
         if(SysRegs.CellVoltsampling>=CellVoltSampleTime)
         {
-            // TODO: Balance 진입 조건
+            // TODO: [완료] Balance 진입 조건
             if((SysRegs.SysPackCurrentAsbF <= 2.0f) && (SysRegs.SysCellMinVoltageF > 2.8f))
             {
                 if(SysRegs.BalanceModeCount < 101u)
@@ -486,7 +486,7 @@ void main(void)
             }
            // SysRegs.SysStateReg.bit.SysBalaMode=0;
            // SysRegs.SysStateReg.bit.SysBalanceEn=0;
-           // TODO: Balance 조건 
+           // TODO: [완료] Balance 조건
             if(SysRegs.SysStateReg.bit.SysBalaMode==1)
             {
                 SysRegs.BalanceTimeCount++;
@@ -535,7 +535,7 @@ void main(void)
                         SysRegs.BalanceRefVoltageF = SysRegs.SysCellMinVoltageF;
                     }
                 }
-                // TODO: Balance 핸들러 함수 호출
+                // TODO: [완료] Balance 핸들러 함수 호출
                 Slave0Regs.ID=BMS_ID_0;
                 Slave0Regs.SlaveCh=C_Slave_ACh;
                 Slave0Regs.SysCellMinVoltage = SysRegs.BalanceRefVoltageF;
@@ -584,7 +584,7 @@ void main(void)
                 SlaveBmsBalance(&Slave3Regs);
                 SysRegs.SlaveVoltErrCount[3]=Slave3Regs.ErrorCount;
             }
-            // TODO: Balance 강제로 disable 후에 셀 전압 읽기
+            // TODO: [완료] Balance 강제로 disable 후에 셀 전압 읽기
             if(SysRegs.SysStateReg.bit.SysBalanceEn==0)
             {
                 if(SysRegs.SysStateReg.bit.CellVoltOk==0)
@@ -607,10 +607,9 @@ void main(void)
                         {
                             SysRegs.SlaveISOSPIErrReg.bit.SlaveBMS00 =0;
                         }
-
                         Slave0Regs.StateMachine = STATE_BATREAD;
                         SlaveVoltagHandler(&Slave0Regs);
-
+                        
                         SysRegs.SlaveVoltErrCount[0]=Slave0Regs.ErrorCount;
                         if(SysRegs.SlaveVoltErrCount[0]>C_ISOSPIPrtectCont)
                         {
@@ -721,7 +720,7 @@ void main(void)
           SysRegs.SysStateReg.bit.CellVoltOk=1;
           SysRegs.CellVoltsampling=0;
        }
-        //TODO : 셀 온도 읽기 루틴
+        //TODO : [완료] 셀 온도 읽기 루틴
        if(SysRegs.CellTempssampling>CellTempSampleTime)
        {
            if(SysRegs.SysStateReg.bit.CellTempsOk==0)
@@ -860,33 +859,33 @@ void main(void)
 
            }
        }
-       //TODO : 셀 전압과 온도 읽은 에러값에 따른 에러 플래그 설정
+       //TODO : [완료] 셀 전압과 온도 읽은 에러값에 따른 에러 플래그 설정
        if(Slave0Regs.ErrorCount>200) {SysRegs.SlaveISOSPIErrReg.bit.SlaveBMS00=1;}
        if(Slave1Regs.ErrorCount>200) {SysRegs.SlaveISOSPIErrReg.bit.SlaveBMS01=1;}
        if(Slave2Regs.ErrorCount>200) {SysRegs.SlaveISOSPIErrReg.bit.SlaveBMS02=1;}
        if(Slave3Regs.ErrorCount>200) {SysRegs.SlaveISOSPIErrReg.bit.SlaveBMS03=1;}
 
-       //TODO : 셀 전압과 온도 읽은 값을 SysRegs에 복사
+       //TODO : [완료] 셀 전압과 온도 읽은 값을 SysRegs에 복사
        memcpy(&CANARegs.SysCellVoltage[0],        &Slave0Regs.CellVoltage[0],sizeof(Uint16)*7);
        memcpy(&CANARegs.SysCellVoltage[7],        &Slave1Regs.CellVoltage[0],sizeof(Uint16)*8);
        memcpy(&CANARegs.SysCellVoltage[15],       &Slave2Regs.CellVoltage[0],sizeof(Uint16)*7);
        memcpy(&CANARegs.SysCellVoltage[22],       &Slave3Regs.CellVoltage[0],sizeof(Uint16)*8);
 
-       //TODO : 셀 온도 읽은 값을 SysRegs에 복사        
+       //TODO : [완료] 셀 온도 읽은 값을 SysRegs에 복사
        memcpy(&CANARegs.SysCelltemperature[0],    &Slave1Regs.CellTemperature[0],sizeof(int16)*7);
        memcpy(&CANARegs.SysCelltemperature[7],    &Slave1Regs.CellTemperature[0],sizeof(int16)*8);
        memcpy(&CANARegs.SysCelltemperature[15],   &Slave2Regs.CellTemperature[0],sizeof(int16)*7);
        memcpy(&CANARegs.SysCelltemperature[22],   &Slave3Regs.CellTemperature[0],sizeof(int16)*8);
 
       // NVRAM_StateTest();
-       //TODO : NVRAM에 주기적으로 쓰는 루틴
+       //TODO : [완료] NVRAM에 주기적으로 쓰는 루틴
        if((g_SysTimeTick>100)&&(SysRegs.SysStateReg.bit.INITOK==1))
        {
            NVRAllRegs.SysTimeTick++;
            switch(NVRAllRegs.SEQ)
            {
                case NVRAM_AZoneSave :
-                    // TODO: NVRAM에 쓰는 루틴
+                    // TODO: [완료] NVRAM에 쓰는 루틴
                      NVRAllRegs.DebugCount++;
                      NVRZoneAWRRegs.MetaVersion=Product_Version;
                      NVRZoneAWRRegs.SysTimeTick = NVRAllRegs.SysTimeTick;
@@ -897,9 +896,9 @@ void main(void)
                      EV240AhSocRegs.state =SOC_STATE_SOSINIT;
                break;
                case NVRAM_BZoneSave :
-                    //TODO: NVRAM에서 읽는 루틴
+                    //TODO: [완료] NVRAM에서 읽는 루틴
                     NVRAM_AZoneReadHandler(&NVRZoneARDRegs);
-                    //TODO: NVRAM Read 디버깅
+                    //TODO: [완료] NVRAM Read 디버깅
                     if(NVRAllRegs.DebugCount>200)
                     {
                         NVRAllRegs.DebugCount=0;
@@ -939,10 +938,10 @@ void main(void)
 interrupt void cpu_timer0_isr(void)
 {
    //LEDSysState_T;
-   //TODO : 1msec마다 실행되는 인터럽트 루틴
+   //TODO : [완료] 1msec마다 실행되는 인터럽트 루틴
    SysRegs.MainIsr1++;
    g_SysTimeTick++;
-   //TODO : 타이머 카운트 증가 루틴
+   //TODO : [완료] 타이머 카운트 증가 루틴
    SysRegs.SysRegTimer5msecCount++;
    SysRegs.SysRegTimer10msecCount++;
    SysRegs.SysRegTimer50msecCount++;
@@ -963,19 +962,17 @@ interrupt void cpu_timer0_isr(void)
     *
     */
   // SysRegs.SysStateReg.bit.PwrHoldRlyDOStatus = (SysRegs.SysCellDivVoltageF > 0.009f) ? 1u : 0u;
-   /*
-    * DigitalInput detection
-    * TODO: 디지털 입력 상태 읽기   
-    */
+
+   //TODO: [완료] 디지털 입력 상태 읽기
    SysDigitalInput(&SysRegs);
 
   /*
    * current sensing detection
   */
   //  SysRegs.SysStateReg.bit.VCUWakeUpIn =CANARegs.PMSCMDRegs.bit.RlyOFF;// 1=off, 0=On
-    //TODO: 전류 센싱 루틴
+    //TODO: [완료] 전류 센싱 루틴
     SysCalCurrentHandle(&SysRegs);
-    //TODO: 경고, 장애, 차단 
+    //TODO: [완료] 경고, 장애, 차단
     if(SysRegs.SysStateReg.bit.INITOK==1)
     {
         SysAlarmtCheck(&SysRegs);
@@ -1010,7 +1007,7 @@ interrupt void cpu_timer0_isr(void)
       CANARegs.ProtectState=3;
       SysRegs.SysStateReg.bit.SysPrtct=1;
    }
-   //TODO: SoC 계산 루틴
+   //TODO: [완료] SoC 계산 루틴
    if(SysRegs.SysStateReg.bit.INITOK==1)
    {
        EV240AhSocRegs.CellAgvVoltageF         = SysRegs.SysCellAgvVoltageF;
@@ -1045,7 +1042,7 @@ interrupt void cpu_timer0_isr(void)
        SysRegs.SysStateReg.bit.SysSocMode = EV240AhSocRegs.SoCStateRegs.bit.CalMeth;
       // SysRegs.SysStateReg.bit.SysSocZone =1;
    }
-   // TODO : VCU에서 CAN으로 데이터 수신 카운트 및 통신 상태 플래그 설정 루틴
+   // TODO : [완료] VCU에서 CAN으로 데이터 수신 카운트 및 통신 상태 플래그 설정 루틴
    CANARegs.VCURxCout++;
    CANARegs.CharRxCout++;
    if(CANARegs.VCURxCout>=3000)
@@ -1057,7 +1054,7 @@ interrupt void cpu_timer0_isr(void)
    {
        SysRegs.SysStateReg.bit.VCUComStatus=1;
    }
-   //TODO : 충전기에서 CAN으로 데이터 수신 카운트 및 통신 상태 플래그 설정 루틴
+   //TODO : [완료] 충전기에서 CAN으로 데이터 수신 카운트 및 통신 상태 플래그 설정 루틴
    if(CANARegs.CharRxCout>=4000)
    {
        SysRegs.SysStateReg.bit.CHAComStatus=0;
@@ -1090,22 +1087,22 @@ interrupt void cpu_timer0_isr(void)
    switch(SysRegs.SysRegTimer10msecCount)
    {
        case 1:
-                //TODO: 셀 전압 읽은 값을 SysRegs에 복사하여
+                //TODO: [완료] 셀 전압 읽은 값을 SysRegs에 복사하여
                    memcpy(&SysRegs.SysCellVoltageF[0],        &Slave0Regs.CellVoltageF[0],sizeof(float32)*7);
                    memcpy(&SysRegs.SysCellVoltageF[7],        &Slave1Regs.CellVoltageF[0],sizeof(float32)*8);
                    memcpy(&SysRegs.SysCellVoltageF[15],       &Slave2Regs.CellVoltageF[0],sizeof(float32)*7);
                    memcpy(&SysRegs.SysCellVoltageF[22],       &Slave3Regs.CellVoltageF[0],sizeof(float32)*8);
-                  //TODO: 셀 전압 최소, 최대, 평균, 편차, 팩 전압 계산 루틴
+                  //TODO: [완료] 셀 전압 최소, 최대, 평균, 편차, 팩 전압 계산 루틴
                    SysCalVoltageHandle(&SysRegs);
                    SysRegs.SysStateReg.bit.CellVoltOk=0;
        break;
        case 2:
-                   // TODO: 셀 온도 읽은 값을 SysRegs에 복사하여
+                   // TODO: [완료] 셀 온도 읽은 값을 SysRegs에 복사하여
                    memcpy(&SysRegs.SysCelltemperatureF[0],     &Slave0Regs.CellTemperatureF[0],sizeof(float32)*7);
                    memcpy(&SysRegs.SysCelltemperatureF[7],     &Slave1Regs.CellTemperatureF[0],sizeof(float32)*8);
                    memcpy(&SysRegs.SysCelltemperatureF[15],    &Slave2Regs.CellTemperatureF[0],sizeof(float32)*7);
                    memcpy(&SysRegs.SysCelltemperatureF[22],    &Slave3Regs.CellTemperatureF[0],sizeof(float32)*8);
-                   // TODO: 셀 온도 최소, 최대, 평균 계산 루틴
+                   // TODO: [완료] 셀 온도 최소, 최대, 평균 계산 루틴
                    SysCalTemperatureHandle(&SysRegs);
                    SysRegs.SysStateReg.bit.CellTempsOk=0;
        break;
@@ -1206,7 +1203,7 @@ interrupt void cpu_timer0_isr(void)
 
        break;
        case 10:
-               // TODO: SOC, SOH, 팩 전압, 전류 CAN 전송
+               // TODO: [완료] SOC, SOH, 팩 전압, 전류 CAN 전송
                SysRegs.SysSOHF=100.0;
                CANARegs.SysPackPT  = (unsigned int)(SysRegs.SysPackParallelVoltageF*10);
                CANARegs.SysPackCT  = (int)(SysRegs.SysPackCurrentF*10);
@@ -1218,7 +1215,7 @@ interrupt void cpu_timer0_isr(void)
                }
        break;
        case 12:
-                //TODO: 시스템 상태, 경고, 장애, 차단 플래그 CAN 전송 루틴
+                //TODO: [완료] 시스템 상태, 경고, 장애, 차단 플래그 CAN 전송 루틴
                 CANARegs.SysState                          = ComBine(CANARegs.ProtectState,CANARegs.DiviceState);
                 SysRegs.SysStateReg.bit.SysSeqState        = SysRegs.SysMachine;
                 SysRegs.SysStateReg.bit.RlySeqState        = PrtectRelayRegs.RlyMachine;
@@ -1244,7 +1241,7 @@ interrupt void cpu_timer0_isr(void)
                 }
        break;
        case 14:
-                //TODO: 시스템 경고, 장애, 차단 플래그 CAN 전송 루틴
+                //TODO: [완료] 시스템 경고, 장애, 차단 플래그 CAN 전송 루틴
                if(SysRegs.CanComEable==1)
                {
 
@@ -1252,7 +1249,7 @@ interrupt void cpu_timer0_isr(void)
                }
        break;
        case 17:
-               // TODO: 충전 및 방전 전력 최대값과 연속값 CAN 통신 전송
+               // TODO: [완료] 충전 및 방전 전력 최대값과 연속값 CAN 통신 전송
 
                SysRegs.SysCHARGPWRPeakF        = 12.0;
                SysRegs.SysDISCHAPWRPeakF       = 36.0;
@@ -1268,7 +1265,7 @@ interrupt void cpu_timer0_isr(void)
                }
        break;
        case 20:
-               //TODO: 셀 전압 최대값, 최소값, 평균값, 편차값 CAN 통신 전송
+               //TODO: [완료] 셀 전압 최대값, 최소값, 평균값, 편차값 CAN 통신 전송
                CANARegs.CellVoltageMax          = (Uint16)(SysRegs.SysCellMaxVoltageF*1000);
                CANARegs.CellVoltageMin          = (Uint16)(SysRegs.SysCellMinVoltageF*1000);
                CANARegs.CellVoltageAgv          = (Uint16)(SysRegs.SysCellAgvVoltageF*1000);
@@ -1279,7 +1276,7 @@ interrupt void cpu_timer0_isr(void)
                }
        break;
        case 23:
-               //TODO: 셀 온도 최대값, 최소값, 평균값, 편차값 CAN 통신 전송
+               //TODO: [완료] 셀 온도 최대값, 최소값, 평균값, 편차값 CAN 통신 전송
                CANARegs.CellTemperaturelMAX    = (int16)(SysRegs.SysCellMaxTemperatureF*10);
                CANARegs.CellTemperaturelMIN    = (int16)(SysRegs.SysCellMinTemperatureF*10);
                CANARegs.CellTemperatureAVG     = (int16)(SysRegs.SysCellAgvTemperatureF*10);
@@ -1290,7 +1287,7 @@ interrupt void cpu_timer0_isr(void)
                }
        break;
        case 26:
-               //TODO: 셀 전압 최대값, 최소값, 평균값, 편차값 위치 값 CAN 통신 전송 
+               //TODO: [완료] 셀 전압 최대값, 최소값, 평균값, 편차값 위치 값 CAN 통신 전송
                CANARegs.CellVoltageMaxNum      = SysRegs.SysVoltageMaxNum;
                CANARegs.CellVoltageMinNum      = SysRegs.SysVoltageMinNum;
                CANARegs.CellTemperatureMaxNum  = SysRegs.SysTemperatureMaxNum;
@@ -1301,7 +1298,7 @@ interrupt void cpu_timer0_isr(void)
                }
        break;
        case 30:
-                // TODO: 주요 연산 검증 위한 Ah연산값  SysTimeTick,NVRZoneARDRegs.LastSOC CAN 통신 전송 루틴
+                // TODO: [완료] 주요 연산 검증 위한 Ah연산값  SysTimeTick,NVRZoneARDRegs.LastSOC CAN 통신 전송 루틴
                 CANARegs.SysPackAh = (int16)(EV240AhSocRegs.SysPackAhF*10.0);
                 CANARegs.SysTimeTickDataL   =  (Uint16)(NVRZoneARDRegs.SysTimeTick & 0xFFFFu);
                 CANARegs.SysTimeTickDataH   =  (Uint16)((NVRZoneARDRegs.SysTimeTick  >> 16) & 0xFFFFu);
@@ -1326,7 +1323,7 @@ interrupt void cpu_timer0_isr(void)
                }
        break;
        case 40:
-               //TODO: CellNumCount 따른 셀 전압과 온도, 내부저항 값
+               //TODO: [완료] CellNumCount 따른 셀 전압과 온도, 내부저항 값
                if(SysRegs.CanComEable==1)
                {
                    CANATX(0x61A,8,CANARegs.CellNumCount,
@@ -1349,7 +1346,7 @@ interrupt void cpu_timer0_isr(void)
             //   CANATX(0x61C,8,CANARegs.MDVoltage[4],CANARegs.MDCellVoltAgv[4],CANARegs.MDCellTempsAgv[4],0x0000);
        break;
        case 55:
-               // TODO: 슬레이브 BMS 오류 카운트 CAN 통신 전송
+               // TODO: [완료] 슬레이브 BMS 오류 카운트 CAN 통신 전송
                CANARegs.SlaveBMSErrCout[0]=Slave0Regs.ErrorCount;
                CANARegs.SlaveBMSErrCout[1]=Slave1Regs.ErrorCount;
                CANARegs.SlaveBMSErrCout[2]=Slave2Regs.ErrorCount;
@@ -1465,39 +1462,37 @@ interrupt void cpu_timer0_isr(void)
 
        break;
        case 10:
-               //TODO : 충전 설정값 충전기 CAN 전송
-               //TODO : [검증] 동적CV 게이트(CHA=1&VCU=0) 동작 / CC구간 팩전류 >=26A 유지(미달 시 24로 하향) / SOC90% 통과 시 0.2V ramp로 CV 진입
+               //TODO : [완료] 충전 설정값 충전기 CAN 전송
+               //TODO : [완료] 동적CV 게이트(CHA=1&VCU=0) 동작 / SOC<85% 52.0V CC / 85~90% 52.0->50.4V 선형강하 / SOC>=90% 50.4V CV
                /* Run charge target only when charger connected (CHA=1) and VCU not (VCU=0).
                   VCU=1 and CHA=1 together is a system fault. */
                if((SysRegs.SysStateReg.bit.CHAComStatus == 1u) && (SysRegs.SysStateReg.bit.VCUComStatus == 0u))
                {
-                   /* CC below 90% : keep target 1V above pack so the charger stays in CC.
-                      Above 90% : step target down 0.2V each cycle toward pack so it enters CV.
-                      Once current falls below 26A the charger is in CV, so hold the target. */
-                   if(SysRegs.SysSOCF < 90.0F)
-                   {
-                       CANARegs.CharCONSTVolt = (Uint16)((SysRegs.SysPackParallelVoltageF + 1.0F) * 10.0F);
-                   }
-                   else if(SysRegs.SysPackCurrentAsbF >= 26.0F)
-                   {
-                       if((float32)CANARegs.CharCONSTVolt > (SysRegs.SysPackParallelVoltageF * 10.0F))
-                       {
-                           CANARegs.CharCONSTVolt -= 2u;                          /* 0.2V step down */
-                       }
-                   }
-                   /* else (current < 26A) : in CV, keep the latched target */
 
-                   /* Cell guard : if the highest cell nears its limit, force CV right away */
-                   if(SysRegs.SysCellMaxVoltageF >= 3.55F)
+                   if(SysRegs.SysSOCF < 85.0F)
                    {
-                       CANARegs.CharCONSTVolt = (Uint16)(SysRegs.SysPackParallelVoltageF * 10.0F);
+                       CANARegs.CharCONSTVolt = 520u;                            /* 52.0V */
                    }
+                   else if(SysRegs.SysSOCF < 93.0F)
+                   {
+                      
+                       /* 520 at 85%, 504 at 93% : slope = (520-504)/(93-85) = 2.0 per % */
+                       CANARegs.CharCONSTVolt = (Uint16)(520.0F - (SysRegs.SysSOCF - 85.0F) * 2.0F);
+                   }
+                   // TODO : 
+                   if(SysRegs.SysSOCF >= 93.0F)
+                   {
+                       CANARegs.CharCONSTVolt = 504u;                            /* 50.4V */
+                   }
+                   //TODO CANARegs.CharCONSTVolt 선형식 오류 방지 위함
+                   if(CANARegs.CharCONSTVolt>521u){CANARegs.CharCONSTVolt = 504u;}               
                }
                else
                {
                    /* not charging, or system fault : safe default target */
-                   CANARegs.CharCONSTVolt = 504;
+                   CANARegs.CharCONSTVolt = 520u;
                }
+               //TODO :[튜닝] 충전기 CC 전류값 25.0A, 30.0A 시에 충전기 자체적으로 중지됨
                CANARegs.CahrConstantCurrt =300;
                CANARegs.CharCONSTSOC=1000;
                CANARegs.SysPackPT  = (unsigned int)(SysRegs.SysPackParallelVoltageF*10);//545;//(unsigned int)(SysRegs.SysPackParallelVoltageF*10);
@@ -1509,11 +1504,11 @@ interrupt void cpu_timer0_isr(void)
 
        break;
        case 30:
-           //  CANARegs.ChargerStateRegs.bit.BSACHAEnable=CANARegs.ChargerResgsStauts.bit.Char_DOSTatue;
+              // CANARegs.ChargerStateRegs.bit.BSACHAEnable=CANARegs.ChargerResgsStauts.bit.Char_DOSTatue;
                CANARegs.ChargerStateRegs.bit.BatNRly=1;
                CANARegs.ChargerStateRegs.bit.BatPRly=1;
-               CANARegs.ChargerStateRegs.bit.BSACHAEnable =SysRegs.SysStateReg.bit.BSACHAEnable;
-
+              // CANARegs.ChargerStateRegs.bit.BSACHAEnable =1;//SysRegs.SysStateReg.bit.BSACHAEnable;
+               CANARegs.ChargerStateRegs.bit.BSACHAEnable =1;
                SysRegs.TargetPackVoltF  = (float32)(CANARegs.CharCONSTVolt/10.0f);
                SysRegs.TargetPackSocF   = (float32)(CANARegs.CharCONSTSOC/10.0f);
                CANATX(0x61f,8,CANARegs.ChargerStateRegs.all,0x0000,0x0000,0x0000);

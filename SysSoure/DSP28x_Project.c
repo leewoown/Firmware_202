@@ -127,6 +127,7 @@ void SysVarINIT(SystemReg *s)
     s->PMSysCMDResg.all=0;
     s->SysStateReg.Word.DataH=0X0000;
     s->SysStateReg.Word.DataL=0X0000;
+    s->SysStateReg.bit.BSACHAEnable = 1u;        /* keep charge enable from boot so charger is not refused */
 
     s->SysAlarmReg.Word.DataH=0;
     s->SysAlarmReg.Word.DataL=0;
@@ -726,7 +727,7 @@ void SysAlarmtCheck(SystemReg *s)
     }
     else
     {
-        if(Hyst_On(s->SysPackCurrentAsbF, 30.0f))
+        if(Hyst_On(s->SysPackCurrentAsbF, 31.0f))
         {
             if(s->SysAlarmCont[0] < AlarmDelayCnt) { ++s->SysAlarmCont[0]; }
             if(s->SysAlarmCont[0] >= AlarmDelayCnt)
@@ -1970,23 +1971,11 @@ void PWRRlyHoldHandle(SystemReg *p)
     {
         return;
     }
-
-    /*--------------------------------------------------------------
-     * 0. 시스템 오류 : VCU와 충전기가 동시에 연결되면 충전 금지
-     *    (charger 블록 진입 전에 BSACHAEnable을 0으로 확정)
-     *--------------------------------------------------------------*/
-    //TODO : [검증] 시스템오류(VCU=1&CHA=1) 시 BSACHAEnable=0 충전차단 동작 확인
-    if((p->SysStateReg.bit.VCUComStatus == 1u) && (p->SysStateReg.bit.CHAComStatus == 1u))
-    {
-        p->SysStateReg.bit.BSACHAEnable = 0u;
-    }
-
     /*--------------------------------------------------------------
      * 1. Charger 우선 제어
-     * 조건 : Charger EN = 1 && CHA 통신 정상 && VCU 미연결
+     * 조건 : Charger EN = 1 && CHA 통신 정상
      *--------------------------------------------------------------*/
-    if((p->SysStateReg.bit.ChargerWakeUpIn == 1u) && (p->SysStateReg.bit.CHAComStatus == 1u)
-       && (p->SysStateReg.bit.VCUComStatus == 0u))
+    if((p->SysStateReg.bit.ChargerWakeUpIn == 1u)&&(p->SysStateReg.bit.CHAComStatus == 1u))
     {
         /* 충전기 연결 중에는 충전 경로 확보를 위해 릴레이 ON 유지 */
         p->SysStateReg.bit.WakeUpOut    = 1u;
