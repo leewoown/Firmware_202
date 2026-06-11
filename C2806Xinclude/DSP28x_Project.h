@@ -664,7 +664,7 @@ struct HMICOMMAND_BIT
    unsigned int     HMICMD09            :1; // 9
    unsigned int     HMICMD10            :1; // 10
    unsigned int     HMICMD11            :1; // 11
-   unsigned int     HMICMD12            :1; // 12
+   unsigned int     Admin_NVRSocInit    :1; // 12
    unsigned int     HMICMD13            :1; // 13
    unsigned int     HMICMD14            :1; // 14
    unsigned int     HMICMD15            :1; // 15
@@ -809,6 +809,7 @@ typedef struct CANA_DATA
     Uint16 HMICellVoltNum;
     Uint16 HMICellTempsNum;
     Uint16 HMIISOSPIErrNum;
+    Uint16 HMISocInitValue;
     Uint16 CANCom_0x61DDate0;
     Uint16 CANCom_0x61DDate1;
     Uint16 CANCom_0x61DDate2;

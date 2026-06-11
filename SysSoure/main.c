@@ -15,6 +15,10 @@
 #include <math.h>
 #include <string.h>
 
+/* SOC init : NVR LastSOC trusted range (else reseed from OCV table) */
+#define NVR_SOC_VALID_LO    22.0F      /* % : below -> OCV (sharp low end)  */
+#define NVR_SOC_VALID_HI    92.0F      /* % : at or above -> OCV (sharp high end) */
+
 /*
  *
  */
@@ -366,22 +370,70 @@ void main(void)
                         /*
                         * soc init 초기화하는 부분
                         */
-                        EV240AhSocRegs.state=SOC_STATE_ZONE;
-                        SysCalSocZoneHandle(&SysRegs);
-                        if(SysRegs.SysSocInitRule == SOC_ZONE_cellVolt)
+                        /*------------------------------------------------------------
+                         * 비고 : 아래 zone 분기 블록은 폐지 (참고용 주석 보존).
+                         *        무조건 NVR에서 SOC 재초기화하도록 변경 (아래 새 코드 사용).
+                         *------------------------------------------------------------*/
+                        //EV240AhSocRegs.state=SOC_STATE_ZONE;
+                        //SysCalSocZoneHandle(&SysRegs);
+                        //if(SysRegs.SysSocInitRule == SOC_ZONE_cellVolt)
+                        //{
+                        //    EV240AhSocRegs.CellAgvVoltageF=SysRegs.SysCellAgvVoltageF;
+                        //    CalEVE240AhSocInit(&EV240AhSocRegs);
+                        //    EV240AhSocRegs.state=SOC_STATE_SOSINIT;
+                        //    SysRegs.SysStateReg.bit.SysSocZone =0;
+                        //}
+                        //else if(SysRegs.SysSocInitRule == SOC_ZONE_NVR)
+                        //{
+                        //    //EV240AhSocRegs.state=SOC_STATE_SOSINIT;  /* moved : set state after seed is ready */
+                        //    NVRAM_AZoneReadHandler(&NVRZoneARDRegs);
+                        //    EV240AhSocRegs.SysSocInitF = (float32)(NVRZoneARDRegs.LastSOC/10.0f);
+                        //    EV240AhSocRegs.state=SOC_STATE_SOSINIT;
+                        //    SysRegs.SysStateReg.bit.SysSocZone =1;
+                        //}
+                        //SysRegs.SysStateReg.bit.SysSocMode = EV240AhSocRegs.SoCStateRegs.bit.CalMeth;
+
+                        /* SOC init :
+                           1) read NVR LastSOC
+                           2) if NVR_SOC_VALID_LO <= NVR < NVR_SOC_VALID_HI : trust NVR
+                           3) else (NVR out of range) :
+                              - if cell V in flat plateau : keep NVR (OCV inaccurate, avoid edge jump)
+                              - else (cell V at sharp ends) : reseed from OCV table 
+                        */
+                        EV240AhSocRegs.state = SOC_STATE_ZONE;
+                        NVRAM_AZoneReadHandler(&NVRZoneARDRegs);
+                        EV240AhSocRegs.SysSocInitF = (float32)(NVRZoneARDRegs.LastSOC/10.0f);   // TODO : [완료] 260610_Note1, 1.0 부팅 시 NVR LastSOC를 SOC 초기값으로 사용
+                        /* NVR sanity : clamp wrap or corruption to safe 0~100% range */
+                        if(EV240AhSocRegs.SysSocInitF <   0.0F) { EV240AhSocRegs.SysSocInitF =   0.0F; }
+                        if(EV240AhSocRegs.SysSocInitF > 100.0F) { EV240AhSocRegs.SysSocInitF = 100.0F; }
+                        if((EV240AhSocRegs.SysSocInitF >= NVR_SOC_VALID_LO)
+                        && (EV240AhSocRegs.SysSocInitF <  NVR_SOC_VALID_HI))
                         {
-                            EV240AhSocRegs.CellAgvVoltageF=SysRegs.SysCellAgvVoltageF;
-                            CalEVE240AhSocInit(&EV240AhSocRegs);
-                            EV240AhSocRegs.state=SOC_STATE_SOSINIT;
-                            SysRegs.SysStateReg.bit.SysSocZone =0;
+                            /* NVR within trusted range : trust NVR */
+                            SysRegs.SysSocInitRule = SOC_ZONE_NVR;
+                            SysRegs.SysStateReg.bit.SysSocZone = 1;
                         }
-                        else if(SysRegs.SysSocInitRule == SOC_ZONE_NVR)
+                        else
                         {
-                            EV240AhSocRegs.state=SOC_STATE_SOSINIT;
-                            NVRAM_AZoneReadHandler(&NVRZoneARDRegs);
-                            EV240AhSocRegs.SysSocInitF = (float32)(NVRZoneARDRegs.LastSOC/10.0f);
-                            SysRegs.SysStateReg.bit.SysSocZone =1;
+                            /* NVR out of trusted range : check cell V zone before falling back to OCV */
+                            if((SysRegs.SysCellAgvVoltageF >= V_FlatStartF)
+                            && (SysRegs.SysCellAgvVoltageF <= V_FlatEndF))
+                            {
+                                /* cell V in flat plateau : OCV is inaccurate here, keep NVR as seed
+                                   to avoid sudden SOC jumps near edges (user confusion guard) */
+                                SysRegs.SysSocInitRule = SOC_ZONE_NVR;
+                                SysRegs.SysStateReg.bit.SysSocZone = 1;
+                            }
+                            else
+                            {
+                                /* cell V at sharp ends : reseed from OCV table */
+                                EV240AhSocRegs.CellAgvVoltageF = SysRegs.SysCellAgvVoltageF;
+                                CalEVE240AhSocInit(&EV240AhSocRegs);
+                                SysRegs.SysSocInitRule = SOC_ZONE_cellVolt;
+                                SysRegs.SysStateReg.bit.SysSocZone = 0;
+                            }
                         }
+                        EV240AhSocRegs.state = SOC_STATE_SOSINIT;
                         SysRegs.SysStateReg.bit.SysSocMode = EV240AhSocRegs.SoCStateRegs.bit.CalMeth;
                      }
                      NVRAllRegs.SEQ=NVRAM_AZoneSave;
@@ -878,22 +930,36 @@ void main(void)
        memcpy(&CANARegs.SysCelltemperature[22],   &Slave3Regs.CellTemperature[0],sizeof(int16)*8);
 
       // NVRAM_StateTest();
-       //TODO : [완료] NVRAM에 주기적으로 쓰는 루틴
+       //TODOS : [완료] NVRAM에 주기적으로 쓰는 루틴
        if((g_SysTimeTick>100)&&(SysRegs.SysStateReg.bit.INITOK==1))
        {
            NVRAllRegs.SysTimeTick++;
            switch(NVRAllRegs.SEQ)
            {
                case NVRAM_AZoneSave :
-                    // TODO: [완료] NVRAM에 쓰는 루틴
-                     NVRAllRegs.DebugCount++;
-                     NVRZoneAWRRegs.MetaVersion=Product_Version;
-                     NVRZoneAWRRegs.SysTimeTick = NVRAllRegs.SysTimeTick;
-                     NVRZoneAWRRegs.LastState   = SysRegs.SysStateReg.all;
-                     NVRZoneAWRRegs.LastSOC     = (int16)(SysRegs.SysSOCF*10);
-                     NVRAM_AZoneSaveHandler(&NVRZoneAWRRegs);
-                     NVRAllRegs.SEQ=NVRAM_BZoneSave;
-                     EV240AhSocRegs.state =SOC_STATE_SOSINIT;
+                     //TODO : [검증] NVRAM에 쓰는 루틴에서 LastSOC가 0~1000 사이로 쓰이는지 검증
+                    if((CANARegs.HMICMDRegs.bit.HMI_MODE==1) && (CANARegs.HMICMDRegs.bit.Admin_NVRSocInit==1u))
+                    {
+                        if(CANARegs.HMISocInitValue <= 1000u)
+                        {
+                            NVRZoneAWRRegs.LastSOC     = CANARegs.HMISocInitValue;
+                            NVRAM_AZoneSaveHandler(&NVRZoneAWRRegs);
+                            SysRegs.SysMachine=INIT;
+                            SysRegs.SysStateReg.bit.INITOK=0;
+                            CANARegs.HMICMDRegs.bit.Admin_NVRSocInit=0;
+                        }
+                    }
+                    else 
+                    {
+                      NVRAllRegs.DebugCount++; //TODO: [완료] NVRAM Read 디버깅
+                      NVRZoneAWRRegs.MetaVersion = Product_Version;
+                      NVRZoneAWRRegs.SysTimeTick = NVRAllRegs.SysTimeTick;
+                      NVRZoneAWRRegs.LastState   = SysRegs.SysStateReg.all;
+                      NVRZoneAWRRegs.LastSOC     = (int16)(SysRegs.SysSOCF*10);
+                      NVRAM_AZoneSaveHandler(&NVRZoneAWRRegs);
+                      NVRAllRegs.SEQ=NVRAM_BZoneSave;
+                      EV240AhSocRegs.state =SOC_STATE_SOSINIT;
+                    }
                break;
                case NVRAM_BZoneSave :
                     //TODO: [완료] NVRAM에서 읽는 루틴
@@ -1016,29 +1082,41 @@ interrupt void cpu_timer0_isr(void)
        EV240AhSocRegs.SoCStateRegs.bit.INITOK = SysRegs.SysStateReg.bit.INITOK;
        EV240AhSocRegs.state =  SOC_STATE_RUN;
        CalEVE240AhSocHandle(&EV240AhSocRegs);
-       if(EV240AhSocRegs.SoCStateRegs.bit.CalMeth==0)
-       {
-           //260524: 런타임 zone 재판정 시 state는 CalEVE240AhSocHandle가 설정(SOSINIT/RUN)하므로 ZONE 중복 -> 제거
-           //EV240AhSocRegs.state =  SOC_STATE_ZONE;
-           SysCalSocZoneHandle(&SysRegs);
-           if(SysRegs.SysSocInitRule == SOC_ZONE_cellVolt)
-           {
-               SysRegs.SysSOCF = EV240AhSocRegs.SysSocInitF;
-               SysRegs.SysStateReg.bit.SysSocZone =0;
-           }
-           else if(SysRegs.SysSocInitRule == SOC_ZONE_NVR)
-           {
-               SysRegs.SysSOCF = (float32)(NVRZoneARDRegs.LastSOC/10.0f);
-               SysRegs.SysStateReg.bit.SysSocZone =1;
-           }
-           /* sync seed to current SOC so charge/discharge start has no jump */
-           EV240AhSocRegs.SysSocInitF = SysRegs.SysSOCF;
-       }
-       else if(EV240AhSocRegs.SoCStateRegs.bit.CalMeth==1)
-       {
-           SysRegs.SysSOCF=EV240AhSocRegs.SysPackSOCF;
-           //260524: SysSocZone은 직전 휴지 기준 zone 유지(적산 출발점). 적산 여부=SysSocMode(CC), 충/방전=SysDisCharMode 참조
-       }
+       /*------------------------------------------------------------
+        * 비고 : 아래 zone 재시드 분기는 폐지 (참고용 주석 보존).
+        *        BMS ON 유지 중에는 전류적산 결과(SysPackSOCF)를 그대로 사용한다.
+        *        - SOC 재시드는 BMS OFF->ON 부팅 init에서만 수행
+        *        - NVRAM 저장은 별도 시퀀스에서 수행
+        *        - 전류 측정 0.002% / SOC 허용 +/-5% 사양 내 안전
+        *------------------------------------------------------------*/
+       //if(EV240AhSocRegs.SoCStateRegs.bit.CalMeth==0)
+       //{
+       //    //260524: 런타임 zone 재판정 시 state는 CalEVE240AhSocHandle가 설정(SOSINIT/RUN)하므로 ZONE 중복 -> 제거
+       //    //EV240AhSocRegs.state =  SOC_STATE_ZONE;
+       //    SysCalSocZoneHandle(&SysRegs);
+       //    if(SysRegs.SysSocInitRule == SOC_ZONE_cellVolt)
+       //    {
+       //        SysRegs.SysSOCF = EV240AhSocRegs.SysSocInitF;
+       //        SysRegs.SysStateReg.bit.SysSocZone =0;
+       //    }
+       //    else if(SysRegs.SysSocInitRule == SOC_ZONE_NVR)
+       //    {
+       //        SysRegs.SysSOCF = (float32)(NVRZoneARDRegs.LastSOC/10.0f);
+       //        SysRegs.SysStateReg.bit.SysSocZone =1;
+       //    }
+       //    /* sync seed to current SOC so charge/discharge start has no jump */
+       //    EV240AhSocRegs.SysSocInitF = SysRegs.SysSOCF;
+       //}
+       //else if(EV240AhSocRegs.SoCStateRegs.bit.CalMeth==1)
+       //{
+       //    SysRegs.SysSOCF=EV240AhSocRegs.SysPackSOCF;
+       //    //260524: SysSocZone은 직전 휴지 기준 zone 유지(적산 출발점). 적산 여부=SysSocMode(CC), 충/방전=SysDisCharMode 참조
+       //}
+
+       /* BMS ON hold : always use coulomb-counting result */
+       /* keep call for downstream SysSocInitRule reference*/
+       SysCalSocZoneHandle(&SysRegs);                    
+       SysRegs.SysSOCF = EV240AhSocRegs.SysPackSOCF;
        SysRegs.SysStateReg.bit.SysSocMode = EV240AhSocRegs.SoCStateRegs.bit.CalMeth;
       // SysRegs.SysStateReg.bit.SysSocZone =1;
    }
@@ -1468,14 +1546,13 @@ interrupt void cpu_timer0_isr(void)
                   VCU=1 and CHA=1 together is a system fault. */
                if((SysRegs.SysStateReg.bit.CHAComStatus == 1u) && (SysRegs.SysStateReg.bit.VCUComStatus == 0u))
                {
-
                    if(SysRegs.SysSOCF < 85.0F)
                    {
                        CANARegs.CharCONSTVolt = 520u;                            /* 52.0V */
                    }
-                   else if(SysRegs.SysSOCF < 93.0F)
+                   //else if(SysRegs.SysSOCF < 93.0F)
+                   else if((SysRegs.SysSOCF >= 85.0F) && (SysRegs.SysSOCF < 93.0F))
                    {
-                      
                        /* 520 at 85%, 504 at 93% : slope = (520-504)/(93-85) = 2.0 per % */
                        CANARegs.CharCONSTVolt = (Uint16)(520.0F - (SysRegs.SysSOCF - 85.0F) * 2.0F);
                    }
@@ -1651,8 +1728,8 @@ interrupt void ISR_CANRXINTA(void)
                 CANARegs.MailBox2RxCount++;
                 if(CANARegs.MailBox2RxCount>250){CANARegs.MailBox2RxCount=0;}
 
-                 CANARegs.HMICMDRegs.all      =   (ECanaMboxes.MBOX2.MDL.byte.BYTE1<<8)|(ECanaMboxes.MBOX2.MDL.byte.BYTE0);
-                //CANRXRegs.WORD700_1         =  (ECanaMboxes.MBOX2.MDL.byte.BYTE2<<8)|(ECanaMboxes.MBOX2.MDL.byte.BYTE3);
+                 CANARegs.HMICMDRegs.all      =  (ECanaMboxes.MBOX2.MDL.byte.BYTE1<<8)|(ECanaMboxes.MBOX2.MDL.byte.BYTE0);
+                 CANARegs.HMISocInitValue     =  (ECanaMboxes.MBOX2.MDL.byte.BYTE3<<8)|(ECanaMboxes.MBOX2.MDL.byte.BYTE2);
                 // CANARegs.HMICEllTempsAgv     =  (ECanaMboxes.MBOX2.MDH.byte.BYTE5<<8)|(ECanaMboxes.MBOX2.MDH.byte.BYTE4);
                 // CANARegs.HMICEllVoltMin      =  (ECanaMboxes.MBOX2.MDH.byte.BYTE7<<8)|(ECanaMboxes.MBOX2.MDH.byte.BYTE6);
                 //if(CANARegs.HMICMDRegs.bit.HMI_Reset==1)

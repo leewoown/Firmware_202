@@ -963,20 +963,24 @@ void CalEVE240AhSocHandle(SocReg *P)
         return;
     }
 
-    /* ---- CalMeth 결정 (전류 크기 기준) ---- */
+    /* ---- CalMeth 결정 ----
+     * [변경 260610] 런타임에는 전류적산을 항상 유지한다.
+     *   - 휴지 5분 후 OCV 재초기화(CalMeth=0)는 폐지.
+     *   - 사유: LFP 평탄구간(3.295~3.340V)에서 휴지 OCV 재추정 시
+     *           수 mV 측정오차가 수십 %p SOC 점프(헌팅)로 증폭됨.
+     *           (BLF 2026-06-09 : 방전 87%->19%->89%, 충전 +63.7% 점프 확인)
+     *   - SOC 재시드는 부팅 init에서만 NVR 기준(22~92%)으로 수행 (main.c 참조).
+     *   - CTCount는 휴지 시간 모니터링용으로만 유지(분기 없음).                 */
+    P->SoCStateRegs.bit.CalMeth = 1u;          /* 전류적산 모드 고정 */
     if(P->SysSoCCTAbsF >= C_SocInitCTVaule)    /* |전류| >= 2.5A : 충방전 */
     {
-        P->SoCStateRegs.bit.CalMeth = 1u;      /* 전류적산 모드 */
         P->CTCount = 0u;                        /* 휴지 카운터 초기화 */
     }
     else                                        /* |전류| < 2.5A : 휴지 */
     {
-        P->CTCount++;                           /* 휴지 시간 누적 (50ms 단위) */
-        if(P->CTCount > 6000u)                  /* 6000 x 50ms = 300초 = 5분 */
+        if(P->CTCount <= 6000u)
         {
-            P->CTCount = 6001u;                 /* 카운터 포화 (오버플로 방지) */
-            P->SoCStateRegs.bit.CalMeth = 0u;   /* 휴지 5분 이상 -> OCV 재초기화 */
-          //P->SoCStateRegs.bit.CalMeth = 1u;   /* (구) 적산 유지 - 비활성 */
+            P->CTCount++;                       /* 휴지 시간 누적 (50ms 단위) */
         }
     }
 
@@ -997,8 +1001,11 @@ void CalEVE240AhSocHandle(SocReg *P)
         prevCalMeth_u16 = curCalMeth_u16;
     }
 
-    /* ---- SOC 산출 ---- */
-    if(P->SoCStateRegs.bit.CalMeth == 0u)       /* OCV 재초기화 모드 (휴지) */
+    /* ---- SOC 산출 ----
+     * [주의 260610] 아래 CalMeth==0(OCV 재초기화) 분기는 현재 도달 불가(dead).
+     *   CalMeth가 항상 1로 고정되기 때문. 급경사 구간 OCV 보정을 다시 쓰려면
+     *   위 'CalMeth 결정' 블록에서 조건부로 0을 부여하도록 복원할 것.            */
+    if(P->SoCStateRegs.bit.CalMeth == 0u)       /* OCV 재초기화 모드 (휴지) - 현재 비활성 */
     {
         //P->AVGXF = P->CellAgvVoltageF;         /* 중복 - 함수 시작에서 이미 설정 */
 

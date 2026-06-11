@@ -1,9 +1,9 @@
 /* ==============================================================================
-System Name:  Çö´ëÀÚµ¿Â÷ ¼ö¼Ò Áö°ÔÂ÷ 80V
+System Name:  ï¿½ï¿½ï¿½ï¿½ï¿½Úµï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ 80V
 
 File Name:		PARAMETER.H
 
-Description:	Çö´ë
+Description:	ï¿½ï¿½ï¿½ï¿½
           	    Orientation Control for a Three Phase AC Induction Motor. 
 
 Originator:		Digital control systems Group - Texas Instruments
@@ -25,7 +25,7 @@ Note: In this software, the default inverter is supposed to be DMC1500 board.
 #ifndef PARAMETER_H
 #define PARAMETER_H
 
-/* Bit À§Ä¡ Á¤ÀÇ(ÁÖ·Î À§¿¡¼­ Á¤ÀÇÇÑ ¸ÅÅ©·Î ÇÔ¼ö¿¡¼­ »ç¿ëÇÏ±â À§ÇØ Á¤ÀÇÇÔ) */
+/* Bit ï¿½ï¿½Ä¡ ï¿½ï¿½ï¿½ï¿½(ï¿½Ö·ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Å©ï¿½ï¿½ ï¿½Ô¼ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ï±ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½) */
 #define BIT0_POS    	0
 #define BIT1_POS    	1
 #define BIT2_POS    	2
@@ -43,7 +43,7 @@ Note: In this software, the default inverter is supposed to be DMC1500 board.
 #define BIT14_POS   	14
 #define BIT15_POS   	15
 
-/* Bit Mask Data Á¤ÀÇ */
+/* Bit Mask Data ï¿½ï¿½ï¿½ï¿½ */
 #define	BIT0_MASK    	0x0001
 #define	BIT1_MASK    	0x0002
 #define	BIT2_MASK    	0x0004
@@ -61,7 +61,7 @@ Note: In this software, the default inverter is supposed to be DMC1500 board.
 #define BIT14_MASK   	0x4000
 #define BIT15_MASK   	0x8000
 
-#define	SCIA_BUFRX		50			// Monstar¿Í ¸ÂÃß¾î¾ß ÇÔ
+#define	SCIA_BUFRX		50			// Monstarï¿½ï¿½ ï¿½ï¿½ï¿½ß¾ï¿½ï¿½ ï¿½ï¿½
 
 #define UL_BYTE(x)		    (x >> 16)
 #define HI_BYTE(x)		    (x >> 8)
@@ -206,7 +206,7 @@ Note: In this software, the default inverter is supposed to be DMC1500 board.
 #define IMDBOTOff          GpioDataRegs.GPACLEAR.bit.GPIO27=1
 
 
-// Bit ¿¬»ê½Ã ÀÏ¹ÝÀûÀ¸·Î ¾²ÀÌ´Â ºÎºÐÀ» ¸ÅÅ©·Î ÇÔ¼ö·Î Á¤ÀÇÇÔ  
+// Bit ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ï¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ì´ï¿½ ï¿½Îºï¿½ï¿½ï¿½ ï¿½ï¿½Å©ï¿½ï¿½ ï¿½Ô¼ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½  
 
 #define BIT_MASK(bit)			(1 << (bit))
 #define GetBit(val, bit)		(((val) & BIT_MASK(bit)) >> (bit))
@@ -237,15 +237,15 @@ Note: In this software, the default inverter is supposed to be DMC1500 board.
 -------------------------------------------------------------------------------*/
 #define	SCIA_LSPCLK				(CPUCLK/4)							// Peripheral Low Speed Clock for SCI-A
 #define	SCIA_BAUDRATE			9600L								// SCI-A Baudrate
-#define	SCIA_BRR_VAL			(SCIA_LSPCLK/(8*SCIA_BAUDRATE)-1)	// SCI-A BaudRate ¼³Á¤ Register °ª
+#define	SCIA_BRR_VAL			(SCIA_LSPCLK/(8*SCIA_BAUDRATE)-1)	// SCI-A BaudRate ï¿½ï¿½ï¿½ï¿½ Register ï¿½ï¿½
 
 #define	SCIB_LSPCLK				(CPUCLK/4)							// Peripheral Low Speed Clock for SCI-B
 #define	SCIB_BAUDRATE			9600L								// SCI-B Baudrate
-#define	SCIB_BRR_VAL			(SCIB_LSPCLK/(8*SCIB_BAUDRATE)-1)	// SCI-B BaudRate ¼³Á¤ Register °ª
+#define	SCIB_BRR_VAL			(SCIB_LSPCLK/(8*SCIB_BAUDRATE)-1)	// SCI-B BaudRate ï¿½ï¿½ï¿½ï¿½ Register ï¿½ï¿½
 
 #define	SCIC_LSPCLK				(CPUCLK/4)							// Peripheral Low Speed Clock for SCI-C
 #define	SCIC_BAUDRATE			9600L								// SCI-C Baudrate
-#define	SCIC_BRR_VAL			(SCIC_LSPCLK/(8*SCIC_BAUDRATE)-1)	// SCI-C BaudRate ¼³Á¤ Register °ª
+#define	SCIC_BRR_VAL			(SCIC_LSPCLK/(8*SCIC_BAUDRATE)-1)	// SCI-C BaudRate ï¿½ï¿½ï¿½ï¿½ Register ï¿½ï¿½
 
 /*-------------------------------------------------------------------------------
 Parameter
@@ -256,9 +256,9 @@ Parameter
 #define PIn							-3.14159265358979
 #define PI2							6.283185307
 #define WE							376.9911184
-#define AdcNormalizerBipolar        0.00048828125           // 1 / 4096À¸·Î ³ª´°°ª
-#define AdcNormalizerUnipolar       0.000244140625          // 1 / 2048À¸·Î ³ª´°°ª
-#define AdcNormalizerpolar          0.000322997416          // 1 / 3096À¸·Î ³ª´°°ª
+#define AdcNormalizerBipolar        0.00048828125           // 1 / 4096ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+#define AdcNormalizerUnipolar       0.000244140625          // 1 / 2048ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+#define AdcNormalizerpolar          0.000322997416          // 1 / 3096ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 #define Inverse3					0.333333333			//1/3
 #define InverseSQRT3				0.577350269			//1/root3
 #define SQRT3						1.732050808			//root3
@@ -296,8 +296,8 @@ Parameter
 #define     CellVoltSampleTime   100
 #define     CellTempSampleTime   250
 
-#define     Product_Type                       3   // 24.09.21
-#define     Product_Version                    00   // 24.09.21
+#define     Product_Type                       1   // 24.09.21
+#define     Product_Version                    0   // 24.09.21
 #define     Product_SysCellVauleS              15
 #define     Product_SysCellVauleP              2
 #define     Product_Voltage                    480 // 3.2*15
@@ -317,16 +317,16 @@ Parameter
 #define     C_CTDirection                 1.0
 #define     C_Cell_Capacity               52
 
-#define     C_SysModuleEa                 2 // Module °³¼ö¸¦  Á¤ÀÇÇÔ
-//#define     C_SlaveMEAEa                  7 // Slave BMS¿¡¼­ ÃøÁ¤ÇÏ´Â Àü¾Ð ¹× ¿Âµµ °³¼ö Á¤ÀÇÇÔ
-#define     C_ModuleMEAEa                 15 // Module¿¡¼­ ÃøÁ¤ÇÏ´Â ¼¿ Àü¾Ð ¹× ¿Âµµ °³¼ö¸¦ Á¤ÀÇÇÔ
+#define     C_SysModuleEa                 2 // Module ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+//#define     C_SlaveMEAEa                  7 // Slave BMSï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Âµï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+#define     C_ModuleMEAEa                 15 // Moduleï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Âµï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 #define     C_SlaveBMSEa                  4
 
-#define     C_SysCellVoltEa               30//C_SysModuleEa*C_ModuleMEAEa // Battery Pack ³» Cell Àü¾Ð EA
-#define     C_SysCellTempEa               30//C_SysModuleEa*C_ModuleMEAEa // Battery Pack ³» Cell ¿Âµµ EA
+#define     C_SysCellVoltEa               30//C_SysModuleEa*C_ModuleMEAEa // Battery Pack ï¿½ï¿½ Cell ï¿½ï¿½ï¿½ï¿½ EA
+#define     C_SysCellTempEa               30//C_SysModuleEa*C_ModuleMEAEa // Battery Pack ï¿½ï¿½ Cell ï¿½Âµï¿½ EA
 #define     C_CellNum                     30
-#define     C_HmiCellVoltCount            9//C_SysCellVoltEa/3 //CAN TX  Àü¼Û À§ÇÑ Cell Àü¾Ð °³¼ö Á¤ÀÇÇÔ
-#define     C_HmiCellTempCount            9//C_SysCellTempEa/3 //CAN TX  Àü¼Û À§ÇÑ Cell ¿Âµµ °³¼ö Á¤ÀÇÇÔ
+#define     C_HmiCellVoltCount            9//C_SysCellVoltEa/3 //CAN TX  ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Cell ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+#define     C_HmiCellTempCount            9//C_SysCellTempEa/3 //CAN TX  ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Cell ï¿½Âµï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 #define     C_HMIISOSPIErrCount           C_SlaveBMSEa/3
 
 

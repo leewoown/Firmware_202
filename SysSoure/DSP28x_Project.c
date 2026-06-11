@@ -319,6 +319,7 @@ void CANRegVarINIT(CANAReg *P)
     P->HMICellVoltNum=0;
     P->HMICellTempsNum=0;
     P->HMIISOSPIErrNum=0;
+    P->HMISocInitValue=0;
     P->MailBoxRxCount=0;
     P->MailBox0RxCount=0;
     P->MailBox1RxCount=0;
