@@ -955,7 +955,11 @@ void main(void)
                       NVRZoneAWRRegs.MetaVersion = Product_Version;
                       NVRZoneAWRRegs.SysTimeTick = NVRAllRegs.SysTimeTick;
                       NVRZoneAWRRegs.LastState   = SysRegs.SysStateReg.all;
-                      NVRZoneAWRRegs.LastSOC     = (int16)(SysRegs.SysSOCF*10);
+                      /* [260612] 킬스위치 OFF→ON 시 SOC가 0.1%씩 낮아지는 현상 수정.
+                       * float→int16 변환 시 소수점 이하가 truncation(버림)되어
+                       * 저장할 때마다 최대 0.09% 손실 발생 → 0.5 더해 반올림으로 수정. */
+                      //NVRZoneAWRRegs.LastSOC     = (int16)(SysRegs.SysSOCF*10);           /* 변경 전 : truncation */
+                      NVRZoneAWRRegs.LastSOC     = (int16)(SysRegs.SysSOCF * 10.0F + 0.5F); /* 변경 후 : rounding  */
                       NVRAM_AZoneSaveHandler(&NVRZoneAWRRegs);
                       NVRAllRegs.SEQ=NVRAM_BZoneSave;
                       EV240AhSocRegs.state =SOC_STATE_SOSINIT;
@@ -1265,7 +1269,6 @@ interrupt void cpu_timer0_isr(void)
                // LEDSysState_L;
        break;
        case 30 :
-
 
        break;
        default :
@@ -1634,6 +1637,7 @@ interrupt void cpu_timer0_isr(void)
                }
        break;
        case 10:
+               // BPA_Type = byte0(Product_Type), BPA_SW_Ver = byte1(Product_Version), per CAN spec 0x610
                CANARegs.ProductInfro = ComBine(Product_Version,Product_Type);
                CANARegs.SysConFig    = ComBine(Product_SysCellVauleP,Product_SysCellVauleS);
                if(SysRegs.CanComEable==1)

@@ -77,7 +77,10 @@ void RlySeqHandle(PrtectRelayReg *P)
                 {
                     P->State.bit.PreRlyDO=1;
                     delay_ms(100);
-                    delay_ms(100);
+                    delay_ms(100); // 기존 200ms
+
+                    delay_ms(4000);
+
                     P->State.bit.PRlyDO=1;
                     delay_ms(100);
                     delay_ms(100);

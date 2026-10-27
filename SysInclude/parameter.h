@@ -206,7 +206,7 @@ Note: In this software, the default inverter is supposed to be DMC1500 board.
 #define IMDBOTOff          GpioDataRegs.GPACLEAR.bit.GPIO27=1
 
 
-// Bit ����� �Ϲ������� ���̴� �κ��� ��ũ�� �Լ��� ������  
+// Bit ����� �Ϲ������� ���̴� �κ��� ��ũ�� �Լ��� ������
 
 #define BIT_MASK(bit)			(1 << (bit))
 #define GetBit(val, bit)		(((val) & BIT_MASK(bit)) >> (bit))
@@ -297,7 +297,7 @@ Parameter
 #define     CellTempSampleTime   250
 
 #define     Product_Type                       1   // 24.09.21
-#define     Product_Version                    0   // 24.09.21
+#define     Product_Version                    3     // 24.09.21 (SW Ver 1.003, CAN BPA_SW_Ver = Product_Type*1000+Product_Version, factor 0.001)
 #define     Product_SysCellVauleS              15
 #define     Product_SysCellVauleP              2
 #define     Product_Voltage                    480 // 3.2*15

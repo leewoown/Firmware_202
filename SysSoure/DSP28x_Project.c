@@ -1968,6 +1968,9 @@ void PWRHoldHandle(SystemReg *P)
 }
 void PWRRlyHoldHandle(SystemReg *p)
 {
+    static Uint16 chgEndLatchU16 = 0u;   /* 충전 종료 래치 : 충전기 분기 이탈(분리/통신 단절) 시 해제 */
+    Uint16 holdU16;                      /* PwrHoldState 최종값 (로컬 계산 후 1회만 대입) */
+
     if(p == (void *)0)
     {
         return;
@@ -1980,31 +1983,22 @@ void PWRRlyHoldHandle(SystemReg *p)
     {
         /* 충전기 연결 중에는 충전 경로 확보를 위해 릴레이 ON 유지 */
         p->SysStateReg.bit.WakeUpOut    = 1u;
-        p->SysStateReg.bit.PwrHoldState = 1u;
+        holdU16 = 1u;   /* 로컬에서 계산 : ISR이 중간값을 읽지 못하도록 공유변수에 먼저 쓰지 않음 */
         //TODO : [검증] SOC 100% + 전류 9.6A(또는 충전기 2A) 종단으로 충전 마무리 확인
         /* 충전 종료 강제 조건 : SOC && 충전전류 임계 (매크로로 튜닝) */
-        if(p->SysSOCF >= CHARGE_END_SOC)
+        /* 충전 종료 조건 성립 시 래치 (충전기 분기를 벗어날 때까지 유지 → 100% 경계 흔들림에도 Hold 재진입 방지) */
+        if((p->SysSOCF >= CHARGE_END_SOC) && (p->SysPackCurrentAsbF <= CHARGE_END_CURRENT))
         {
-            
-            /* 전류가 종료 임계 이하로 떨어지면 Hold 해제 */
-            if(p->SysPackCurrentAsbF <= CHARGE_END_CURRENT)
+            chgEndLatchU16 = 1u;
+        }
+
+        if(chgEndLatchU16 == 1u)
+        {
+            p->SysStateReg.bit.BSACHAEnable = 0u;
+            /* 셀 편차 정상(<=0.05V) 또는 Hold 대기시간 초과 시 Hold 해제 */
+            if((p->SysCellDivVoltageF <= 0.05F) || (p->PwrHoldCount > 14400u))
             {
-                p->SysStateReg.bit.BSACHAEnable = 0u;
-                if(p->SysCellDivVoltageF <= 0.05F)
-                {
-                    p->SysStateReg.bit.PwrHoldState = 0u;
-                }
-                else
-                {
-                    if(p->PwrHoldCount > 14400u)
-                    {
-                        p->SysStateReg.bit.PwrHoldState = 0u;
-                    }
-                    else
-                    {
-                        p->SysStateReg.bit.PwrHoldState = 1u;
-                    }
-                }
+                holdU16 = 0u;
             }
         }
         else if((p->SysPackParallelVoltageF <= (p->TargetPackVoltF - 1.5F)) && (p->SysSOCF < 98.0F))
@@ -2012,8 +2006,11 @@ void PWRRlyHoldHandle(SystemReg *p)
             /* 정상 충전 중 : 충전 활성 */
             p->SysStateReg.bit.BSACHAEnable = 1u;
         }
+
+        p->SysStateReg.bit.PwrHoldState = holdU16;   /* PwrHoldState 단일 대입 (레이스 방지) */
         return;
     }
+    chgEndLatchU16 = 0u;   /* 충전기 분기 이탈 : 충전 종료 래치 해제 */
     /*--------------------------------------------------------------
      * 2. VCU 통신 정상
      * 조건 :
